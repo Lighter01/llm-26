@@ -17,4 +17,5 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel>=7.4.0",
+    "kaleido>=1.4.0",
 ]

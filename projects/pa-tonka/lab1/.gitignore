@@ -1,0 +1,44 @@
+# Python environments, caches and build artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local configuration, credentials and editor files
+.env
+.env.*
+!.env.example
+.agents/
+.codex/
+.aws/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Model weights and regenerated experiment runs
+*.gguf
+*.safetensors
+/results_reproduced/
+*.log
+
+# Generated figures: add only images referenced by reports with git add -f.
+*.png
+*.html
+/results/report_materials/**/plotly.min.js
+
+# Keep experiment JSON/JSONL, Markdown tables/responses and uv.lock trackable.
