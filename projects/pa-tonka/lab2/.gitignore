@@ -1,0 +1,23 @@
+# Python environment and build products
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/dist/
+/build/
+
+# Isolated ingestion runtime and generated data
+/tools/ingestion/node_modules/
+/.cache/
+/data/diagnostics/
+/data/resolved/
+/data/markdown/
+
+# agentic files
+.agents
+.codex
+.agents/skills/
+skills-lock.json
+
+# misc
+external/how_to_update.md

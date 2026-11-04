@@ -1,0 +1,739 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dnd-rag:resolved-book:1.0.0",
+  "title": "Self-contained D&D book from pinned 5etools",
+  "description": "Adapter envelope is strict; upstream game payloads and source recipes remain lossless JSON.",
+  "type": "object",
+  "required": [
+    "artifact_kind",
+    "stage",
+    "schema_version",
+    "generator",
+    "upstream",
+    "provenance",
+    "scope",
+    "book",
+    "chapters",
+    "domain"
+  ],
+  "properties": {
+    "artifact_kind": {
+      "const": "resolved_book"
+    },
+    "stage": {
+      "const": 6
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "generator": {
+      "$ref": "#/$defs/generator"
+    },
+    "upstream": {
+      "$ref": "#/$defs/upstream"
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "inventory",
+        "assembly",
+        "enrichment"
+      ],
+      "properties": {
+        "inventory": {
+          "$ref": "#/$defs/input"
+        },
+        "assembly": {
+          "$ref": "#/$defs/input"
+        },
+        "enrichment": {
+          "$ref": "#/$defs/input"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "all_source_chapters",
+        "embedded_references_resolved",
+        "domain_enrichment",
+        "book_complete"
+      ],
+      "properties": {
+        "all_source_chapters": {
+          "const": true
+        },
+        "embedded_references_resolved": {
+          "const": true
+        },
+        "domain_enrichment": {
+          "const": true
+        },
+        "book_complete": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "book": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "published",
+        "source_file",
+        "source_metadata",
+        "catalog_entry",
+        "catalog_origin"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "XPHB",
+            "XDMG",
+            "XMM"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "published": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_file": {
+          "type": "string"
+        },
+        "source_metadata": {
+          "type": "object"
+        },
+        "catalog_entry": {
+          "type": "object"
+        },
+        "catalog_origin": {
+          "$ref": "#/$defs/origin"
+        }
+      },
+      "additionalProperties": false
+    },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "chapter_index",
+          "title",
+          "original_id",
+          "origin",
+          "content"
+        ],
+        "properties": {
+          "chapter_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string"
+          },
+          "original_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origin": {
+            "$ref": "#/$defs/origin"
+          },
+          "content": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "domain": {
+      "type": "object",
+      "required": [
+        "entities",
+        "relationships"
+      ],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity"
+          },
+          "minItems": 0
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from_entity_id",
+              "to_entity_id",
+              "relation",
+              "evidence",
+              "anchor"
+            ],
+            "properties": {
+              "from_entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to_entity_id": {
+                "type": "string"
+              },
+              "relation": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "object"
+              },
+              "anchor": {
+                "$ref": "#/$defs/anchor"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "origin": {
+      "type": "object",
+      "required": [
+        "file",
+        "json_pointer",
+        "source",
+        "upstream_commit",
+        "printed_page",
+        "page_attribution",
+        "page_origin_pointer"
+      ],
+      "properties": {
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "json_pointer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "upstream_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        },
+        "printed_page": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "page_attribution": {
+          "enum": [
+            "explicit",
+            "inherited_section_start",
+            "unknown"
+          ]
+        },
+        "page_origin_pointer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lookup_source": {
+          "enum": [
+            "physical_record",
+            "generated_item",
+            "ambiguous_physical_candidates"
+          ]
+        },
+        "record_id": {
+          "type": "string"
+        },
+        "page_evidence": {
+          "enum": [
+            null,
+            "source_record",
+            "template_inherits",
+            "loader_entity"
+          ]
+        },
+        "lookup": {
+          "$ref": "#/$defs/lookup"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/origin"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "lookup": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "prop",
+        "source",
+        "hash",
+        "lookup_page"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "prop": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "lookup_page": {
+          "type": "string"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "anchor": {
+      "type": "object",
+      "required": [
+        "book_id",
+        "chapter_index",
+        "occurrence_id",
+        "origin"
+      ],
+      "properties": {
+        "book_id": {
+          "enum": [
+            "XPHB",
+            "XDMG",
+            "XMM"
+          ]
+        },
+        "chapter_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occurrence_id": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        }
+      },
+      "additionalProperties": true
+    },
+    "entity": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "prop",
+        "representation",
+        "canonical_placement",
+        "source_records",
+        "data_origin"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "prop": {
+          "type": "string"
+        },
+        "representation": {
+          "enum": [
+            "book_insertion",
+            "domain_component"
+          ]
+        },
+        "canonical_placement": {
+          "type": "object",
+          "required": [
+            "anchor",
+            "relation",
+            "parent_entity_id"
+          ],
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/anchor"
+            },
+            "relation": {
+              "type": "string"
+            },
+            "parent_entity_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "source_records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "record_id",
+              "prop",
+              "origin",
+              "representation",
+              "raw"
+            ],
+            "properties": {
+              "record_id": {
+                "type": "string"
+              },
+              "prop": {
+                "type": "string"
+              },
+              "origin": {
+                "$ref": "#/$defs/origin"
+              },
+              "representation": {
+                "const": "source_recipe"
+              },
+              "raw": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "data_origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "occurrence_id": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/derivation"
+            }
+          ]
+        },
+        "loading_method": {
+          "type": "string"
+        },
+        "shared_content": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "parent_entity_id",
+              "parent_path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "parent_entity_id": {
+                "type": "string"
+              },
+              "parent_path": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "properties": {
+            "representation": {
+              "const": "book_insertion"
+            }
+          },
+          "required": [
+            "occurrence_id"
+          ]
+        },
+        {
+          "properties": {
+            "representation": {
+              "const": "domain_component"
+            }
+          },
+          "required": [
+            "data",
+            "loading_method",
+            "derivation"
+          ]
+        }
+      ]
+    },
+    "wrapper": {
+      "type": "object",
+      "required": [
+        "kind",
+        "occurrence_id",
+        "entity_id",
+        "original_reference",
+        "lookup",
+        "entity_origin",
+        "data",
+        "derivation",
+        "placement"
+      ],
+      "properties": {
+        "kind": {
+          "const": "embedded_entity"
+        },
+        "occurrence_id": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "original_reference": {
+          "type": "object"
+        },
+        "lookup": {
+          "$ref": "#/$defs/lookup"
+        },
+        "entity_origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "data": {
+          "type": "object"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/derivation"
+            }
+          ]
+        },
+        "placement": {
+          "type": "object",
+          "required": [
+            "book_id",
+            "chapter_index",
+            "origin"
+          ],
+          "properties": {
+            "book_id": {
+              "enum": [
+                "XPHB",
+                "XDMG",
+                "XMM"
+              ]
+            },
+            "chapter_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "origin": {
+              "$ref": "#/$defs/origin"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "generator": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "schema_version",
+        "node_version",
+        "source_sha256",
+        "config_sha256",
+        "config",
+        "signature"
+      ],
+      "properties": {
+        "name": {
+          "const": "dnd_rag.ingestion.5etools_resolver"
+        },
+        "version": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "node_version": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "config_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "config": {
+          "type": "object"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "upstream": {
+      "type": "object",
+      "required": [
+        "repository",
+        "checkout_sha",
+        "gitlink_sha",
+        "gitlink_matches_checkout",
+        "tracked_clean",
+        "package_version"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "checkout_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        },
+        "gitlink_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        },
+        "gitlink_matches_checkout": {
+          "const": true
+        },
+        "tracked_clean": {
+          "const": true
+        },
+        "package_version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "signature",
+        "report_sha256"
+      ],
+      "properties": {
+        "signature": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "report_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "file_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "derivation": {
+      "type": "object",
+      "required": [
+        "method",
+        "base_item",
+        "template"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "native_item_variant"
+        },
+        "base_item": {
+          "type": "object",
+          "required": [
+            "uid",
+            "target",
+            "origins"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "uid": {
+              "type": "string"
+            },
+            "target": {
+              "$ref": "#/$defs/lookup"
+            },
+            "origins": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/origin"
+              }
+            }
+          }
+        },
+        "template": {
+          "type": "object",
+          "required": [
+            "target",
+            "origins"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/lookup"
+            },
+            "origins": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/origin"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
