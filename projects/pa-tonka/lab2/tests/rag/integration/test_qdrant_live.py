@@ -106,6 +106,15 @@ def test_native_bm25_rrf_quantization_and_persistence(tmp_path):
             assert str(dense[0].id) == chunks[0].metadata.chunk_id
             assert str(lexical[0].id) == chunks[0].metadata.chunk_id
             assert str(fusion[0].id) == chunks[0].metadata.chunk_id
+            shared = store.search(ready, vectors[0].tolist(), 'shield', cfg, 10)
+            assert shared[0].chunk.metadata.chunk_id == chunks[0].metadata.chunk_id
+            assert shared[0].score_kind == 'rrf'
+            dense_config = cfg.model_copy(
+                update={'retrieval': cfg.retrieval.model_copy(update={'mode': 'dense'})}
+            )
+            shared_dense = store.search(ready, vectors[0].tolist(), 'shield', dense_config, 10)
+            assert shared_dense[0].chunk.metadata.chunk_id == chunks[0].metadata.chunk_id
+            assert shared_dense[0].score_kind == 'cosine'
             report['profiles'].append(
                 {
                     'quantization': quant,

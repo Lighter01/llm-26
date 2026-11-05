@@ -68,3 +68,6 @@ running/queued optimizations; approximate indexed count не обязан рав
 runtime concurrency на 1 (на 2, если уже 1), записывает last_optimizer_resume в metadata
 и ждёт завершения. Ready build_id сохраняется; split/embed/upload не повторяются.
 Неполная building-коллекция всё равно пересоздаётся целиком.
+
+После подключения общего Store.search проба повторена: 1 passed, 8.89 s;
+проверены и прямые native запросы, и фактическое общее ядро dense/hybrid.

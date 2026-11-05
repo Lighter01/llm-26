@@ -76,3 +76,12 @@ split/metadata/IDs → GPU encoder → upload/index readiness. Документ�
 При смерти родителя живой ребёнок сохраняет lock. Штатный выход/Ctrl+C останавливает
 только process groups данного запуска, затем закрывает descriptor. Lock-файл сохраняется.
 Qdrant volume и результаты не очищаются при остановке.
+
+`retrieval.py` предоставляет `Retriever.retrieve(question, limit=None)`. Он использует
+постоянный CPU QueryEncoder и QdrantStore.search без чтения Markdown, gold или LLM.
+Dense query идёт по named `dense` с hnsw_ef. Hybrid посылает 20 dense + 20 native BM25
+prefetch, сервер объединяет их равновесным RRF и возвращает до10. Score — cosine либо
+rrf, не вероятность. Нет score_threshold и дополнительного поиска ради диагностики.
+Порядок серверных ties сохраняется; одинаковые IDs убираются без дополнения выдачи.
+Успешная пустота отличается от технической ошибки. Timings отдельно измеряют CPU
+embedding, search и весь retrieval. Этот интерфейс общий для аналитики и будущего API.

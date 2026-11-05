@@ -82,3 +82,9 @@ docker compose -f compose.yaml stop qdrant
 
 `stop` сохраняет volume. Не используйте `down -v`, если нужны готовые индексы.
 Создание HNSW/BM25 асинхронно: приложение ждёт завершения очереди, одного принятого upsert мало.
+
+Retrieval сейчас доступен через Python `Retriever` и аналитический runner; отдельный
+HTTP launcher `serve-retrieval` добавляется в Task 11. Лимит Python retrieval по умолчанию
+из YAML (10), допустим 1..configured limit. Полные payload и rank/score_kind сохраняются
+без LLM; отсутствие score-порога означает, что далёкий по смыслу вопрос обычно всё равно
+получит ближайшие dense-векторы. Это не проверка достаточности ответа.
