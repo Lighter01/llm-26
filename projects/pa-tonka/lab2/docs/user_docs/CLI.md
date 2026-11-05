@@ -88,3 +88,9 @@ HTTP launcher `serve-retrieval` добавляется в Task 11. Лимит Py
 из YAML (10), допустим 1..configured limit. Полные payload и rank/score_kind сохраняются
 без LLM; отсутствие score-порога означает, что далёкий по смыслу вопрос обычно всё равно
 получит ближайшие dense-векторы. Это не проверка достаточности ответа.
+
+Для evaluation используйте только `data/questions/validated/questions.yaml` и соседний
+`validation_report.json` со свежим PASS/written. Runner проверяет hashes и exact slices,
+но не перезапускает генератор вопросов/ingestion. После изменения gold сравнивайте все
+варианты на одной версии; старые и новые метрики не смешиваются. Основные средние —
+20 answerable; 3 insufficient предназначены для отдельного будущего QA-анализа.
