@@ -14,7 +14,7 @@ __pycache__/
 /data/markdown/
 
 # agentic files
-.agents
+# .agents
 .codex
 .agents/skills/
 skills-lock.json
