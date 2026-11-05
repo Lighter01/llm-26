@@ -122,12 +122,14 @@ def _original_stages(metadata):
 
 def _comparison_row(group, role, name, reference, config, changes, reason, data, anchor):
     metadata, metrics, cohort, error = data[name]
-    if anchor is not None:
-        _, _, anchor_cohort, anchor_error = data[anchor]
-        if anchor_error:
-            error = error or f'Reference/base {anchor} is unavailable: {anchor_error}'
-        elif cohort != anchor_cohort:
-            error = error or 'Corpus, gold or metric definitions differ from the reference/base'
+    for control in dict.fromkeys(name for name in (anchor, reference) if name is not None):
+        _, _, control_cohort, control_error = data[control]
+        if control_error:
+            error = error or f'Reference/base {control} is unavailable: {control_error}'
+        elif cohort != control_cohort:
+            error = (
+                error or f'Corpus, gold or metric definitions differ from reference/base {control}'
+            )
     stages = metadata.get('stages', {})
     original = metadata.get('build_provenance', {})
     row = {
@@ -235,6 +237,15 @@ def _rows(study, data):
             )
             if group.requires_base and not group.selected_base_run:
                 row.update(comparison_eligible=False, comparison_error='Group base is not selected')
+            elif (
+                group.requires_base
+                and item.reference_run is not None
+                and item.reference_run != group.selected_base_run
+            ):
+                row.update(
+                    comparison_eligible=False,
+                    comparison_error='A dependent comparison must use its group selected base',
+                )
             rows.append(row)
     return rows
 

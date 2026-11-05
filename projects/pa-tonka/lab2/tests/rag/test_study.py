@@ -225,6 +225,74 @@ def test_declared_delta_and_selected_reference_checked(tmp_path, saved_study):
         read_study_entry(path, 'G2', config, tmp_path)
 
 
+@pytest.mark.parametrize('reference_state', ['valid', 'different_gold', 'failed', 'missing'])
+def test_summary_checks_effective_reference(tmp_path, saved_study, reference_state):
+    _, saved = saved_study
+    saved('base')
+    saved('candidate')
+    if reference_state != 'missing':
+        saved(
+            'reference',
+            status='failed' if reference_state == 'failed' else 'completed',
+            gold_hash='e' * 64 if reference_state == 'different_gold' else None,
+        )
+    path = write_yaml(
+        tmp_path / 'study.yaml',
+        {
+            'schema_version': 1,
+            'groups': {
+                'G1': {
+                    'requires_base': False,
+                    'selected_base_run': 'base',
+                    'comparisons': [
+                        {'config': 'base.yaml', 'run': 'base'},
+                        {
+                            'config': 'candidate.yaml',
+                            'run': 'candidate',
+                            'reference_run': 'reference',
+                        },
+                    ],
+                }
+            },
+        },
+    )
+    output = summarize_results(path, tmp_path / 'comparison.csv', project_root=tmp_path)
+    with output.open() as stream:
+        rows = {row['run']: row for row in csv.DictReader(stream)}
+    candidate = rows['candidate']
+    assert candidate['reference_run'] == 'reference'
+    assert candidate['comparison_eligible'] == ('True' if reference_state == 'valid' else 'False')
+    assert bool(candidate['comparison_error']) == (reference_state != 'valid')
+    assert candidate['evidence_coverage@5'] == '0.5'  # Saved observations remain available.
+
+
+def test_summary_rejects_dependent_reference_drift(tmp_path, saved_study):
+    _, saved = saved_study
+    for name in ('base', 'other', 'candidate'):
+        saved(name)
+    path = write_yaml(
+        tmp_path / 'study.yaml',
+        {
+            'schema_version': 1,
+            'groups': {
+                'G2': {
+                    'requires_base': True,
+                    'selected_base_run': 'base',
+                    'selection_reason': 'Fixture',
+                    'comparisons': [
+                        {'config': 'candidate.yaml', 'run': 'candidate', 'reference_run': 'other'},
+                    ],
+                }
+            },
+        },
+    )
+    output = summarize_results(path, tmp_path / 'comparison.csv', project_root=tmp_path)
+    with output.open() as stream:
+        rows = {row['run']: row for row in csv.DictReader(stream)}
+    assert rows['candidate']['comparison_eligible'] == 'False'
+    assert 'selected base' in rows['candidate']['comparison_error']
+
+
 def test_config_deltas_are_exact():
     root = Path(__file__).resolve().parents[2]
     study = read_yaml(root / 'configs/experiments/study.yaml')
