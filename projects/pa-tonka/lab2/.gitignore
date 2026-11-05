@@ -21,6 +21,8 @@ skills-lock.json
 .env
 /.runtime/
 *.runtime.log
+.agents/work/implementation/*.log
+.agents/work/implementation/pytest-full/
 
 # misc
 external/how_to_update.md

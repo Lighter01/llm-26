@@ -100,3 +100,16 @@ Evidence Coverage объединяет все диапазоны top-k без re
 Половины разных alternatives не складываются. Raw tokens суммируют overlap повторно
 как стоимость контекста, EC учитывает символ один раз. Метрики @1/5/10 считаются до
 будущего сокращения LLM-контекста и не являются оценкой правильности ответа.
+
+`evaluation/artifacts.py` атомарно резервирует уникальную results-папку и обновляет
+паспорт running→completed/failed. `retrieval_run.py` соединяет готовые компоненты под
+одной RuntimeSession. GPU worker полностью завершается до CPU query loading. Manifest
+получается scroll из текущей коллекции и не используется как кэш для другого build.
+Все Rq, ranked raw hits, fact/alternative coverage, счётчики/токены и времена сохраняются.
+Offline `recompute_saved_metrics` читает только сохранённые gold/manifest/hits после проверки
+hash gold; reset коллекции не лишает run проверяемости. Failed и partial runs не дают
+успешного среднего по подмножеству вопросов.
+
+`evaluation/study.py` проверяет простую YAML-карту сравнений: явно выбранная completed база,
+однозначный comparison, общий corpus/gold и фактические изменённые поля config snapshot.
+Нет наследования или автоматического DAG; runner не переписывает study.yaml после запуска.

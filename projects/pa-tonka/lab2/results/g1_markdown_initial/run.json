@@ -1,0 +1,433 @@
+{
+  "schema_version": 1,
+  "run_id": "99aebbe9-a464-473a-929d-e643387a30b0",
+  "experiment_name": "g1_markdown_initial",
+  "run_type": "retrieval",
+  "started_at": "2026-11-05T20:25:14.782423+00:00",
+  "ended_at": "2026-11-05T20:27:27.331980+00:00",
+  "status": "completed",
+  "current_stage": "completed",
+  "stages": {
+    "gold_validation": {
+      "name": "gold_validation",
+      "status": "executed",
+      "elapsed_ms": 1842.525330997887,
+      "details": {}
+    },
+    "corpus_validation": {
+      "name": "corpus_validation",
+      "status": "executed",
+      "elapsed_ms": 1805.9702699974878,
+      "details": {}
+    },
+    "qdrant_readiness": {
+      "name": "qdrant_readiness",
+      "status": "executed",
+      "elapsed_ms": 42.539045000012266,
+      "details": {}
+    },
+    "index_inspection": {
+      "name": "index_inspection",
+      "status": "executed",
+      "elapsed_ms": 2.9370100019150414,
+      "details": {}
+    },
+    "worker_corpus_validation": {
+      "name": "worker_corpus_validation",
+      "status": "executed",
+      "elapsed_ms": 2052.7611289980996,
+      "details": {}
+    },
+    "tokenizer_load": {
+      "name": "tokenizer_load",
+      "status": "executed",
+      "elapsed_ms": 5157.724899996538,
+      "details": {}
+    },
+    "splitting": {
+      "name": "splitting",
+      "status": "executed",
+      "elapsed_ms": 6356.838225998217,
+      "details": {}
+    },
+    "document_model_load": {
+      "name": "document_model_load",
+      "status": "executed",
+      "elapsed_ms": 5286.91555000114,
+      "details": {}
+    },
+    "embedding": {
+      "name": "embedding",
+      "status": "executed",
+      "elapsed_ms": 87911.6739530291,
+      "details": {}
+    },
+    "upload": {
+      "name": "upload",
+      "status": "executed",
+      "elapsed_ms": 2796.993342031783,
+      "details": {}
+    },
+    "index_wait": {
+      "name": "index_wait",
+      "status": "executed",
+      "elapsed_ms": 714.8481699987315,
+      "details": {}
+    },
+    "manifest_export": {
+      "name": "manifest_export",
+      "status": "executed",
+      "elapsed_ms": 389.8964590007381,
+      "details": {}
+    },
+    "query_model_load": {
+      "name": "query_model_load",
+      "status": "executed",
+      "elapsed_ms": 9428.294403001928,
+      "details": {}
+    },
+    "evaluation_export": {
+      "name": "evaluation_export",
+      "status": "executed",
+      "elapsed_ms": 92.37329099778435,
+      "details": {}
+    },
+    "query_embedding": {
+      "name": "query_embedding",
+      "status": "executed",
+      "elapsed_ms": 2835.0285700071254,
+      "details": {
+        "aggregation": "sum of sequential question timings"
+      }
+    },
+    "search": {
+      "name": "search",
+      "status": "executed",
+      "elapsed_ms": 115.0834610016318,
+      "details": {
+        "aggregation": "sum of sequential question timings"
+      }
+    }
+  },
+  "error": null,
+  "cli": {
+    "command": "experiment",
+    "rebuild": false
+  },
+  "config_id": "fe9b50714b34e169af91385e3c2fb9fdcbbc34e86f5afcec8ca3fb929e6c28dd",
+  "config_sha256": "e233f7a4e9a3e77c8463373b20f63418908737758fb2243d4c277b25f1d2797c",
+  "group": "G1",
+  "reference_run": null,
+  "changed_parameters": [],
+  "selection_reason": "Baseline Markdown 512/64; остальные splitters будут измерены в Task 13.",
+  "last_completed_stage": "search",
+  "corpus": {
+    "files": {
+      "xphb.md": {
+        "body_sha256": "3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7"
+      },
+      "xdmg.md": {
+        "body_sha256": "632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215"
+      },
+      "xmm.md": {
+        "body_sha256": "a00f0ed424bf507554f230ce2af28bcfcf9695844645f9af3fe7234f4d8aa0ea"
+      }
+    },
+    "source_map_sha256": "385b102e47afaaf19d77fd4318622f9cc1889a538e73d5e059a375460a9b4577"
+  },
+  "gold_sha256": "f46644b746bf029942bc718f308308783a40c9287dcdca711e2aed891e76db26",
+  "raw_input_sha256": "5d6672fc4f4974596fd1d7e0af5ef3cd755a6a9d3e7e999f1f4a995f08305478",
+  "provenance": {
+    "git_commit": "92886db5748c33b23d7784c901125c36c80cb790",
+    "git_status": "M .agents/work/implementation/progress.md\n M README.md\n M configs/experiments/README.md\n M docs/README.md\n M docs/user_docs/ARCHITECTURE.md\n M docs/user_docs/CLI.md\n M src/dnd_rag/README.md\n M src/dnd_rag/__main__.py\n M src/dnd_rag/evaluation/README.md\n M src/dnd_rag/indexing/build.py\n M src/dnd_rag/runtime/application.py\n M tests/README.md\n M tests/rag/fixtures.py\n M tests/rag/test_cli.py\n?? .agents/.old_prompts/\n?? .agents/AGENTS.md\n?? .agents/docs/\n?? .agents/work/implementation/baseline.log\n?? .agents/work/implementation/c2-python-tests-full.log\n?? .agents/work/implementation/c2-python-tests.log\n?? .agents/work/implementation/c2-ruff-check.log\n?? .agents/work/implementation/c2-ruff-format.log\n?? .agents/work/implementation/dependencies.log\n?? .agents/work/implementation/embedding-live.log\n?? .agents/work/implementation/empty-optimizer-red.log\n?? .agents/work/implementation/experiment-cli-red.log\n?? .agents/work/implementation/model-download.log\n?? .agents/work/implementation/model-snapshot.log\n?? .agents/work/implementation/optimizer-red.log\n?? .agents/work/implementation/pytest-full/\n?? .agents/work/implementation/qdrant-live-final.log\n?? .agents/work/implementation/qdrant-live.log\n?? .agents/work/implementation/qdrant-threshold-red.log\n?? .agents/work/implementation/restart-red.log\n?? .agents/work/implementation/task1-green.log\n?? .agents/work/implementation/task2-red.log\n?? .agents/work/implementation/task3-red.log\n?? .agents/work/implementation/task4-red.log\n?? .agents/work/implementation/task5-red.log\n?? .agents/work/implementation/task6-red.log\n?? .agents/work/implementation/task7-red.log\n?? .agents/work/implementation/task8-red.log\n?? .agents/work/implementation/torchvision-dependency.log\n?? configs/experiments/study.yaml\n?? docs/rag/VALIDATION.md\n?? docs/user_docs/README.md\n?? results/\n?? src/dnd_rag/evaluation/artifacts.py\n?? src/dnd_rag/evaluation/retrieval_run.py\n?? src/dnd_rag/evaluation/study.py\n?? tests/rag/README.md\n?? tests/rag/test_artifacts.py\n?? tests/rag/test_retrieval_run.py\n?? tests/rag/test_study.py",
+    "python": "3.13.13",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "cpu_count": 16,
+    "ram_bytes": 20973510656
+  },
+  "metrics_definition_version": 1,
+  "conditions": {
+    "query_device": "cpu",
+    "query_dtype": "float32",
+    "cache_policy": "normal HF cache; downloads included in model-load timings; first encode marked separately"
+  },
+  "index_id": "49a0a1a1baa61ca0e02babf717626a341a92686ff27fcc2b67b487d002753221",
+  "build_id": "403ac973-45b6-44fd-b663-ebc10f1a9389",
+  "collection": "rag_49a0a1a1baa61ca0e02babf717626a341a92686ff27fcc2b67b487d002753221",
+  "build_spec": {
+    "schema_version": 1,
+    "algorithms": {
+      "coordinates": 1,
+      "chunking": 1,
+      "metadata": 1,
+      "embedding_input": 1
+    },
+    "corpus": {
+      "files": [
+        {
+          "source_file": "xphb.md",
+          "body_sha256": "3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7",
+          "metadata": {
+            "book_id": "XPHB",
+            "title": "Player's Handbook (2024)",
+            "source": "5etools",
+            "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+          }
+        },
+        {
+          "source_file": "xdmg.md",
+          "body_sha256": "632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215",
+          "metadata": {
+            "book_id": "XDMG",
+            "title": "Dungeon Master's Guide (2024)",
+            "source": "5etools",
+            "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+          }
+        },
+        {
+          "source_file": "xmm.md",
+          "body_sha256": "a00f0ed424bf507554f230ce2af28bcfcf9695844645f9af3fe7234f4d8aa0ea",
+          "metadata": {
+            "book_id": "XMM",
+            "title": "Monster Manual (2025)",
+            "source": "5etools",
+            "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+          }
+        }
+      ],
+      "source_map_sha256": "385b102e47afaaf19d77fd4318622f9cc1889a538e73d5e059a375460a9b4577"
+    },
+    "chunking": {
+      "strategy": "markdown",
+      "chunk_size": 512,
+      "chunk_overlap": 64,
+      "keep_separator": true,
+      "strip_whitespace": false,
+      "coordinate_policy": "unicode-half-open-lf-body"
+    },
+    "embedding": {
+      "model_id": "google/embeddinggemma-2",
+      "revision": "f9972ac22e696a105c482202646979e33e4b5a1e",
+      "dimension": 768,
+      "include_title": true,
+      "strip_markdown_headings": false,
+      "document_dtype": "bfloat16",
+      "tokenizer_id": "google/embeddinggemma-2",
+      "tokenizer_revision": "f9972ac22e696a105c482202646979e33e4b5a1e",
+      "text_only": true,
+      "input_format": "title: {title} | text: {content}",
+      "normalize_embeddings": true,
+      "max_input_tokens": 8192
+    },
+    "index": {
+      "hnsw": {
+        "m": 16,
+        "ef_construction": 100
+      },
+      "quantization": "none"
+    },
+    "qdrant": {
+      "vector_name": "dense",
+      "distance": "Cosine",
+      "datatype": "float32",
+      "shard_number": 1,
+      "indexing_threshold": 1
+    },
+    "mode": "dense",
+    "versions": {
+      "langchain-core": "1.7.6",
+      "langchain-text-splitters": "1.1.3",
+      "transformers": "5.22.1",
+      "tokenizers": "0.23.3",
+      "sentence-transformers": "6.2.0",
+      "torch": "2.15.0",
+      "torchvision": "0.29.2",
+      "numpy": "2.5.4",
+      "qdrant-client": "1.20.0",
+      "markdown-it-py": "4.2.0",
+      "PyYAML": "6.0.3",
+      "qdrant-server": "1.20.0"
+    }
+  },
+  "index_action": "built",
+  "index_reason": "Collection does not exist",
+  "build_provenance": {
+    "schema_version": 1,
+    "owner": "dnd_rag_lab2",
+    "index_id": "49a0a1a1baa61ca0e02babf717626a341a92686ff27fcc2b67b487d002753221",
+    "build_spec": {
+      "schema_version": 1,
+      "algorithms": {
+        "coordinates": 1,
+        "chunking": 1,
+        "metadata": 1,
+        "embedding_input": 1
+      },
+      "corpus": {
+        "files": [
+          {
+            "source_file": "xphb.md",
+            "body_sha256": "3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7",
+            "metadata": {
+              "book_id": "XPHB",
+              "title": "Player's Handbook (2024)",
+              "source": "5etools",
+              "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+            }
+          },
+          {
+            "source_file": "xdmg.md",
+            "body_sha256": "632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215",
+            "metadata": {
+              "book_id": "XDMG",
+              "title": "Dungeon Master's Guide (2024)",
+              "source": "5etools",
+              "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+            }
+          },
+          {
+            "source_file": "xmm.md",
+            "body_sha256": "a00f0ed424bf507554f230ce2af28bcfcf9695844645f9af3fe7234f4d8aa0ea",
+            "metadata": {
+              "book_id": "XMM",
+              "title": "Monster Manual (2025)",
+              "source": "5etools",
+              "upstream_sha": "c3d53956346388b222aaaaf4637776f563e201b8"
+            }
+          }
+        ],
+        "source_map_sha256": "385b102e47afaaf19d77fd4318622f9cc1889a538e73d5e059a375460a9b4577"
+      },
+      "chunking": {
+        "strategy": "markdown",
+        "chunk_size": 512,
+        "chunk_overlap": 64,
+        "keep_separator": true,
+        "strip_whitespace": false,
+        "coordinate_policy": "unicode-half-open-lf-body"
+      },
+      "embedding": {
+        "model_id": "google/embeddinggemma-2",
+        "revision": "f9972ac22e696a105c482202646979e33e4b5a1e",
+        "dimension": 768,
+        "include_title": true,
+        "strip_markdown_headings": false,
+        "document_dtype": "bfloat16",
+        "tokenizer_id": "google/embeddinggemma-2",
+        "tokenizer_revision": "f9972ac22e696a105c482202646979e33e4b5a1e",
+        "text_only": true,
+        "input_format": "title: {title} | text: {content}",
+        "normalize_embeddings": true,
+        "max_input_tokens": 8192
+      },
+      "index": {
+        "hnsw": {
+          "m": 16,
+          "ef_construction": 100
+        },
+        "quantization": "none"
+      },
+      "qdrant": {
+        "vector_name": "dense",
+        "distance": "Cosine",
+        "datatype": "float32",
+        "shard_number": 1,
+        "indexing_threshold": 1
+      },
+      "mode": "dense",
+      "versions": {
+        "langchain-core": "1.7.6",
+        "langchain-text-splitters": "1.1.3",
+        "transformers": "5.22.1",
+        "tokenizers": "0.23.3",
+        "sentence-transformers": "6.2.0",
+        "torch": "2.15.0",
+        "torchvision": "0.29.2",
+        "numpy": "2.5.4",
+        "qdrant-client": "1.20.0",
+        "markdown-it-py": "4.2.0",
+        "PyYAML": "6.0.3",
+        "qdrant-server": "1.20.0"
+      }
+    },
+    "build_id": "403ac973-45b6-44fd-b663-ebc10f1a9389",
+    "status": "ready",
+    "expected_points": 3175,
+    "created_at": "2026-11-05T20:25:39.182973+00:00",
+    "ready_at": "2026-11-05T20:27:12.386867+00:00",
+    "versions": {
+      "langchain-core": "1.7.6",
+      "langchain-text-splitters": "1.1.3",
+      "transformers": "5.22.1",
+      "tokenizers": "0.23.3",
+      "sentence-transformers": "6.2.0",
+      "torch": "2.15.0",
+      "torchvision": "0.29.2",
+      "numpy": "2.5.4",
+      "qdrant-client": "1.20.0",
+      "markdown-it-py": "4.2.0",
+      "PyYAML": "6.0.3",
+      "qdrant-server": "1.20.0"
+    },
+    "stages": [
+      {
+        "name": "worker_corpus_validation",
+        "status": "executed",
+        "elapsed_ms": 2052.7611289980996,
+        "details": {}
+      },
+      {
+        "name": "tokenizer_load",
+        "status": "executed",
+        "elapsed_ms": 5157.724899996538,
+        "details": {}
+      },
+      {
+        "name": "splitting",
+        "status": "executed",
+        "elapsed_ms": 6356.838225998217,
+        "details": {}
+      },
+      {
+        "name": "document_model_load",
+        "status": "executed",
+        "elapsed_ms": 5286.91555000114,
+        "details": {}
+      },
+      {
+        "name": "embedding",
+        "status": "executed",
+        "elapsed_ms": 87911.6739530291,
+        "details": {}
+      },
+      {
+        "name": "upload",
+        "status": "executed",
+        "elapsed_ms": 2796.993342031783,
+        "details": {}
+      },
+      {
+        "name": "index_wait",
+        "status": "executed",
+        "elapsed_ms": 714.8481699987315,
+        "details": {}
+      }
+    ],
+    "indexed_vectors_count": 3175,
+    "storage_vectors_bytes": 9753600,
+    "conditions": {
+      "document_device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+      "document_dtype": "bfloat16",
+      "document_batch_size": 16,
+      "gpu_peak_allocated_bytes": 2915404288,
+      "gpu_peak_reserved_bytes": 6438256640,
+      "process_peak_rss_bytes": 2498748416
+    },
+    "timing_note": "Embedding/upload interleave; Qdrant optimization overlaps upload."
+  },
+  "expected_points": 3175,
+  "current_question": "multi_05",
+  "process_peak_rss_bytes": 2648383488,
+  "wall_time_ms": 133061.11420600064,
+  "failed_stage": null
+}

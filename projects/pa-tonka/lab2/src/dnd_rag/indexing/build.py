@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import resource
 import traceback
 from pathlib import Path
 from time import perf_counter
@@ -55,7 +56,19 @@ def build_index(config, settings, identity, *, on_stage=None):
     encoder = DocumentEncoder(config.embedding, settings)
     record('document_model_load', before)
     store = QdrantStore(settings)
-    ready = store.build(identity, chunks, encoder.iter_batches(chunks, corpus), on_stage=emit)
+    before = perf_counter()
+    try:
+        ready = store.build(identity, chunks, encoder.iter_batches(chunks, corpus), on_stage=emit)
+    except Exception as exc:
+        emit(
+            StageEvent(
+                name='index_build',
+                status='failed',
+                elapsed_ms=(perf_counter() - before) * 1000,
+                details={'message': str(exc)},
+            )
+        )
+        raise
     provenance = {
         **ready.build_provenance,
         'stages': [s.model_dump() for s in stages],
@@ -65,6 +78,7 @@ def build_index(config, settings, identity, *, on_stage=None):
             'document_batch_size': config.embedding.document_batch_size,
             'gpu_peak_allocated_bytes': torch.cuda.max_memory_allocated(),
             'gpu_peak_reserved_bytes': torch.cuda.max_memory_reserved(),
+            'process_peak_rss_bytes': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
         },
         'timing_note': 'Embedding/upload interleave; Qdrant optimization overlaps upload.',
     }

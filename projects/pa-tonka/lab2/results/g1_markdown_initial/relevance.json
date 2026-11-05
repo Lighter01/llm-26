@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "threshold": 0.5,
+  "formula": "intersection/min(chunk_length,evidence_length) >= 0.5, same file/body",
+  "questions": {
+    "phb_01": {
+      "relevant_ids": [
+        "74e6e72f-6020-5e73-a47f-c9b90bd72e74"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_02": {
+      "relevant_ids": [
+        "1eebeda1-1341-59b0-b302-8abf6bce8676",
+        "47b6b59a-e77e-57a7-905f-4117661dd279",
+        "bbf34791-92ec-5c0c-81e8-03b6f086cc00",
+        "cffb772a-e168-5114-821a-72b134543284",
+        "d0aa4a67-d3db-5125-b60a-7cda6a880e7c"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_03": {
+      "relevant_ids": [
+        "8107a9bf-8968-5299-b309-b438856cb0f9"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_04": {
+      "relevant_ids": [
+        "98a6fdc7-08a3-5605-8257-4fc9357ec983"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_05": {
+      "relevant_ids": [
+        "5cc32c68-3744-51a5-90e5-efbf4414571e",
+        "bbf34791-92ec-5c0c-81e8-03b6f086cc00",
+        "fda7e648-9b13-5330-846b-fc40945c1a39"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_01": {
+      "relevant_ids": [
+        "39cba3a7-909f-57c5-989c-1946a77cc182",
+        "c8507e6a-75a3-5463-b3d1-5d2fdd79782f"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_02": {
+      "relevant_ids": [
+        "443702ee-095d-5a9d-865f-eda5a177cb36",
+        "b8c4aa58-46db-527c-9b2a-e5b669f4e642"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_03": {
+      "relevant_ids": [
+        "33a54a52-6027-5cbc-abdd-0f3ca411faed"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_04": {
+      "relevant_ids": [
+        "c455b4fc-a1b5-55e3-80ec-4f868dfbedb4"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_05": {
+      "relevant_ids": [
+        "005ce4f4-9786-595c-9166-3965b58cc772",
+        "239a94c8-5ff7-56a7-82c0-f3527b0f5799",
+        "652142fe-1b9f-5a55-9a1b-171042df3154",
+        "7b5cec1f-23d7-5071-8e48-2b66a8e4efea"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_01": {
+      "relevant_ids": [
+        "199843ba-da9e-528b-ace1-e90cc833bba8"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_02": {
+      "relevant_ids": [
+        "05073a1d-7466-5fe0-a92f-2150186f888f"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_03": {
+      "relevant_ids": [
+        "1e13c557-c835-56cb-8cda-77b150c0c3b3"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_04": {
+      "relevant_ids": [
+        "c71b7b35-5b62-55b8-b3ea-a9437dacfaf6"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_05": {
+      "relevant_ids": [
+        "c0f6b351-b0cc-5c78-b1e4-b024a95e763d",
+        "ff3398bc-871b-5cc9-bb72-d27351de445e"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_01": {
+      "relevant_ids": [
+        "693fa925-8f06-5ede-9226-254f85ce818f",
+        "e419e3f5-2f7e-5e50-9b2f-02a9db9aeea0"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_02": {
+      "relevant_ids": [
+        "05073a1d-7466-5fe0-a92f-2150186f888f",
+        "9fbc6e3a-e780-538c-bba0-dc7b3055fd67"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_03": {
+      "relevant_ids": [
+        "381f205b-94b6-51bc-aa82-ce080538ba91",
+        "8e2753cf-7b9a-5696-802e-c56de8aaed62",
+        "99f37af4-7f44-5268-aed4-d9bc72c6423f",
+        "e3347a1a-e1d3-5936-a416-085fc3985f4a"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_04": {
+      "relevant_ids": [
+        "1627e085-8789-5f08-b4d7-bc08cf24b6d3",
+        "55fb6bb0-fc31-5a1f-a840-77e13b124146",
+        "5c0d3841-d679-5b57-842b-2407b8b87ba7",
+        "5f78fce7-2cd4-5923-967d-c8699b956bc1",
+        "7dfb68ed-e590-5994-8837-76cbf89597ee",
+        "b8505eae-b1c9-5702-ab03-bec68fb1cb42",
+        "e3e1bb04-a70b-5473-93a8-6699bd833dab"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_05": {
+      "relevant_ids": [
+        "199843ba-da9e-528b-ace1-e90cc833bba8",
+        "47b6b59a-e77e-57a7-905f-4117661dd279",
+        "692acd0e-0a58-550b-90fd-31587a24df44",
+        "cffb772a-e168-5114-821a-72b134543284"
+      ],
+      "no_relevant_chunks": false
+    }
+  }
+}

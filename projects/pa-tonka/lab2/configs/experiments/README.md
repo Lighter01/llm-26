@@ -54,4 +54,26 @@ gold и batch не меняют fingerprint. Dense игнорирует BM25 п�
 indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
 При grey после restart меняется только runtime max_optimization_threads на 1/2;
 фактическое действие сохраняется в metadata коллекции.
-Карта групп и результаты добавляются вместе с аналитическим runner.
+Карта групп — [study.yaml](study.yaml). Остальные девять конфигураций и сводка — Task 13.
+
+## Карта study
+
+| Поле | Тип / default | Значение |
+| --- | --- | --- |
+| schema_version | int, обязательно | Только 1. |
+| groups | mapping[str,group], обязательно | Имена групп, например G1..G5. |
+| group.requires_base | bool, обязательно | G1 false, зависимые G2–G5 true. |
+| group.selected_base_run | str/null, null | Имя completed retrieval-run под results; null блокирует dependent group. |
+| group.selection_reason | str/null, null | Причина выбора базы по EC@5, MRR@10 и затратам. |
+| group.comparisons | list[object], обязательно | Самостоятельные полные конфиги этой группы. |
+| comparison.config | str, обязательно | Project-relative YAML path; однозначно сопоставляется с --config. |
+| comparison.run | str/null, null | Имя сохранённого comparison run; исполнитель обновляет после завершения. |
+| comparison.reference_run | str/null, null | Контрольный run; default — selected_base_run. Для initial G1 null. |
+| comparison.changed_parameters | list[str], [] | Dotted paths полей YAML, точно соответствуют отличиям от reference snapshot. |
+
+Run/base/reference — безопасные имена папок, config — явный путь. База/reference должны
+быть completed, иметь тот же corpus/gold. Снимок group/reference/changes/reason пишется
+в run.json; последующее редактирование карты не меняет историю. Runner не меняет YAML.
+Карта не наследует параметры и не запускает следующую группу сама. Для G1 пока измеряется
+только Markdown baseline; зависимые базы остаются null до Task 13. Reuse-check не включается
+в обязательные 10 сравнений.

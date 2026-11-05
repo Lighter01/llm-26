@@ -22,6 +22,16 @@ def parser():
     selector = reset.add_mutually_exclusive_group(required=True)
     selector.add_argument('--config', type=Path)
     selector.add_argument('--index-id', help='Full SHA256 from a previous run')
+    experiment = commands.add_parser(
+        'experiment', help='Run a full retrieval experiment without LLM'
+    )
+    experiment.add_argument('--config', type=Path, required=True)
+    experiment.add_argument(
+        '--experiment-name', required=True, help='Unique safe results directory name'
+    )
+    experiment.add_argument('--rebuild', action='store_true')
+    experiment.add_argument('--study', type=Path, help='Optional study map; requires --group')
+    experiment.add_argument('--group', help='Group in the study; requires --study')
     return root
 
 
@@ -38,6 +48,26 @@ def main(argv=None):
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
         settings = load_settings(PROJECT_ROOT)
+        if args.command == 'experiment':
+            from dnd_rag.evaluation.retrieval_run import run_retrieval_experiment
+            from dnd_rag.evaluation.study import read_study_entry
+
+            if bool(args.study) != bool(args.group):
+                raise RagError('invalid_study', '--study and --group must be supplied together')
+            selection = (
+                read_study_entry(args.study, args.group, args.config, PROJECT_ROOT)
+                if args.study
+                else None
+            )
+            path = run_retrieval_experiment(
+                args.config,
+                args.experiment_name,
+                settings,
+                rebuild=args.rebuild,
+                selection=selection,
+            )
+            print(json.dumps({'results': str(path)}))
+            return 0
         config = load_experiment(args.config, project_root=PROJECT_ROOT) if args.config else None
         from dnd_rag.runtime.application import ensure_index, reset_index
         from dnd_rag.runtime.processes import RuntimeSession
@@ -61,6 +91,17 @@ def main(argv=None):
         return 2 if exc.code.startswith('invalid_') else 1
     except KeyboardInterrupt:
         print('Runtime interrupted; owned children stopped.', file=sys.stderr)
+        return 1
+    except Exception as exc:
+        import traceback
+
+        log_directory = PROJECT_ROOT / '.runtime'
+        log_directory.mkdir(exist_ok=True)
+        with (log_directory / 'errors.log').open('a') as stream:
+            traceback.print_exc(file=stream)
+        print(
+            json.dumps({'error': {'code': 'runtime_error', 'message': str(exc)}}), file=sys.stderr
+        )
         return 1
 
 

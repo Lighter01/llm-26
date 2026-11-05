@@ -11,3 +11,9 @@ def test_help_has_implemented_commands(capsys):
     assert main(['--help']) == 0
     output = capsys.readouterr().out
     assert 'build-index' in output and 'reset-index' in output
+
+
+def test_experiment_help_and_required_name(capsys):
+    assert main(['experiment', '--help']) == 0
+    assert '--experiment-name' in capsys.readouterr().out
+    assert main(['experiment', '--config', 'x.yaml']) == 2

@@ -148,7 +148,13 @@ def ensure_index(config, settings, session, *, rebuild=False, on_stage=None):
             name='corpus_validation', status='executed', elapsed_ms=(perf_counter() - before) * 1000
         )
     )
+    before = perf_counter()
     store = ensure_qdrant(settings, session)
+    record(
+        StageEvent(
+            name='qdrant_readiness', status='executed', elapsed_ms=(perf_counter() - before) * 1000
+        )
+    )
     identity = make_identity(config, corpus, library_versions(store.server_version()))
     before = perf_counter()
     inspection = store.inspect(identity)

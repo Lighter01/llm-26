@@ -4,12 +4,12 @@
 
 | Проверка | Наблюдение |
 | --- | --- |
-| Python / uv | system 3.13.1; uv 0.11.6. Project interpreter уточняется после sync. |
+| Python / uv | system 3.13.1; project uv-managed 3.13.13; uv 0.11.6. |
 | CUDA | Elevated nvidia-smi: RTX 3060 Laptop, 6144 MiB; driver 617.42, CUDA UMD 13.4. Sandbox NVML недоступен. |
 | Docker | CLI 29.9.2; Desktop initially stopped; `docker desktop start` выполнен. |
 | LLM | GGUF существует, 5060482240 bytes. llama-server не в PATH. Task 9 probe ещё не выполнена. |
 | Model / tokenizer revision | `hf models info google/embeddinggemma-2 --expand sha --format json`: f9972ac22e696a105c482202646979e33e4b5a1e. |
-| Qdrant | Выбран server/client 1.20.0; живые BM25/quantization/persistence ещё не проверены. |
+| Qdrant | Server/client 1.20.0; живые BM25/RRF/quantization/persistence PASS, детали ниже. |
 
 Закреплённые API: [EG2 card](https://huggingface.co/google/embeddinggemma-2),
 [Qdrant 1.20.0](https://github.com/qdrant/qdrant/releases/tag/v1.20.0),
@@ -71,3 +71,20 @@ runtime concurrency на 1 (на 2, если уже 1), записывает las
 
 После подключения общего Store.search проба повторена: 1 passed, 8.89 s;
 проверены и прямые native запросы, и фактическое общее ядро dense/hybrid.
+
+## Первый полный baseline — C2
+
+`experiment --config configs/experiments/g1_splitters/markdown.yaml --experiment-name g1_markdown_initial --study configs/experiments/study.yaml --group G1`
+→ completed/built,20 questions,3175 points,133.061s wall. Кэш HF уже заполнен C1;
+скачивание зависимостей/весов не входит в это время. BF16 batch16 сохранился без fallback.
+GPU allocated/reserved peak2.715/5.996GiB; процесс GPU worker peak RSS2.327GiB.
+Единичный NVML sample во время работы:5795MiB, GPU99%; это не измеренный пик всей VRAM.
+После завершения worker/runtime NVML sample:186MiB. Локальная LLM не запускалась.
+
+Повтор `g1_markdown_reuse_check` → completed/reused,16.339s, тот же build_id;
+tokenizer/splitting/document model/embedding/upload/index wait имеют elapsed_ms=null.
+Новых GPU workers нет (1 directory до/после). CPU query encoder загружается в каждом
+новом процессе; загрузка8.873s объясняет значительную часть reuse wall time.
+Метрики обоих runs совпали и воспроизведены офлайн без поиска.
+Числа, стадии и ограничения: [VALIDATION](VALIDATION.md),
+[baseline metrics](../../results/g1_markdown_initial/metrics.json).

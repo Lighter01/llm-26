@@ -78,3 +78,67 @@ def make_corpus(directory: Path):
         ''.join(json.dumps(r) + '\n' for r in records), encoding='utf-8'
     )
     return directory
+
+
+def make_gold(directory, corpus):
+    directory.mkdir(parents=True, exist_ok=True)
+    questions = []
+    for prefix in ('phb', 'dmg', 'mm', 'multi'):
+        filename = {'phb': 'xphb.md', 'dmg': 'xdmg.md', 'mm': 'xmm.md', 'multi': 'xphb.md'}[prefix]
+        book = corpus.books[filename]
+        for i in range(1, 6):
+            questions.append(
+                {
+                    'id': f'{prefix}_{i:02}',
+                    'question': f'{prefix} question {i}?',
+                    'reference_answer': 'Fixture answer',
+                    'answerable': True,
+                    'evidence': [
+                        {
+                            'fact': 'Fixture fact',
+                            'alternatives': [
+                                {
+                                    'file': filename,
+                                    'heading_path': ['Intro'],
+                                    'quote': book.body[1:20],
+                                    **book.coordinates(1, 20),
+                                }
+                            ],
+                        }
+                    ],
+                }
+            )
+    questions.extend(
+        {
+            'id': f'insufficient_{i:02}',
+            'question': f'Unknown {i}?',
+            'reference_answer': 'Not enough context',
+            'answerable': False,
+            'evidence': [],
+        }
+        for i in range(1, 4)
+    )
+    data = {
+        'schema_version': 1,
+        'questions': questions,
+        'corpus': corpus.passport(),
+        'raw_input_sha256': 'a' * 64,
+    }
+    path = write_yaml(directory / 'questions.yaml', data)
+    report = {
+        'status': 'PASS',
+        'output_state': 'written',
+        'errors': [],
+        'counts': {
+            'questions': 23,
+            'answerable': 20,
+            'insufficient': 3,
+            'facts': 20,
+            'alternatives': 20,
+            'matched_alternatives': 20,
+        },
+        'corpus': corpus.passport(),
+        'raw_input_sha256': 'a' * 64,
+    }
+    (directory / 'validation_report.json').write_text(json.dumps(report))
+    return path
