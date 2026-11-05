@@ -41,6 +41,7 @@ def test_reuse_never_splits_loads_or_embeds(tmp_path, monkeypatch, state, rebuil
 
     monkeypatch.setattr(application, 'ensure_qdrant', lambda *a: Store())
     monkeypatch.setattr(application, 'library_versions', lambda *a: versions)
+    monkeypatch.setattr(application, '_check_gpu_conflict', lambda *a: None)
 
     def worker(*a, **k):
         events.extend(['split', 'embed', 'upload', 'ready', 'worker_exited'])

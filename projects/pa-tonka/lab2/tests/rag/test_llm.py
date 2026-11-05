@@ -1,3 +1,4 @@
+import errno
 import json
 from types import SimpleNamespace as NS
 
@@ -112,7 +113,9 @@ def startup_inputs(tmp_path, monkeypatch, *, foreign=False, never_ready=False):
     def handle(request):
         if request.url.path == '/health':
             if not state['started']:
-                raise httpx.ConnectError('not running', request=request)
+                raise httpx.ConnectError(
+                    'not running', request=request
+                ) from ConnectionRefusedError(errno.ECONNREFUSED, 'connection refused')
             return httpx.Response(503 if never_ready else 200, json={'status': 'ok'})
         if request.url.path == '/props':
             return httpx.Response(

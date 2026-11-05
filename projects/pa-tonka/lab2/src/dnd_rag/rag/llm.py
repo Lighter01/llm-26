@@ -8,6 +8,7 @@ from langchain_core.messages import convert_to_openai_messages
 from langchain_openai import ChatOpenAI
 
 from dnd_rag.contracts import RagError
+from dnd_rag.runtime.preflight import native_llm_url
 
 
 @dataclass(frozen=True)
@@ -24,7 +25,7 @@ class LLMClient:
     def __init__(self, settings, profile, *, http_client=None):
         self.settings = settings
         self.profile = profile
-        self.native_url = settings.llm_base_url.rstrip('/').removesuffix('/v1')
+        self.native_url = native_llm_url(settings.llm_base_url)
         self.http = http_client or httpx.Client(timeout=profile.http_timeout_seconds)
         self.owns_http = http_client is None
         self.last_chat_response = {}

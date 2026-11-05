@@ -18,6 +18,7 @@ from dnd_rag.contracts import EnsureResult, RagError, ReadyIndex, StageEvent
 from dnd_rag.indexing.corpus import load_corpus
 from dnd_rag.indexing.identity import library_versions, make_identity
 from dnd_rag.indexing.store import QdrantStore
+from dnd_rag.runtime.preflight import connection_refused, native_llm_url
 
 
 def ensure_qdrant(settings, session):
@@ -25,8 +26,8 @@ def ensure_qdrant(settings, session):
     store = QdrantStore(settings)
     try:
         server = store.server_version()
-    except RagError:
-        if settings.qdrant_url.rstrip('/') not in (
+    except RagError as exc:
+        if not connection_refused(exc) or settings.qdrant_url.rstrip('/') not in (
             'http://127.0.0.1:6333',
             'http://localhost:6333',
         ):
@@ -70,17 +71,21 @@ def ensure_qdrant(settings, session):
 
 
 def _check_gpu_conflict(settings):
-    native = settings.llm_base_url.removesuffix('/v1').rstrip('/')
+    native = native_llm_url(settings.llm_base_url)
     try:
         response = httpx.get(native + '/health', timeout=1)
-    except httpx.TransportError:
-        return
-    if response.status_code in (200, 503):
+    except httpx.TransportError as exc:
+        if connection_refused(exc):
+            return
         raise RagError(
-            'gpu_conflict',
-            'A llama-server is running at the configured endpoint; '
-            'stop it before GPU document preparation',
-        )
+            'llm_preflight_failed',
+            'Cannot verify that the LLM endpoint is free; GPU preparation was not started',
+        ) from exc
+    raise RagError(
+        'gpu_conflict',
+        f'The configured LLM endpoint responded with HTTP {response.status_code}; '
+        'stop that service before GPU document preparation',
+    )
 
 
 def run_build_worker(config, settings, identity, session, on_stage):

@@ -13,6 +13,7 @@ import httpx
 
 from dnd_rag.contracts import RagError
 from dnd_rag.rag.llm import LLMClient
+from dnd_rag.runtime.preflight import connection_refused
 
 
 def resolve_binary(settings):
@@ -142,7 +143,12 @@ def start_llama(settings, profile, session, *, http_client=None):
     try:
         try:
             response = client.http.get(client.native_url + '/health', timeout=2)
-        except httpx.TransportError:
+        except httpx.TransportError as exc:
+            if not connection_refused(exc):
+                raise RagError(
+                    'llm_preflight_failed',
+                    'Cannot verify that the LLM endpoint is free; no server was started',
+                ) from exc
             response = None
         if response is not None:
             raise RagError(
