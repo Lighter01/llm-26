@@ -201,3 +201,18 @@ uv run python scripts/start_llama_server.py --llm-profile configs/llm/local.yaml
 ```bash
 uv run --group test python -m pytest tests/rag/integration/test_llama_live.py --run-llama
 ```
+
+## Контекст и цитаты QA
+
+QA-ядро использует только текущий вопрос и первые пять hits. Полный prompt вместе
+с chat template ограничен 6400 LLM-токенами; ответ — максимум 1536, запас — 256.
+При переполнении целые чанки с конца удаляются с пересчётом. Ошибка
+`context_budget_exceeded` предлагает сократить вопрос и не запускает генерацию.
+Пустая успешная retrieval-выдача даёт `no_context`, пустые sources и null для usage/
+generation timing. Ошибка зависимости остаётся ошибкой.
+
+В sources попадают только действительно использованные `[n]` из текущего реестра,
+с полным исходным текстом, превью до 400 символов и точными координатами. Номера
+сохраняются, неизвестные `[n]` дают `unknown_citation`. Код, экранированные скобки
+и настоящие Markdown links/images не считаются цитатами. `answer_truncated` означает
+finish_reason=length; приложение сохраняет текст без скрытой повторной генерации.

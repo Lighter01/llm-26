@@ -2,8 +2,8 @@
 
 Готовые Markdown XPHB/XDMG/XMM и `source_map.jsonl` поступают в indexing:
 canonical body → token splitters → embedding input → GPU document embeddings →
-Qdrant. CPU query encoder и retrieval используют готовую коллекцию. Следующий
-этап разработки добавит prompt/LLM и проверку числовых цитат; сейчас QA не готов.
+Qdrant. CPU query encoder и retrieval используют готовую коллекцию. QA-ядро
+упаковывает исходные фрагменты в prompt локальной LLM и проверяет числовые цитаты.
 
 [config.py](../../src/dnd_rag/config.py) читает строгий YAML и локальные настройки.
 Конфиги экспериментов задают изменяемые параметры retrieval, `.env` — адреса/пути,
@@ -12,7 +12,7 @@ Qdrant. CPU query encoder и retrieval используют готовую ко�
 содержит общие типы и RagError без зависимости от транспорта.
 
 У системы два токенайзера: embedding tokenizer измеряет чанки и вход эмбеддера;
-LLM tokenizer впоследствии будет считать полный chat prompt. Их числа не взаимозаменяемы.
+LLM tokenizer считает полный chat prompt. Их числа не взаимозаменяемы.
 Сырой `page_content` предназначен для цитат/BM25/оценки; производный `embedding_text`
 меняет только представление для модели. Координаты Unicode и строки относятся к body,
 без YAML и одной пустой строки после него. Метаданные печатных страниц наследуются
@@ -66,7 +66,7 @@ dense его не создаёт; поиск использует raw page_conte
 `runtime/application.ensure_index` сначала валидирует corpus и паспорт готовой коллекции.
 Только при необходимости запускает `indexing.build` отдельным процессом: tokenizer →
 split/metadata/IDs → GPU encoder → upload/index readiness. Документная модель завершается
-вместе с worker; следующий этап загрузит CPU QueryEncoder. В `.runtime/builds/<uuid>/`
+вместе с worker; затем загружается CPU QueryEncoder. В `.runtime/builds/<uuid>/`
 остаются immutable request, stages/result и worker.log для диагностики; это не кэш.
 `reset_index` — отдельная ветка без ensure/build: по config вычисляет текущий identity,
 по index_id вообще не читает corpus/gold/tokenizer и удаляет только проверенную коллекцию.
@@ -126,3 +126,18 @@ descriptor project.lock (проверено на живом PID). Уже зан�
 prefix учитывает сервер. Реальные usage23/6027 совпали с подсчётом. Thinking=false,
 один slot, auto fit/context shift/prompt cache выключены. Native response hook сохраняет
 timings/usage этого же HTTP-вызова; второго запроса генерации нет.
+
+`rag/context.py` передаёт первые пять исходных фрагментов вместе с вопросом, system
+и явным списком номеров. Полный chat prompt должен занимать не более 6400 токенов:
+8192 − 1536 − 256. При превышении удаляется целиком последний чанк, prompt считается
+снова. Если не входит даже первый, generation не вызывается. System prompt — ресурс
+пакета `rag/prompts/system.txt`, доступный независимо от рабочего каталога.
+
+`rag/service.py` выполняет один retrieval и не более одной генерации; истории нет.
+Пустая успешная выдача даёт no_context без обращения к LLM. AskTrace хранит реально
+использованные messages, frozen registry и raw response для будущего QA-аудита.
+`rag/citations.py` распознаёт `[n]` через Markdown parser вне кода, escapes и настоящих
+links/images. Источники возвращаются только для допустимых использованных номеров,
+без перенумерации. Неизвестные номера и finish_reason=length дают warnings; исходный
+ответ сохраняется. Snippet — первые 400 Unicode-символов исходного чанка, координаты
+и атрибуция страниц остаются прежними. Наличие номера не доказывает смысл цитаты.

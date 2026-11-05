@@ -142,3 +142,43 @@ def make_gold(directory, corpus):
     }
     (directory / 'validation_report.json').write_text(json.dumps(report))
     return path
+
+
+def make_hits(count=5):
+    import uuid
+
+    from dnd_rag.contracts import Chunk, ChunkMetadata, RetrievalHit, SectionAttribution
+
+    result = []
+    for i in range(count):
+        content = f'Passage {i + 1}: A creature follows this rule.\n' * 15
+        start = i * 1000
+        chunk = Chunk(
+            page_content=content,
+            metadata=ChunkMetadata(
+                chunk_id=str(uuid.uuid5(uuid.NAMESPACE_URL, f'test-chunk-{i}')),
+                index_id='a' * 64,
+                source_file='xphb.md',
+                body_sha256='b' * 64,
+                book_id='XPHB',
+                book_title="Player's Handbook (2024)",
+                source_system='5etools',
+                upstream_sha='f' * 40,
+                start_char=start,
+                end_char=start + len(content),
+                line_start=1 + i * 20,
+                line_end=15 + i * 20,
+                token_count=200,
+                sections=[
+                    SectionAttribution(
+                        heading_path=['Rules', 'Creatures'],
+                        section_start_char=0,
+                        section_end_char=10000,
+                        printed_pages=[42],
+                        page_attribution='inherited_section_start',
+                    )
+                ],
+            ),
+        )
+        result.append(RetrievalHit(rank=i + 1, score=0.5, score_kind='cosine', chunk=chunk))
+    return result
