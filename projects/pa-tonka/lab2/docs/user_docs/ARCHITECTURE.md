@@ -45,3 +45,20 @@ DocumentEncoder явно требует CUDA и выбранный BF16/FP32; Qu
 query — штатный prompt_name модели. Весь input считается со special tokens до encode,
 без silent truncation. Размерность сокращается библиотечным API, Normalize сохраняется;
 векторы проверяются на форму/конечность и передаются в float32.
+
+`indexing/identity.py` вычисляет SHA256 canonical JSON эффективного build_spec:
+corpus/map/metadata, chunking, embedding input/model/revision/dtype/dimension,
+HNSW build, quantization, mode и активный BM25 preprocessing, версии алгоритмов/библиотек.
+Query ef_search/k1/b/RRF/prompt, batch, пути cache/gold и имя run не входят.
+Имена коллекций `rag_<полный hash>`; UUIDv5 points зависят от index_id/file/char range.
+Одинаковые тексты разных мест не склеиваются.
+
+`indexing/store.py` управляет только указанной собственной коллекцией. Metadata коллекции
+хранят owner/build_spec/index_id/build_id/expected_points и building→ready; фиктивного
+point нет. Upsert повторяет те же IDs. Ready выставляется после schema/payload/count и
+дренирования очереди оптимизаций. BM25 для hybrid строится после upload отдельным шагом,
+dense его не создаёт; поиск использует raw page_content. Для квантования оригиналы
+сохраняются, поиск не rescoring. Совместимая ready-коллекция переиспользуется полностью;
+отсутствующая/неполная или `--rebuild` проходят весь build, без кэшей стадий.
+Сетевая ошибка и недоказанное владение не приводят к удалению. Возобновление optimizer
+после restart описано в [пробах](../rag/TECHNICAL_PROBES.md).

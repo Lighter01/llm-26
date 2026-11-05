@@ -43,3 +43,28 @@ CPU load 3.582 s, четыре последовательных query 87.9/93.9/
 Максимум полного embedding input явно ограничен 8192 независимо от большого
 tokenizer model_max_length. Подробные исходные числа —
 [embedding-probe.json](../../.agents/work/implementation/embedding-probe.json).
+
+## Qdrant — PASS (C1)
+
+`uv run --group test python -m pytest tests/rag/integration/test_qdrant_live.py --run-qdrant -q`
+→ 1 passed, 9.07 s. Server 1.20.0 commit
+222b2e44ab1c3f17e8246396ead6558e45041df7, qdrant-client 1.20.0.
+Compose image `qdrant/qdrant:v1.20.0`, volume `dnd_rag_lab2_qdrant`.
+На 1024 fixed-векторах 128d для каждого none/scalar_int8/TurboQuant bits4:
+1024 indexed, dense находит исходный vector, native payload BM25 — уникальный термин,
+RRF с c=2/weights=[1,1] даёт совместный первый hit со score=1.0.
+QuantizationSearchParams ignore=false/rescore=false, исходные float32 сохранены.
+Проверены collection metadata, reset twice и persistence после restart без удаления volume.
+Disposable коллекции удалены. [Числа](../../.agents/work/implementation/qdrant-probe.json).
+
+Технические thresholds: indexing_threshold=1 KB (build identity), full_scan_threshold=10 KB
+(планировщик query; API не разрешает меньше 10). Ready требует green, валидные schema/
+payload/count, реальные indexed vectors для достаточно большого fixture и пустые
+running/queued optimizations; approximate indexed count не обязан равняться points.
+
+После restart 1.20.0 может приостановить optimizer (`grey`) полной ready-коллекции.
+Пустой optimizer diff из документации не возобновил его в пробе. Отдельная проба
+подтвердила: изменение max_optimization_threads будит очередь. Store меняет только
+runtime concurrency на 1 (на 2, если уже 1), записывает last_optimizer_resume в metadata
+и ждёт завершения. Ready build_id сохраняется; split/embed/upload не повторяются.
+Неполная building-коллекция всё равно пересоздаётся целиком.

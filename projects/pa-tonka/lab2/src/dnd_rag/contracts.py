@@ -50,3 +50,71 @@ class DraftMetadata(Contract):
 class ChunkDraft(Contract):
     page_content: str
     metadata: DraftMetadata
+
+
+class ChunkMetadata(DraftMetadata):
+    chunk_id: str
+    index_id: str
+
+
+class Chunk(Contract):
+    page_content: str
+    metadata: ChunkMetadata
+
+    def to_document(self):
+        from langchain_core.documents import Document
+
+        return Document(page_content=self.page_content, metadata=self.metadata.model_dump())
+
+
+class ChunkRef(Contract):
+    chunk_id: str
+    source_file: str
+    body_sha256: str
+    start_char: int
+    end_char: int
+    line_start: int
+    line_end: int
+    token_count: int
+
+
+class IndexIdentity(Contract):
+    index_id: str
+    collection: str
+    build_spec: dict
+
+
+class ReadyIndex(IndexIdentity):
+    build_id: str
+    expected_points: int
+    build_provenance: dict
+
+
+class StageEvent(Contract):
+    name: str
+    status: Literal['executed', 'reused', 'skipped', 'failed']
+    elapsed_ms: float | None
+    details: dict = {}
+
+
+class EnsureResult(Contract):
+    index: ReadyIndex
+    action: Literal['built', 'reused', 'rebuilt']
+    reason: str
+    stages: list[StageEvent]
+
+
+class RetrievalHit(Contract):
+    rank: int
+    score: float
+    score_kind: Literal['cosine', 'rrf']
+    chunk: Chunk
+
+
+class RetrievalResult(Contract):
+    question: str
+    index_id: str
+    build_id: str
+    mode: Literal['dense', 'hybrid']
+    hits: list[RetrievalHit]
+    timings_ms: dict[str, float]

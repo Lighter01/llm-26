@@ -50,4 +50,8 @@ gold и batch не меняют fingerprint. Dense игнорирует BM25 п�
 стадии. Кэшей chunks/vectors и достройки dense → hybrid нет.
 
 На текущем этапе подготовлен [baseline G1](g1_splitters/markdown.yaml).
+В resolved snapshot сохраняются shard=1, datatype=float32, Cosine,
+indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
+При grey после restart меняется только runtime max_optimization_threads на 1/2;
+фактическое действие сохраняется в metadata коллекции.
 Карта групп и результаты добавляются вместе с аналитическим runner.

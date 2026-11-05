@@ -8,6 +8,10 @@
 - `embedding.py`: `prepare_embedding_text`, `load_token_counter`, `DocumentEncoder`
   (GPU batched iterator) и `QueryEncoder.encode(question)` (CPU FP32).
   Тяжёлые импорты только при явной загрузке tokenizer/модели.
+- `identity.py`: `make_identity`/`assign_ids`, canonical JSON, версии и фиксированные
+  технические thresholds; не загружает tokenizer ради reuse/reset.
+- `store.py`: inspect/build/manifest/reset только одной owned коллекции, batching,
+  BM25 schema, quantization, readiness и provenance. Загрузка Qdrant отделена от worker.
 
 ChunkDraft ещё не имеет index_id/chunk_id. Metadata и текст описаны в общих
 [contracts](../contracts.py). API не запускает ingestion и не меняет корпус.
