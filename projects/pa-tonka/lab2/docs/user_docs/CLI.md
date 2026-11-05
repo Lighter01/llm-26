@@ -47,8 +47,8 @@ uv создаёт окружение и устанавливает пакет. T
 YAML эксперимента выбирает corpus/chunking/embedding/index/retrieval/evaluation,
 а не адреса сервисов. [Все поля и defaults](../../configs/experiments/README.md).
 LLM-профиль отдельно фиксирует окно 8192, максимум ответа 1536, запас 256,
-максимум 5 чанков и thinking=false. Размещение GPU/batch/KV ещё не измерено;
-поля null не являются готовым профилем запуска Nemotron.
+максимум 5 чанков и thinking=false. Размещение GPU/batch/KV измерено в Task9;
+полный справочник полей и локальный профиль приведены ниже.
 
 Live-проверки включаются только явно: `--run-qdrant`, `--run-models`, `--run-llama`
 для соответствующих tests/rag/integration. Skipped не подтверждают совместимость.
@@ -150,3 +150,54 @@ metrics = recompute_saved_metrics(Path('results/g1_markdown_initial'))
 Это Python API, отдельной CLI-команды для recompute нет. Полные правила сравнения и поля
 карты — в [справочнике](../../configs/experiments/README.md). QA/demo/HTTP и полная серия
 из 10 вариантов будут реализованы после C2; их команды пока не доступны.
+
+## llama.cpp и LLM-профиль
+
+Используется найденный `~/.llama-app/llama`, build11046/60081bb2b, команда `serve`.
+Локальный `.env` задаёт LLAMA_SERVER_BIN=/home/lighter_01/.llama-app/llama. Для отдельного
+`llama-server` задайте его путь и `server_subcommand: null` в профиле. Бинарник/веса
+остаются вне проекта, первая индексация всегда завершается до запуска LLM.
+
+| Поле local.yaml | Default / значения | Назначение |
+| --- | --- | --- |
+| context_size | 8192, фиксировано | Полное окно, fit/context shift выключены. |
+| max_output_tokens | 1536, фиксировано | Максимум генерации, не требуемая длина ответа. |
+| safety_margin | 256, фиксировано | Резерв; полный input ≤6400. |
+| max_context_chunks | 5, фиксировано | Максимум первых retrieval hits для QA. |
+| thinking | false, фиксировано | --reasoning off и enable_thinking=false в count/generate. |
+| server_subcommand | null / serve | null: standalone llama-server; serve: установленный unified llama. |
+| model_alias | dnd-nemotron | Имя модели в локальном HTTP API. |
+| gpu_layers | null / int≥0 | Обязательно при launch; local99 означает максимум доступных слоёв. |
+| batch_size | null / int>0 | Logical prompt batch; local512, влияет на throughput/память. |
+| ubatch_size | null / int>0, ≤batch | Physical prompt batch; local128, влияет на память. |
+| cache_type_k / cache_type_v | null / f16,q8_0,q4_0 | Обязательны при launch; local q8_0/q8_0, тип KV cache. |
+| kv_offload | true | GPU KV; false переносит KV в CPU RAM. |
+| flash_attention | on / off, on | Attention backend; local on. YAML on заключать в кавычки. |
+| threads | int>0, 8 | CPU generation и prompt threads. |
+| temperature | float≥0, 0.0 | Greedy sampling при0; профиль явно фиксирован. |
+| top_p | (0,1], 1.0 | Nucleus sampling. |
+| top_k | int≥0, 40 | Sampling candidates. |
+| min_p | [0,1], 0.0 | Sampling cutoff. |
+| seed | int≥0, 42 | Seed; не обещание побитовой воспроизводимости на всех устройствах. |
+| startup_timeout_seconds | float>0, 120 | Ожидание readiness, не лимит QA. |
+| http_timeout_seconds | float>0, 180 | HTTP timeout; ориентир30s не timeout. |
+
+Параметры размещения меняются технической пробой, без автоматического fallback. Окно,
+резерв, модель и thinking без решения пользователя не меняются. В локальном профиле
+уже проверены gpu_layers=99 и q8_0 KV; эти параметры не задают dtype эмбеддера.
+Native count/generation используют одну template конфигурацию. ChatOpenAI1.7.4 посылает
+лимит как max_completion_tokens; установленный llama.cpp его соблюдает.
+
+Отдельный запуск сервера (занимает project lock, поэтому не запускайте параллельно demo):
+
+```bash
+uv run python scripts/start_llama_server.py --llm-profile configs/llm/local.yaml
+```
+
+Это тонкая обёртка над тем же launcher. Ctrl+C останавливает созданный процесс;
+`.runtime/llama/server.log` и instance.json сохраняют диагностику/argv/profile/props.
+Занятый LLM_BASE_URL даёт llm_conflict, запуск не завершает чужие процессы. Проба:
+
+```bash
+uv run --group test python -m pytest tests/rag/integration/test_llama_live.py --run-llama
+```

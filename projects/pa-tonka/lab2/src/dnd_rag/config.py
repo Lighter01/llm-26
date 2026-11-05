@@ -144,14 +144,29 @@ class LLMProfile(ConfigModel):
     safety_margin: Literal[256] = 256
     max_context_chunks: Literal[5] = 5
     thinking: Literal[False] = False
-    # Placement is deliberately unprobed until Task 9.
-    gpu_layers: int | None = None
-    batch_size: int | None = None
-    ubatch_size: int | None = None
-    cache_type_k: str | None = None
-    cache_type_v: str | None = None
+    server_subcommand: Literal['serve'] | None = None
+    model_alias: str = 'dnd-nemotron'
+    gpu_layers: int | None = Field(default=None, ge=0)
+    batch_size: int | None = Field(default=None, gt=0)
+    ubatch_size: int | None = Field(default=None, gt=0)
+    cache_type_k: Literal['f16', 'q8_0', 'q4_0'] | None = None
+    cache_type_v: Literal['f16', 'q8_0', 'q4_0'] | None = None
+    kv_offload: bool = True
+    flash_attention: Literal['on', 'off'] = 'on'
+    threads: int = Field(default=8, gt=0)
+    temperature: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    top_p: float = Field(default=1.0, gt=0, le=1, allow_inf_nan=False)
+    top_k: int = Field(default=40, ge=0)
+    min_p: float = Field(default=0.0, ge=0, le=1, allow_inf_nan=False)
+    seed: int = Field(default=42, ge=0)
     startup_timeout_seconds: float = Field(default=120.0, gt=0)
     http_timeout_seconds: float = Field(default=180.0, gt=0)
+
+    @model_validator(mode='after')
+    def check_batches(self):
+        if self.batch_size and self.ubatch_size and self.ubatch_size > self.batch_size:
+            raise ValueError('ubatch_size must not exceed batch_size')
+        return self
 
 
 class RuntimeSettings(ConfigModel):

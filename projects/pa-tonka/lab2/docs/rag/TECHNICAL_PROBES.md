@@ -88,3 +88,30 @@ tokenizer/splitting/document model/embedding/upload/index wait имеют elapse
 Метрики обоих runs совпали и воспроизведены офлайн без поиска.
 Числа, стадии и ограничения: [VALIDATION](VALIDATION.md),
 [baseline metrics](../../results/g1_markdown_initial/metrics.json).
+
+## Task9 — Nemotron / точный prompt: PASS
+
+Найден установленный unified llama.cpp `~/.llama-app/llama serve`:
+0.4.1-dev, build11046, commit60081bb2b (Clang19.1.7). GGUF тот же согласованный
+NVIDIA-Nemotron-3.5-Bolt-E4B-UD-Q4_K_XL.gguf,5060482240B, architecture gemma4/42 blocks.
+Это checkpoint Nemotron на Gemma4, не fallback на другую модель.
+
+Профиль configs/llm/local.yaml:8192/1536/256,thinking=false,slot1,gpu_layers99,
+batch512/ubatch128,q8_0 K/V,KV offload=true,flash on,threads8,temperature0/top_p1/
+top_k40/min_p0/seed42. Fit,context shift,prompt caching выключены. Шаблон из GGUF.
+Native `/apply-template` использует тот же chat parser, что Chat Completions;
+`/tokenize` add_special=true/parse_special=true. ChatOpenAI1.7.4 передаёт
+max_completion_tokens; installed server соблюдает предел.
+
+`pytest tests/rag/integration/test_llama_live.py --run-llama -q`:
+первый запуск1 passed16.63s, повтор с ресурсами1 passed8.25s. Count/usage23=23 и
+6027=6027; near-budget prompt из реальных passages, без reasoning/truncation.
+Первый cold startup11.011s, повтор2.654s. В повторе short3 output tokens274.2ms;
+6027 input/32 output —3.912s (технический limit32, finish=length, не оценка QA).
+GPU used samples:before672MiB,ready4245,short4249,near-budget4279,after672.
+Это NVML по всей GPU, не private peak процесса. Child peak RSS5557403648B.
+Нативный процесс действительно сохранил inherited project.lock descriptor.
+
+[Паспорт пробы](../../.agents/work/implementation/llama-probe.json),
+initial probe сохранён отдельно. Сервер штатно остановлен, embedding GPU не запускался.
+Замеры полного ответа/нескольких прогретых QA и большой context будут выполнены в C3.

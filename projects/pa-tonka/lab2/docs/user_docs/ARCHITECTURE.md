@@ -113,3 +113,16 @@ hash gold; reset коллекции не лишает run проверяемос
 `evaluation/study.py` проверяет простую YAML-карту сравнений: явно выбранная completed база,
 однозначный comparison, общий corpus/gold и фактические изменённые поля config snapshot.
 Нет наследования или автоматического DAG; runner не переписывает study.yaml после запуска.
+
+`runtime/llama.py` запускает установленный llama.cpp отдельным процессом через RuntimeSession.
+Локально найден unified `~/.llama-app/llama serve`, build11046/60081bb2b: это тот же
+сервер llama.cpp. Subcommand задан явно в LLM-профиле, путь — в .env. Процесс наследует
+descriptor project.lock (проверено на живом PID). Уже занятый endpoint отклоняется:
+полный профиль чужого запуска нельзя подтвердить, чужой процесс не завершается.
+
+`rag/llm.py` обращается к Chat Completions через ChatOpenAI. Native `/apply-template`
+использует те же messages/chat_template_kwargs/reasoning_effort, `/tokenize` считает
+весь полученный prompt с add_special=true/parse_special=true. BOS, system и generation
+prefix учитывает сервер. Реальные usage23/6027 совпали с подсчётом. Thinking=false,
+один slot, auto fit/context shift/prompt cache выключены. Native response hook сохраняет
+timings/usage этого же HTTP-вызова; второго запроса генерации нет.
