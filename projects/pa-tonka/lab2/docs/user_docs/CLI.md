@@ -149,7 +149,7 @@ metrics = recompute_saved_metrics(Path('results/g1_markdown_initial'))
 
 Это Python API, отдельной CLI-команды для recompute нет. Полные правила сравнения и поля
 карты — в [справочнике](../../configs/experiments/README.md). Demo/API реализованы ниже;
-QA-аналитика и полная серия из 10 вариантов остаются следующими задачами после C3.
+QA-аналитика реализована ниже; серия из10 вариантов выполняется в Task13.
 
 ## llama.cpp и LLM-профиль
 
@@ -288,3 +288,43 @@ api_ready/ui_started с накопленным временем. Для reuse GP
 соответствующие подготовительные стадии имеют status=reused, elapsed_ms=null.
 LLM argv/profile/model/template hashes — `.runtime/llama/instance.json`; журналы —
 `.runtime/llama/server.log` и `.runtime/ui.log`. Это диагностика, не кэш индексации.
+
+## Сохранённый QA-запуск
+
+```bash
+uv run python -m dnd_rag evaluate-qa \
+  --config configs/experiments/g1_splitters/markdown.yaml \
+  --llm-profile configs/llm/local.yaml --experiment-name qa_markdown
+# Необязательный --include-insufficient добавляет3 отдельных вопроса.
+```
+
+Обязательны `--config PATH`, `--llm-profile PATH`, `--experiment-name NAME`. Флаг
+`--include-insufficient` по умолчанию false:20 основных вопросов; true:20+3.
+Запуск занимает общий runtime lock, резервирует новое имя results до тяжёлой
+работы, проверяет gold/индекс, выполняет build при необходимости, загружает один
+CPU query encoder, затем Nemotron. UI не запускается. На каждый вопрос вызывается
+один RagService.ask; контекст для проверки не ищется повторно. Повтор с тем же
+именем запрещён, в том числе если рецензент уже изменил CSV.
+
+Общие config.yaml/resolved_config.yaml/gold.yaml/run.json дополняются файлами:
+
+- `llm_profile.yaml`: точный вход; `resolved_llm_profile.yaml`: все эффективные поля.
+- `prompts/system.txt` и `prompts/context_builder.py`: snapshots system и сборщика
+  динамического блока. Их hashes и фактический server model/template/profile — в run.json.
+- `qa_answers.jsonl`: вопрос/категория, raw_answer и AskResult, фактический retrieval,
+  context (IDs/budget), полные messages и citation_registry (все переданные raw chunks),
+  used/unknown IDs, usage/finish/warnings/timings, native response и structural_diagnostics.
+- `qa_review.csv`: наблюдаемые поля и пустые смысловые критерии correctness, completeness,
+  citation_support с отдельными *_reason; missing_facts, uncited_claims, reviewer,
+  review_method, reviewed_at, review_version. Изначально review_status=not_reviewed.
+- `qa_summary.json`: expected/completed/failed/unattempted и timings для primary и
+  insufficient раздельно; структурные наблюдения отделены от смысловых оценок.
+
+Рецензент заполняет каждый критерий yes/partial/no/not_applicable с обоснованием
+и review_status=reviewed/needs_review. Для агентской помощи review_method=agent_assisted,
+для человеческой проверки human. Программа не делает correctness из существования
+номера цитаты и не запускает LLM-as-judge. Пропущенная generation остаётся null,
+времена warm исключают первый QA всего запуска. При сбое сохраняются предыдущие
+ответы, строка ошибки и failed-паспорт/сводка; такой запуск не считается QA20.
+
+Реальный финальный QA20 выполняется после C4 на выбранном профиле (Task14).

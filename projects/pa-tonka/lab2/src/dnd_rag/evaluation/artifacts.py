@@ -1,16 +1,86 @@
 """Unique run directories, immutable input copies, and atomic status updates."""
 
+import csv
 import json
+import os
+import platform
 import re
 import shutil
+import subprocess
 import uuid
 from pathlib import Path
+from statistics import mean, median
 from time import perf_counter
 
 import yaml
 
-from dnd_rag.contracts import RagError
+from dnd_rag.contracts import RagError, StageEvent
+from dnd_rag.indexing.identity import FULL_SCAN_THRESHOLD, INDEXING_THRESHOLD
 from dnd_rag.indexing.store import utc_now
+
+
+def summary_statistics(values):
+    if not values:
+        return None
+    return {'mean': mean(values), 'median': median(values), 'max': max(values), 'min': min(values)}
+
+
+def code_provenance(root):
+    def git(args):
+        result = subprocess.run(['git', *args], cwd=root, capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else None
+
+    return {
+        'git_commit': git(['rev-parse', 'HEAD']),
+        'git_status': git(['status', '--short', '--', '.']),
+        'python': platform.python_version(),
+        'platform': platform.platform(),
+        'cpu_count': os.cpu_count(),
+        'ram_bytes': os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES'),
+    }
+
+
+def resolved_config(config):
+    return {
+        **config.model_dump(mode='json'),
+        'fixed': {
+            'text_only': True,
+            'distance': 'Cosine',
+            'normalize_embeddings': True,
+            'stored_datatype': 'float32',
+            'vector_name': 'dense',
+            'shard_number': 1,
+            'indexing_threshold_kb': INDEXING_THRESHOLD,
+            'full_scan_threshold_kb': FULL_SCAN_THRESHOLD,
+            'document_device': 'cuda',
+            'query_device': 'cpu',
+            'query_dtype': 'float32',
+            'quantization_rescore': False,
+            'quantization_ignore': False,
+            'rrf_weights': [1.0, 1.0],
+            'max_embedding_input_tokens': 8192,
+        },
+    }
+
+
+def record_elapsed(writer, name, before):
+    writer.record_stage(
+        StageEvent(name=name, status='executed', elapsed_ms=(perf_counter() - before) * 1000)
+    )
+
+
+def index_metadata(ensured):
+    index = ensured.index
+    return {
+        'index_id': index.index_id,
+        'build_id': index.build_id,
+        'collection': index.collection,
+        'build_spec': index.build_spec,
+        'index_action': ensured.action,
+        'index_reason': ensured.reason,
+        'build_provenance': index.build_provenance,
+        'expected_points': index.expected_points,
+    }
 
 
 def validate_run_name(name):
@@ -87,6 +157,16 @@ class RunWriter:
     def append_jsonl(self, name, row):
         with (self.path / name).open('a', encoding='utf-8') as stream:
             stream.write(json.dumps(row, ensure_ascii=False, allow_nan=False) + '\n')
+
+    def append_csv(self, name, fields, row):
+        target = self.path / name
+        new = not target.exists()
+        with target.open('a', encoding='utf-8', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=fields)
+            if new:
+                writer.writeheader()
+            if row is not None:
+                writer.writerow(row)
 
     def finish(self, status, *, error=None):
         self.update_metadata(

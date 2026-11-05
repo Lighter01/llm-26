@@ -25,3 +25,10 @@ def test_service_commands_expose_fixed_startup_profiles(capsys):
     assert main(['demo', '--help']) == 0
     assert '--llm-profile' in capsys.readouterr().out
     assert main(['demo', '--config', 'x.yaml']) == 2
+
+
+def test_qa_help_requires_named_profile_run(capsys):
+    assert main(['evaluate-qa', '--help']) == 0
+    output = capsys.readouterr().out
+    assert '--include-insufficient' in output and '--llm-profile' in output
+    assert main(['evaluate-qa', '--config', 'x.yaml', '--llm-profile', 'llm.yaml']) == 2

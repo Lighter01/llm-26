@@ -135,7 +135,7 @@ timings/usage этого же HTTP-вызова; второго запроса �
 
 `rag/service.py` выполняет один retrieval и не более одной генерации; истории нет.
 Пустая успешная выдача даёт no_context без обращения к LLM. AskTrace хранит реально
-использованные messages, frozen registry и raw response для будущего QA-аудита.
+использованные messages, frozen registry и raw response для QA-аудита.
 `rag/citations.py` распознаёт `[n]` через Markdown parser вне кода, escapes и настоящих
 links/images. Источники возвращаются только для допустимых использованных номеров,
 без перенумерации. Неизвестные номера и finish_reason=length дают warnings; исходный
@@ -153,3 +153,10 @@ Retrieval продолжает обслуживаться. Конфиг, мод�
 дожидается HTTP API перед запуском Streamlit; RuntimeSession владеет дочерними LLM/UI
 и освобождает lock после их остановки. Retrieval-only не импортирует LLM-профиль/GGUF.
 `ui.py` содержит только HTTP и представление текущего результата; история не идёт в QA.
+
+`evaluation/qa_run.py` использует тот же RuntimeSession/ensure_index и RagService,
+но сохраняет AskTrace напрямую, без HTTP и повторного retrieval. JSONL содержит
+полный исходный контекст в messages/registry и структурные наблюдения; CSV содержит
+пустые смысловые оценки для отдельного рецензента. Primary20 и optional insufficient3
+имеют разные сводки, в том числе при failed-run. Общие snapshots/provenance/statistics
+разделены с retrieval runner в artifacts.py.

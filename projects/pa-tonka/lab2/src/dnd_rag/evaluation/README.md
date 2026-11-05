@@ -16,3 +16,7 @@
   `recompute_saved_metrics` для офлайн-проверки сохранённого completed-run.
 - `study.py`: strict карта групп, completed base/reference и точные config deltas.
   StudySelection — immutable происхождение сравнения, не механизм наследования.
+- `qa_run.py`: `run_qa_evaluation` сохраняет один фактический AskTrace на вопрос,
+  profile/prompts snapshots, JSONL, not_reviewed CSV и раздельные сводки20+3.
+  Ошибка сохраняет частичный failed-run; смысловые оценки приложение не выставляет.
+  Общие snapshot/provenance/statistics функции находятся в `artifacts.py`.

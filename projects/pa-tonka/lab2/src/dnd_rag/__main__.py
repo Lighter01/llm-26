@@ -39,6 +39,17 @@ def parser():
     demo.add_argument('--config', type=Path, required=True)
     demo.add_argument('--llm-profile', type=Path, required=True)
     demo.add_argument('--rebuild', action='store_true')
+    qa = commands.add_parser(
+        'evaluate-qa', help='Save QA answers, actual traces and an unjudged worksheet'
+    )
+    qa.add_argument('--config', type=Path, required=True)
+    qa.add_argument('--llm-profile', type=Path, required=True)
+    qa.add_argument('--experiment-name', required=True)
+    qa.add_argument(
+        '--include-insufficient',
+        action='store_true',
+        help='Add three separate insufficient-context cases',
+    )
     return root
 
 
@@ -55,6 +66,18 @@ def main(argv=None):
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
         settings = load_settings(PROJECT_ROOT)
+        if args.command == 'evaluate-qa':
+            from dnd_rag.evaluation.qa_run import run_qa_evaluation
+
+            path = run_qa_evaluation(
+                args.config,
+                args.llm_profile,
+                args.experiment_name,
+                settings,
+                include_insufficient=args.include_insufficient,
+            )
+            print(json.dumps({'results': str(path)}))
+            return 0
         if args.command in ('serve-retrieval', 'demo'):
             from dnd_rag.runtime.application import run_demo, serve_retrieval
 
