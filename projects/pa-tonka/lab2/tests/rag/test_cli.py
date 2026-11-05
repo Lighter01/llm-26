@@ -32,3 +32,20 @@ def test_qa_help_requires_named_profile_run(capsys):
     output = capsys.readouterr().out
     assert '--include-insufficient' in output and '--llm-profile' in output
     assert main(['evaluate-qa', '--config', 'x.yaml', '--llm-profile', 'llm.yaml']) == 2
+
+
+def test_summary_is_dispatched_before_runtime_settings(tmp_path, monkeypatch, capsys):
+    import dnd_rag.__main__ as cli
+    from tests.rag.fixtures import write_yaml
+
+    study = write_yaml(tmp_path / 'study.yaml', {'schema_version': 1, 'groups': {}})
+    output = tmp_path / 'summary.csv'
+    monkeypatch.setattr(
+        cli,
+        'load_settings',
+        lambda *a: (_ for _ in ()).throw(AssertionError('Offline settings dependency')),
+    )
+    assert main(['summarize-results', '--study', str(study), '--output', str(output)]) == 0
+    assert output.read_text().startswith('group,role,run,')
+    assert main(['summarize-results', '--help']) == 0
+    assert '--output' in capsys.readouterr().out

@@ -20,3 +20,7 @@
   profile/prompts snapshots, JSONL, not_reviewed CSV и раздельные сводки20+3.
   Ошибка сохраняет частичный failed-run; смысловые оценки приложение не выставляет.
   Общие snapshot/provenance/statistics функции находятся в `artifacts.py`.
+
+- `summary.py`: офлайн-строки CSV из сохранённых run/metrics, dataset cohorts,
+  явные failed/missing, честные reused/original build timings и ссылки на контролы.
+  Публичный `study.summarize_results` читает строгую карту и вызывает exporter.

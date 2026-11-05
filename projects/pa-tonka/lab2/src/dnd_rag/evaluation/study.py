@@ -27,9 +27,16 @@ class StudyGroup(Contract):
     comparisons: list[Comparison]
 
 
+class QASelection(Contract):
+    run: str
+    config: str
+    reason: str = Field(min_length=1)
+
+
 class Study(Contract):
     schema_version: Literal[1]
     groups: dict[str, StudyGroup]
+    qa_selection: QASelection | None = None
 
 
 class StudySelection(Contract):
@@ -57,6 +64,8 @@ def read_study_entry(
         entry = study.groups[group]
         if entry.requires_base and not entry.selected_base_run:
             raise ValueError(f'Base is not selected for {group}')
+        if entry.requires_base and not entry.selection_reason:
+            raise ValueError(f'Record the selected base reason for {group}')
         selected = [
             c
             for c in entry.comparisons
@@ -65,6 +74,12 @@ def read_study_entry(
         if len(selected) != 1:
             raise ValueError('Config must identify exactly one comparison in the group')
         comparison = selected[0]
+        if (
+            entry.requires_base
+            and comparison.reference_run is not None
+            and comparison.reference_run != entry.selected_base_run
+        ):
+            raise ValueError('A dependent comparison must use its group selected base')
         reference = comparison.reference_run or entry.selected_base_run
         # A selected base and an explicit reference must both be completed.
         for name in dict.fromkeys(n for n in (entry.selected_base_run, reference) if n is not None):
@@ -95,3 +110,15 @@ def read_study_entry(
         )
     except (OSError, KeyError, ValueError, TypeError) as exc:
         raise RagError('invalid_study', f'{study_path}: {exc}') from exc
+
+
+def summarize_results(study_path: Path, output_path: Path, *, project_root: Path) -> Path:
+    """Export explicit comparisons from saved files, without starting a runtime."""
+    from dnd_rag.evaluation.summary import write_summary
+
+    path = resolve_path(study_path, project_root)
+    try:
+        study = Study.model_validate(read_yaml(path))
+        return write_summary(study, path, resolve_path(output_path, project_root), project_root)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        raise RagError('invalid_summary', f'{study_path}: {exc}') from exc

@@ -50,6 +50,11 @@ def parser():
         action='store_true',
         help='Add three separate insufficient-context cases',
     )
+    summary = commands.add_parser(
+        'summarize-results', help='Export comparison CSV from saved runs without models or services'
+    )
+    summary.add_argument('--study', type=Path, required=True)
+    summary.add_argument('--output', type=Path, required=True)
     return root
 
 
@@ -65,6 +70,12 @@ def main(argv=None):
             and not re.fullmatch('[a-f0-9]{64}', args.index_id)
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
+        if args.command == 'summarize-results':
+            from dnd_rag.evaluation.study import summarize_results
+
+            path = summarize_results(args.study, args.output, project_root=PROJECT_ROOT)
+            print(json.dumps({'summary': str(path)}))
+            return 0
         settings = load_settings(PROJECT_ROOT)
         if args.command == 'evaluate-qa':
             from dnd_rag.evaluation.qa_run import run_qa_evaluation

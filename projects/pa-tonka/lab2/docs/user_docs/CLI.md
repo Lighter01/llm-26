@@ -149,7 +149,7 @@ metrics = recompute_saved_metrics(Path('results/g1_markdown_initial'))
 
 Это Python API, отдельной CLI-команды для recompute нет. Полные правила сравнения и поля
 карты — в [справочнике](../../configs/experiments/README.md). Demo/API реализованы ниже;
-QA-аналитика реализована ниже; серия из10 вариантов выполняется в Task13.
+QA-аналитика реализована ниже; серия из10 вариантов описана в study и выполняется последовательно.
 
 ## llama.cpp и LLM-профиль
 
@@ -328,3 +328,26 @@ CPU query encoder, затем Nemotron. UI не запускается. На к�
 ответы, строка ошибки и failed-паспорт/сводка; такой запуск не считается QA20.
 
 Реальный финальный QA20 выполняется после C4 на выбранном профиле (Task14).
+
+## Групповые эксперименты и CSV
+
+```bash
+uv run python -m dnd_rag experiment --config configs/experiments/g1_splitters/recursive.yaml \
+  --experiment-name g1_recursive --study configs/experiments/study.yaml --group G1
+uv run python -m dnd_rag summarize-results --study configs/experiments/study.yaml \
+  --output results/retrieval_comparison.csv
+```
+
+`--study PATH` и `--group NAME` у experiment задаются вместе; без них остаётся
+независимый retrieval-run. Карта не подставляет параметры: YAML всегда полный.
+Имена новых runs задаёт `--experiment-name`; поле comparison.run в study ссылается
+на сохранённый результат. Сначала закончите G1 и выберите базу, затем обновите
+полные G2; после G2 — G3/G5; G4 всегда от G3. В зависимой группе selected_base_run=null
+блокирует запуск, как и failed/reference с другими corpus/gold либо лишней дельтой.
+
+`summarize-results`: обязательные `--study PATH` и `--output PATH`, других флагов нет.
+Команда работает без runtime lock, .env, Qdrant, GPU и моделей; читает результаты
+на диске и атомарно обновляет CSV. Она не выполняет новый retrieval. Missing/failed
+и несовпадающие corpus/gold показаны явно, reuse не получает build_time=0. Столбцы,
+семантика стадий и все10 профилей — в [справочнике](../../configs/experiments/README.md).
+Выбор QA-профиля хранится в study.qa_selection и выполняется до финального QA20.

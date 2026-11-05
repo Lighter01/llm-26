@@ -49,12 +49,12 @@ gold и batch не меняют fingerprint. Dense игнорирует BM25 п�
 Готовая совместимая коллекция переиспользуется целиком; `--rebuild` повторяет все
 стадии. Кэшей chunks/vectors и достройки dense → hybrid нет.
 
-На текущем этапе подготовлен [baseline G1](g1_splitters/markdown.yaml).
+Подготовлены10 полных YAML, включая [baseline G1](g1_splitters/markdown.yaml).
 В resolved snapshot сохраняются shard=1, datatype=float32, Cosine,
 indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
 При grey после restart меняется только runtime max_optimization_threads на 1/2;
 фактическое действие сохраняется в metadata коллекции.
-Карта групп — [study.yaml](study.yaml). Остальные девять конфигураций и сводка — Task 13.
+Карта групп и выбранные базы — [study.yaml](study.yaml); измерения выполняются последовательно.
 
 ## Карта study
 
@@ -62,6 +62,10 @@ indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
 | --- | --- | --- |
 | schema_version | int, обязательно | Только 1. |
 | groups | mapping[str,group], обязательно | Имена групп, например G1..G5. |
+| qa_selection | object/null, null | Выбранный retrieval-профиль для последующего QA20. |
+| qa_selection.run | str, обязательно в object | Имя completed retrieval-run. |
+| qa_selection.config | str, обязательно в object | Полный project-relative YAML path выбранного профиля. |
+| qa_selection.reason | str, непустая | Основание выбора по сохранённым сравнениям. |
 | group.requires_base | bool, обязательно | G1 false, зависимые G2–G5 true. |
 | group.selected_base_run | str/null, null | Имя completed retrieval-run под results; null блокирует dependent group. |
 | group.selection_reason | str/null, null | Причина выбора базы по EC@5, MRR@10 и затратам. |
@@ -74,6 +78,40 @@ indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
 Run/base/reference — безопасные имена папок, config — явный путь. База/reference должны
 быть completed, иметь тот же corpus/gold. Снимок group/reference/changes/reason пишется
 в run.json; последующее редактирование карты не меняет историю. Runner не меняет YAML.
-Карта не наследует параметры и не запускает следующую группу сама. Для G1 пока измеряется
-только Markdown baseline; зависимые базы остаются null до Task 13. Reuse-check не включается
+Карта не наследует параметры и не запускает следующую группу сама. До фактического выбора
+зависимые базы остаются null, а их полные YAML считаются заготовками. Reuse-check не включается
 в обязательные 10 сравнений.
+
+## Программа G1–G5 и сводка
+
+В репозитории10 полных YAML, без наследования. G1:markdown/recursive/source_map_recursive
+(512/64,H4). G2:копии победителя G1 с512/128 и768/64. G3:hybrid-копия лучшей dense
+базы G1/G2. G4:две независимые копии G3 — HNSW32/200/256 и stemmer=null,k1=1.5,b=.5.
+G5:копии той же dense базы с title/strip=true/true иfalse/false. Невыбранные
+зависимости в study имеют selected_base_run=null; соответствующие YAML — заготовки,
+которые полностью обновляются по фактическим результатам до запуска.
+
+У dependent группы explicit reference_run должен совпадать с selected_base_run,
+а selection_reason — быть непустой строкой. Runner проверяет completed retrieval
+reference, общий corpus/gold и точную declared delta всех эффективных полей. Это
+не автоматический DAG: базы выбираются явно после сравнения EC@5, MRR@10 и затрат.
+
+Корневое `qa_selection` — null до выбора; затем объект `{run,config,reason}`.
+run — сохранённый retrieval-run, config — полный YAML, reason — обоснование
+по всей обязательной серии. Это выбор для следующего QA20, не смысловая оценка QA.
+
+`summarize-results --study PATH --output PATH` читает только study и сохранённые
+run/metrics JSON. CSV содержит comparison и reference строки; один прежний контроль
+может присутствовать в нескольких группах без повторной индексации. Разные corpus/
+gold/metric versions получают разные comparison_cohort; comparison_eligible=false
+и comparison_error показывают несопоставимость. Failed/missing/not_run видны явно;
+failed не получает успешных метрик. Агрегирования разных runs в одну метрику нет.
+
+Сохраняются все P/R/EC@1/5/10,MRR@10, количество чанков/векторов, средний raw_tokens/
+returned_count@k, отдельные all/warm mean/median/max/min, first query и stage timings.
+preparation_ms — сумма измеренных tokenizer/split/document load/embedding/upload/
+index wait/BM25 стадий только для built/rebuilt; для reuse пусто.
+original_preparation_ms — та же сумма из сохранённого паспорта исходной сборки,
+не время её повторения. Пропущенные стадии пусты, а не фиктивные нули.
+Общий wall_time_ms включает проверку/reuse, CPU model и20 запросов. Пути к исходным
+run/config snapshots сохранены. Сводку можно перезаписать; файлы внутри run защищены.

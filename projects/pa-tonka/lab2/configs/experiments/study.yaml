@@ -2,30 +2,81 @@ schema_version: 1
 groups:
   G1:
     requires_base: false
-    selected_base_run: null
-    selection_reason: Baseline Markdown 512/64; остальные splitters будут измерены в Task 13.
+    selected_base_run: g1_markdown_initial
+    selection_reason: 'Контроль G1: исходный Markdown512/64; победитель будет выбран
+      по трём фактическим runs.'
     comparisons:
-      - config: configs/experiments/g1_splitters/markdown.yaml
-        run: g1_markdown_initial
-        reference_run: null
-        changed_parameters: []
+    - config: configs/experiments/g1_splitters/markdown.yaml
+      run: g1_markdown_initial
+      reference_run: null
+      changed_parameters: []
+    - config: configs/experiments/g1_splitters/recursive.yaml
+      run: g1_recursive
+      reference_run: g1_markdown_initial
+      changed_parameters:
+      - chunking.strategy
+    - config: configs/experiments/g1_splitters/source_map_recursive.yaml
+      run: g1_source_map_recursive
+      reference_run: g1_markdown_initial
+      changed_parameters:
+      - chunking.strategy
   G2:
     requires_base: true
     selected_base_run: null
     selection_reason: null
-    comparisons: []
+    comparisons:
+    - config: configs/experiments/g2_chunks/overlap_128.yaml
+      run: g2_overlap_128
+      reference_run: null
+      changed_parameters:
+      - chunking.chunk_overlap
+    - config: configs/experiments/g2_chunks/size_768.yaml
+      run: g2_size_768
+      reference_run: null
+      changed_parameters:
+      - chunking.chunk_size
   G3:
     requires_base: true
     selected_base_run: null
     selection_reason: null
-    comparisons: []
+    comparisons:
+    - config: configs/experiments/g3_search/hybrid.yaml
+      run: g3_hybrid
+      reference_run: null
+      changed_parameters:
+      - retrieval.mode
   G4:
     requires_base: true
     selected_base_run: null
     selection_reason: null
-    comparisons: []
+    comparisons:
+    - config: configs/experiments/g4_index/hnsw_32_200_256.yaml
+      run: g4_hnsw_32_200_256
+      reference_run: null
+      changed_parameters:
+      - index.hnsw.m
+      - index.hnsw.ef_construction
+      - retrieval.ef_search
+    - config: configs/experiments/g4_index/bm25_no_stem.yaml
+      run: g4_bm25_no_stem
+      reference_run: null
+      changed_parameters:
+      - bm25.stemmer
+      - bm25.k1
+      - bm25.b
   G5:
     requires_base: true
     selected_base_run: null
     selection_reason: null
-    comparisons: []
+    comparisons:
+    - config: configs/experiments/g5_headings/title_strip.yaml
+      run: g5_title_strip
+      reference_run: null
+      changed_parameters:
+      - embedding.strip_markdown_headings
+    - config: configs/experiments/g5_headings/no_title_keep.yaml
+      run: g5_no_title_keep
+      reference_run: null
+      changed_parameters:
+      - embedding.include_title
+qa_selection: null
