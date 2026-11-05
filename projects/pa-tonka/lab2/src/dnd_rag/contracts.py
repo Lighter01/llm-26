@@ -1,6 +1,6 @@
 """Shared data contracts; importing this module never loads a model."""
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -21,3 +21,32 @@ class RagError(Exception):
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra='forbid', frozen=True, strict=True)
+
+
+class SectionAttribution(Contract):
+    heading_path: list[str]
+    section_start_char: int
+    section_end_char: int
+    printed_pages: list[int] | None
+    page_attribution: Literal['explicit', 'partial', 'inherited_section_start', 'unknown']
+
+
+class DraftMetadata(Contract):
+    schema_version: Literal[1] = 1
+    source_file: str
+    body_sha256: str
+    book_id: str
+    book_title: str
+    source_system: str
+    upstream_sha: str
+    start_char: int
+    end_char: int
+    line_start: int
+    line_end: int
+    token_count: int
+    sections: list[SectionAttribution]
+
+
+class ChunkDraft(Contract):
+    page_content: str
+    metadata: DraftMetadata
