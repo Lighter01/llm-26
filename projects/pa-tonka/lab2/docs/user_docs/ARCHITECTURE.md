@@ -62,3 +62,17 @@ dense его не создаёт; поиск использует raw page_conte
 отсутствующая/неполная или `--rebuild` проходят весь build, без кэшей стадий.
 Сетевая ошибка и недоказанное владение не приводят к удалению. Возобновление optimizer
 после restart описано в [пробах](../rag/TECHNICAL_PROBES.md).
+
+`runtime/application.ensure_index` сначала валидирует corpus и паспорт готовой коллекции.
+Только при необходимости запускает `indexing.build` отдельным процессом: tokenizer →
+split/metadata/IDs → GPU encoder → upload/index readiness. Документная модель завершается
+вместе с worker; следующий этап загрузит CPU QueryEncoder. В `.runtime/builds/<uuid>/`
+остаются immutable request, stages/result и worker.log для диагностики; это не кэш.
+`reset_index` — отдельная ветка без ensure/build: по config вычисляет текущий identity,
+по index_id вообще не читает corpus/gold/tokenizer и удаляет только проверенную коллекцию.
+
+`runtime/lock.py` и `processes.py` обеспечивают один runtime. flock удерживается всем
+сроком session; созданные процессы наследуют открытый descriptor через pass_fds.
+При смерти родителя живой ребёнок сохраняет lock. Штатный выход/Ctrl+C останавливает
+только process groups данного запуска, затем закрывает descriptor. Lock-файл сохраняется.
+Qdrant volume и результаты не очищаются при остановке.
