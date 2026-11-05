@@ -32,6 +32,13 @@ def parser():
     experiment.add_argument('--rebuild', action='store_true')
     experiment.add_argument('--study', type=Path, help='Optional study map; requires --group')
     experiment.add_argument('--group', help='Group in the study; requires --study')
+    serve = commands.add_parser('serve-retrieval', help='Run a retrieval-only API without LLM/UI')
+    serve.add_argument('--config', type=Path, required=True)
+    serve.add_argument('--rebuild', action='store_true')
+    demo = commands.add_parser('demo', help='Run the local Q&A API and Streamlit interface')
+    demo.add_argument('--config', type=Path, required=True)
+    demo.add_argument('--llm-profile', type=Path, required=True)
+    demo.add_argument('--rebuild', action='store_true')
     return root
 
 
@@ -48,6 +55,14 @@ def main(argv=None):
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
         settings = load_settings(PROJECT_ROOT)
+        if args.command in ('serve-retrieval', 'demo'):
+            from dnd_rag.runtime.application import run_demo, serve_retrieval
+
+            if args.command == 'demo':
+                run_demo(args.config, args.llm_profile, settings, rebuild=args.rebuild)
+            else:
+                serve_retrieval(args.config, settings, rebuild=args.rebuild)
+            return 0
         if args.command == 'experiment':
             from dnd_rag.evaluation.retrieval_run import run_retrieval_experiment
             from dnd_rag.evaluation.study import read_study_entry

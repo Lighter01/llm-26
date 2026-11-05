@@ -22,7 +22,8 @@ skills-lock.json
 /.runtime/
 *.runtime.log
 .agents/work/implementation/*.log
-.agents/work/implementation/pytest-full/
+.agents/work/implementation/pytest-*/
+.agents/work/implementation/wheel-check/
 
 # misc
 external/how_to_update.md

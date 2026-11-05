@@ -141,3 +141,15 @@ links/images. Источники возвращаются только для д
 без перенумерации. Неизвестные номера и finish_reason=length дают warnings; исходный
 ответ сохраняется. Snippet — первые 400 Unicode-символов исходного чанка, координаты
 и атрибуция страниц остаются прежними. Наличие номера не доказывает смысл цитаты.
+
+`api.py` — транспорт над общим ядром: строгий question/limit, отдельные retrieval/QA
+readiness и единый error envelope. Sync endpoints выполняются в thread pool;
+неблокирующий QA gate даёт429, пока первый вызов упаковывает контекст/генерирует.
+Retrieval продолжает обслуживаться. Конфиг, модель и collection не меняются через HTTP.
+
+`runtime/application.py` запускает API программно в одном worker без reload, поэтому
+родитель и API не загружают два query encoder. После ensure_index и выхода GPU worker
+загружается CPU query; demo затем запускает llama.cpp и ожидает readiness. Supervisor
+дожидается HTTP API перед запуском Streamlit; RuntimeSession владеет дочерними LLM/UI
+и освобождает lock после их остановки. Retrieval-only не импортирует LLM-профиль/GGUF.
+`ui.py` содержит только HTTP и представление текущего результата; история не идёт в QA.

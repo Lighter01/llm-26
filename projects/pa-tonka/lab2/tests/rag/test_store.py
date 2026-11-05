@@ -190,3 +190,28 @@ def test_index_modes(store_inputs, mode, quant):
         assert collection['schema']['page_content'].params.scoring is True
     assert collection['options']['vectors_config']['dense'].datatype.value == 'float32'
     assert (collection['options']['quantization_config'] is None) == (quant == 'none')
+
+
+def test_runtime_readiness_matches_same_build_without_payload_scan(store_inputs, monkeypatch):
+    store, client, _, inputs = store_inputs
+    identity, chunks, batches = inputs()
+    ready = store.build(identity, chunks, batches, on_stage=lambda e: None)
+    monkeypatch.setattr(store, '_points', lambda *a: pytest.fail('Health must not scan payloads'))
+    assert store.is_ready(ready) is True
+    client.collections[identity.collection]['options']['metadata']['build_id'] = 'other-build'
+    assert store.is_ready(ready) is False
+
+
+def test_wrapped_qdrant_timeout_is_distinct(store_inputs):
+    import httpx
+    from qdrant_client.http.exceptions import ResponseHandlingException
+
+    store, client, _, _ = store_inputs
+
+    def timeout():
+        raise ResponseHandlingException(httpx.ReadTimeout('read timed out'))
+
+    client.info = timeout
+    with pytest.raises(RagError) as error:
+        store.server_version()
+    assert error.value.code == 'qdrant_timeout'

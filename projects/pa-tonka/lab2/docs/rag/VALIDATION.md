@@ -1,7 +1,7 @@
 # Проверка реализации
 
-Этап C2: Tasks 1–8. QA/LLM/API/UI, полная серия экспериментов и финальное независимое
-ревью относятся к следующим этапам. Skipped live tests не считаются доказательством.
+Этап C3: Tasks 1–11. Реализованы локальная LLM, QA/API/UI. Полная серия экспериментов,
+QA20 и финальное независимое ревью относятся к следующим этапам. Skipped live tests не считаются доказательством.
 
 | Требование | Проверенное поведение / доказательство |
 | --- | --- |
@@ -12,8 +12,10 @@
 | A06–A07 | Fingerprint excludes query/batch/inactive BM25, stable UUIDs/upsert, building not ready, safe targeted reset twice, foreign/network errors do not delete. |
 | A08 | Shared dense/hybrid store tested live; pure metric fixtures prove50% boundary, full Rq, fractional EC, alternatives/union/equal weights. |
 | A09 | Runner tests: unique names, retained failures, honest reuse/null timings, offline recomputation. Реальные baseline/reuse PASS, числа ниже. |
-| A13 частично | Real subprocess tests: second runtime rejected, child holds lock after parent SIGKILL, own cleanup preserves sentinel. API generation gate ещё не реализован. |
-| A16 частично | ARCHITECTURE/CLI/config reference/module navigation обновлены для Tasks1–8. Остальные команды будут документированы вместе с реализацией. |
+| A10–A11 | Точный полный prompt, whole-tail budget и Markdown Citation Registry:21 unit tests PASS; реальный count/usage23/6027, C3 inputs1683–6220. |
+| A12 | Живые serve-retrieval/demo, один CPU encoder/API worker; Streamlit HTTP health и AppTest с настоящим QA API PASS. |
+| A13 | Runtime lock и QA429; parent-death/cleanup повторены с реальными Uvicorn/Streamlit, чужой sentinel сохраняется; быстрый restart после TIME_WAIT проверен. |
+| A16 частично | ARCHITECTURE/CLI/config reference/module navigation обновлены для Tasks1–11. Команды следующих задач будут документированы вместе с реализацией. |
 | A17 частично | Targeted tests и Ruff выполнены. Независимое review запланировано после полного плана. |
 
 ## C2 — baseline и reuse: PASS
@@ -71,6 +73,63 @@ live probes выполнены отдельно и описаны в C1. Пер�
 
 ## Ограничения текущего этапа
 
-LLM, budget/token-template parity, numeric citations, HTTP/API/UI и QA20 ещё не готовы
-(A10–A12/A15). Девять остальных configs и групповые сравнения ещё не выполнены (A14).
+QA20 и его review worksheet ещё не выполнены (A15). Девять остальных configs и
+групповые сравнения ещё не выполнены (A14). Независимое ревью — после полного плана.
 Литературный отчёт и семантическое рецензирование QA пользователь поручит отдельно.
+
+## C3 — Nemotron, API и Streamlit: PASS
+
+2026-11-06, тот же baseline index/build, action=reused: GPU document worker не
+запускался. Retrieval-only готов за13.632s после начала launcher, 3 hits за230.3ms
+HTTP, health retrieval_ready=true/qa_ready=false/mode=retrieval_only; ask503 qa_disabled,
+неверный limit422, второй runtime отклонён. После SIGINT lock освобождён.
+
+Полное demo: внешний процесс готов за17.159s; startup events index_ready2.077s →
+cpu_query_loaded10.468s → llm_ready16.006s → api_ready16.229s → ui_started16.230s. Cold означает первую QA после
+старта модели; disk/HF cache не очищались, скачиваний не было. Принятый профиль
+8192/1536/256, thinking=false и Nemotron сохранены.
+
+| Запрос | Полный вход | Выход, tokens | CPU query, s | Prompt eval, s | Decode, s | Полный QA, s |
+| --- | --- | --- | --- | --- | --- | --- |
+| Help, первый/cold | 2931 | 210 | .158 | 1.708 | 3.637 | 5.557 |
+| Help, warm | 2931 | 210 | .284 | 1.430 | 3.707 | 5.475 |
+| Vortex + Silence, warm | 1683 | 58 | .137 | .858 | .992 | 2.085 |
+| Encounter XP, warm | 2670 | 91 | .122 | 1.361 | 1.595 | 3.146 |
+| Большой вопрос, warm | 6220 | 85 | 5.661 | 3.478 | 1.513 | 10.760 |
+| Help через UI, warm | 2931 | 210 | .110 | 1.480 | 3.689 | 5.428 |
+
+Search4.8–7.2ms, context11.7–29.4ms, postprocess0.24–1.09ms; generation в API
+включает prompt+decode/HTTP. Prompt/decode в таблице — дельты native llama.cpp
+metrics того же запроса. Полные input counts совпали с prompt_tokens_total, cached
+input=0 для всех шести. Большой вопрос — техническая синтетическая нагрузка с
+повторённой заметкой, не дополнительный gold question; полные retrieved chunks прежние.
+Его CPU embedding5.66s виден отдельно и входит в10.76s. Все ответы finish=stop,
+sources только использованные (1–3), citation warnings=0; это не семантические grades.
+
+Три обычных warm: min2.085/median3.146/max5.475s. Самый долгий измеренный случай10.760s;
+превышений30s в этой пробе нет. Это небольшая техническая выборка, не гарантия для
+любой длины ответа до1536. UI round trip вместе с AppTest6.077s, backend5.428s;
+отрендерены3 раскрываемых источника с raw text и атрибуцией страниц. Браузерная
+визуальная приёмка не выполнялась: проверены реальный Streamlit server и AppTest.
+
+Пик NVML по всей GPU4279MiB из6144, фон до664/после666MiB. RAM: пик суммы PSS
+своего дерева7977704448B (7.430GiB) при загрузке LLM; это учитывает shared pages
+пропорционально, не сумма дублированных RSS. В пике API PSS2395288576B, llama
+5555906560B, uv26509312B. Постоянный Qdrant и процесс самого измерителя не входят.
+Сэмплирование примерно0.5s, возможен пропуск коротких пиков. Дети найдены по всем
+threads /proc, включая spawn от supervisor. После demo LLM/UI завершены, lock свободен.
+
+Паспорт и сырые измерения: [demo](../../.agents/work/implementation/c3-demo.json),
+[retrieval-only](../../.agents/work/implementation/c3-retrieval.json). Начальный
+неполный технический прогон сохранён отдельно: четыре QA были успешны, генератор
+тестового большого вопроса не достиг длины. Повтор выявил/исправил ложный TCP conflict
+из-за TIME_WAIT; регрессия RED→GREEN, чужой listener по-прежнему отвергается.
+Первоначальные RAM samples не учитывали детей non-main threads и не используются.
+Модель, профиль, вопросы gold и индекс не менялись.
+
+Итоговые проверки C3: полный Python suite с явными test dirs/--input-build —
+660 passed,3 opt-in live skipped за63.36s. Эти skip не подменяют отдельно выполненные
+C1/Task9/C3 живые пробы. Targeted API/launcher/UI/store/retrieval/CLI —53 passed
+до добавления двух socket-регрессий; обе socket-регрессии затем PASS, входят в полный
+suite. Wheel содержит system.txt с исходными bytes, cwd-independent загрузка PASS.
+Ruff check/format — PASS,121 файлов отформатированы. Обязательная пауза после Task11.

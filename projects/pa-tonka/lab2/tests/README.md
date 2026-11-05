@@ -7,7 +7,8 @@
 - [question_validation](ingestion/question_validation/README.md): строгая схема, цитаты, координаты и публикация; `uv run --group test python -m pytest tests/ingestion/question_validation`, реальные книги не требуются.
 
 [RAG](rag/README.md): конфиги/корпус/точный чанкинг, embedding adapters на fakes,
-Qdrant state/fingerprint, runtime subprocesses, retrieval, gold/метрики и runner.
+Qdrant state/fingerprint, runtime subprocesses, retrieval, gold/метрики и runner, LLM budget/citations,
+API429/readiness и Streamlit AppTest.
 Обычный pytest не загружает модели и не удаляет рабочие коллекции. Реальные
 модельные и Qdrant-пробы — explicit opt-in. Quick/full команды —
 в [CLI](../docs/user_docs/CLI.md).

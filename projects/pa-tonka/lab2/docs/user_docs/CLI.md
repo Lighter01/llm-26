@@ -42,7 +42,7 @@ uv создаёт окружение и устанавливает пакет. T
 | LLM_MODEL_PATH | Путь Nemotron из .env.example; GGUF вне проекта |
 | LLM_BASE_URL | http://127.0.0.1:8080/v1 |
 | EMBEDDING_CACHE_DIR | Пусто: стандартный HF cache; иначе cache_folder |
-| RAG_API_URL | http://127.0.0.1:8000, будущий адрес API для UI |
+| RAG_API_URL | http://127.0.0.1:8000, bind-адрес API и адрес для UI; loopback HTTP |
 
 YAML эксперимента выбирает corpus/chunking/embedding/index/retrieval/evaluation,
 а не адреса сервисов. [Все поля и defaults](../../configs/experiments/README.md).
@@ -95,8 +95,8 @@ docker compose -f compose.yaml stop qdrant
 `stop` сохраняет volume. Не используйте `down -v`, если нужны готовые индексы.
 Создание HNSW/BM25 асинхронно: приложение ждёт завершения очереди, одного принятого upsert мало.
 
-Retrieval сейчас доступен через Python `Retriever` и аналитический runner; отдельный
-HTTP launcher `serve-retrieval` добавляется в Task 11. Лимит Python retrieval по умолчанию
+Retrieval доступен через Python `Retriever`, аналитический runner и HTTP launcher
+`serve-retrieval`. Лимит retrieval по умолчанию
 из YAML (10), допустим 1..configured limit. Полные payload и rank/score_kind сохраняются
 без LLM; отсутствие score-порога означает, что далёкий по смыслу вопрос обычно всё равно
 получит ближайшие dense-векторы. Это не проверка достаточности ответа.
@@ -148,8 +148,8 @@ metrics = recompute_saved_metrics(Path('results/g1_markdown_initial'))
 ```
 
 Это Python API, отдельной CLI-команды для recompute нет. Полные правила сравнения и поля
-карты — в [справочнике](../../configs/experiments/README.md). QA/demo/HTTP и полная серия
-из 10 вариантов будут реализованы после C2; их команды пока не доступны.
+карты — в [справочнике](../../configs/experiments/README.md). Demo/API реализованы ниже;
+QA-аналитика и полная серия из 10 вариантов остаются следующими задачами после C3.
 
 ## llama.cpp и LLM-профиль
 
@@ -216,3 +216,75 @@ generation timing. Ошибка зависимости остаётся ошиб
 сохраняются, неизвестные `[n]` дают `unknown_citation`. Код, экранированные скобки
 и настоящие Markdown links/images не считаются цитатами. `answer_truncated` означает
 finish_reason=length; приложение сохраняет текст без скрытой повторной генерации.
+
+## API и демонстрация
+
+```bash
+uv run python -m dnd_rag serve-retrieval --config configs/experiments/g1_splitters/markdown.yaml
+# Остановить Ctrl+C перед следующим runtime:
+uv run python -m dnd_rag demo --config configs/experiments/g1_splitters/markdown.yaml --llm-profile configs/llm/local.yaml
+```
+
+`serve-retrieval`: обязательный `--config PATH`, необязательный `--rebuild` (false).
+`demo`: те же аргументы и обязательный `--llm-profile PATH`. Профили фиксируются
+при запуске. Путь конфига/профиля разрешается от lab2. Запущен один Uvicorn worker
+без reload; CPU query encoder загружается один раз в процессе API.
+
+| Индекс / режим | Порядок |
+| --- | --- |
+| Новый / retrieval | Полный GPU build → worker exit → CPU query → API. GGUF/llama не нужны. |
+| Готовый / retrieval | Проверка и reuse → CPU query → API; GPU document model не загружается. |
+| Новый / demo | Полный GPU build → worker exit → CPU query → Nemotron → API → UI. |
+| Готовый / demo | Проверка и reuse → CPU query → Nemotron → API → UI; без новой векторизации. |
+
+`--rebuild` принудительно выбирает полный build для обоих режимов. Ошибка сборки
+останавливает запуск до LLM/UI. Второй runtime отказывает с runtime_busy; не удаляйте
+lock-файл. Ctrl+C останавливает собственные LLM/Streamlit, Qdrant и volume сохраняются.
+Живые дети сохраняют защиту и при аварийной смерти родителя. Занятый API/UI/LLM порт
+даёт конфликт: чужой сервис не завершается.
+
+Откройте Streamlit на http://127.0.0.1:8501. Он обращается к RAG_API_URL и разрешает
+отправку только при qa_ready. Ответ показывается целиком после проверки цитат; одна
+текущая пара вопрос/ответ, без истории в prompt. Источники раскрывают полный текст,
+body file/строки, разделы, превью с многоточием и печатные страницы с исходной
+атрибуцией. Inherited section start не означает точную страницу всего фрагмента.
+Смена конфига/модели требует остановить demo и запустить заново.
+
+API по умолчанию http://127.0.0.1:8000, OpenAPI — `/docs`. RAG_API_URL поддерживает
+http://127.0.0.1:PORT или http://localhost:PORT без path/query; порт UI фиксирован8501.
+LLM_BASE_URL задаёт отдельный порт (обычно8080/v1). Примеры из другого терминала:
+
+```bash
+curl -s http://127.0.0.1:8000/health
+curl -s http://127.0.0.1:8000/retrieve -H 'Content-Type: application/json' \
+  -d '{"question":"How does the Help action work in combat?","limit":3}'
+curl -s http://127.0.0.1:8000/ask -H 'Content-Type: application/json' \
+  -d '{"question":"How does the Help action work in combat?"}'
+```
+
+`POST /retrieve`: question — непустая строка, limit — необязательный int, default
+из YAML (10), 1..retrieval.limit. Возвращает question/index_id/build_id/mode, hits
+с rank/score/score_kind/full chunk и timings_ms query_embedding/search/total.
+`POST /ask`: только question; возвращает status/answer/sources/warnings, index/build,
+context (переданные/удалённые chunk IDs, input_tokens,8192/1536/256), finish_reason
+и timings_ms query_embedding/search/context/generation/postprocess/total.
+History/config/model/collection и любые лишние поля запрещены.
+
+`GET /health` возвращает index_ready/query_encoder_ready/retrieval_ready/qa_ready,
+mode и index/build IDs. HTTP200 означает доступный retrieval,503 — его неготовность.
+В serve-retrieval mode=retrieval_only, qa_ready=false, `/ask` даёт503 qa_disabled.
+Здоровье проверяется без embeddings и без чтения всех payload.
+
+Ошибки имеют вид `{error:{code,message,details?}}`:422 — поля/пустой вопрос/limit,
+слишком длинный embedding input или context_budget_exceeded;503 — недоступная
+зависимость;504 — её timeout;429 qa_busy — уже идёт QA;500 — внутренняя ошибка
+с диагностикой в `.runtime/errors.log`, без traceback в ответе. `/retrieve` доступен
+во время генерации. Citation warnings не меняют200. HTTP timeout профиля180s
+отдельный от ориентира30s. Прерванный клиент не продолжает ответ вторым LLM-вызовом.
+
+`.runtime/startup.json` сохраняет mode/PID/index_action/index_id/build_id, исходные
+ensure_stages и события index_ready/gpu_worker_exited/cpu_query_loaded/llm_ready/
+api_ready/ui_started с накопленным временем. Для reuse GPU worker не запускается,
+соответствующие подготовительные стадии имеют status=reused, elapsed_ms=null.
+LLM argv/profile/model/template hashes — `.runtime/llama/instance.json`; журналы —
+`.runtime/llama/server.log` и `.runtime/ui.log`. Это диагностика, не кэш индексации.

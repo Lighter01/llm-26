@@ -17,3 +17,11 @@ def test_experiment_help_and_required_name(capsys):
     assert main(['experiment', '--help']) == 0
     assert '--experiment-name' in capsys.readouterr().out
     assert main(['experiment', '--config', 'x.yaml']) == 2
+
+
+def test_service_commands_expose_fixed_startup_profiles(capsys):
+    assert main(['serve-retrieval', '--help']) == 0
+    assert '--rebuild' in capsys.readouterr().out
+    assert main(['demo', '--help']) == 0
+    assert '--llm-profile' in capsys.readouterr().out
+    assert main(['demo', '--config', 'x.yaml']) == 2

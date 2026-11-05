@@ -12,6 +12,12 @@ class Retriever:
         self.encoder = encoder
         self.store = store
 
+    def readiness(self):
+        return {
+            'index_ready': self.store.is_ready(self.index),
+            'query_encoder_ready': self.encoder is not None,
+        }
+
     def retrieve(self, question: str, limit: int | None = None) -> RetrievalResult:
         if not isinstance(question, str) or not question.strip():
             raise RagError('invalid_question', 'Question must be nonempty text')

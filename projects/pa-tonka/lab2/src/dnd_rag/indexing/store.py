@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from time import monotonic, perf_counter, sleep
 
+import httpx
 from qdrant_client import QdrantClient
 from qdrant_client import models as m
 
@@ -61,10 +62,28 @@ class QdrantStore:
         except RagError:
             raise
         except Exception as exc:
+            source = getattr(exc, 'source', exc)
+            if isinstance(source, (TimeoutError, httpx.TimeoutException)):
+                raise RagError('qdrant_timeout', f'Qdrant {method} timed out') from exc
             raise RagError('qdrant_unavailable', f'Qdrant {method}: {exc}') from exc
 
     def server_version(self):
         return self._call('info').version
+
+    def is_ready(self, index):
+        """Check the already validated runtime build without scrolling its payloads."""
+        if not self._call('collection_exists', index.collection):
+            return False
+        info = self._call('get_collection', index.collection)
+        meta = self._owned_metadata(info, index.index_id)
+        return (
+            meta.get('status') == 'ready'
+            and meta.get('build_id') == index.build_id
+            and info.points_count == index.expected_points
+            and info.status == 'green'
+            and info.optimizer_status == 'ok'
+            and self._schema_matches(info, index.build_spec)
+        )
 
     def _owned_metadata(self, info, index_id):
         meta = info.config.metadata or {}

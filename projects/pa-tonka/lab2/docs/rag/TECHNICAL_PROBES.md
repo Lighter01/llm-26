@@ -1,13 +1,13 @@
 # Технические пробы
 
-2026-11-05, Europe/Moscow. Реализация Tasks 1–8. Непроведённые проверки не считаются PASS.
+2026-11-06, Europe/Moscow. Реализация Tasks 1–11. Непроведённые проверки не считаются PASS.
 
 | Проверка | Наблюдение |
 | --- | --- |
 | Python / uv | system 3.13.1; project uv-managed 3.13.13; uv 0.11.6. |
 | CUDA | Elevated nvidia-smi: RTX 3060 Laptop, 6144 MiB; driver 617.42, CUDA UMD 13.4. Sandbox NVML недоступен. |
 | Docker | CLI 29.9.2; Desktop initially stopped; `docker desktop start` выполнен. |
-| LLM | GGUF существует, 5060482240 bytes. llama-server не в PATH. Task 9 probe ещё не выполнена. |
+| LLM | Согласованный GGUF5060482240B; установленный unified llama.cpp serve найден, Task9/C3 PASS, детали ниже. |
 | Model / tokenizer revision | `hf models info google/embeddinggemma-2 --expand sha --format json`: f9972ac22e696a105c482202646979e33e4b5a1e. |
 | Qdrant | Server/client 1.20.0; живые BM25/RRF/quantization/persistence PASS, детали ниже. |
 
@@ -114,4 +114,24 @@ GPU used samples:before672MiB,ready4245,short4249,near-budget4279,after672.
 
 [Паспорт пробы](../../.agents/work/implementation/llama-probe.json),
 initial probe сохранён отдельно. Сервер штатно остановлен, embedding GPU не запускался.
-Замеры полного ответа/нескольких прогретых QA и большой context будут выполнены в C3.
+Замеры полного ответа/нескольких прогретых QA и большого context выполнены в C3 ниже.
+
+## C3 — полный QA и процессы: PASS
+
+Живые `serve-retrieval` и `demo` с baseline reuse, real HTTP contracts, Streamlit
+server health и AppTest→реальный API. Первое QA5.557s, три ordinary warm
+min2.085/median3.146/max5.475s; технический вопрос с6220 входными токенами10.760s,
+из них CPU query5.661s. Все6 generation finish=stop, actual prompt counts совпали
+с native metrics, cache0, shift/truncation0. Decode примерно56–58 tokens/s.
+
+NVML whole-device peak4279MiB, фон664/666MiB до/после. Runtime tree peak PSS
+7977704448B (7.430GiB), llama в этой точке5555906560B; sampled0.5s. Model/template
+SHA256, actual argv/props/profile и per-request native metrics сохранены в
+[паспорте C3](../../.agents/work/implementation/c3-demo.json). Подробная таблица и
+условия измерения — [VALIDATION](VALIDATION.md#c3--nemotron-api-и-streamlit-pass).
+
+Real parent-death/cleanup Uvicorn/Streamlit unit probes PASS, inherited flock
+сохраняется без родителя; чужой sentinel не завершён. Live второй runtime отклонён,
+SIGINT завершает LLM/UI и освобождает lock; Qdrant остаётся. Быстрый restart проверяет
+SO_REUSEADDR как Uvicorn, TIME_WAIT не принимается за чужой listener. Live C3
+не заменяет QA20/содержательное рецензирование и выбор retrieval-конфига следующих задач.

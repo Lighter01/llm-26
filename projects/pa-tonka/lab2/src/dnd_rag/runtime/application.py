@@ -1,11 +1,16 @@
 """Mode-specific preflight and ready-or-full-build orchestration."""
 
 import json
+import os
 import re
+import socket
 import subprocess
 import sys
 import uuid
+from pathlib import Path
+from threading import Event, Thread
 from time import monotonic, perf_counter, sleep
+from urllib.parse import urlparse
 
 import httpx
 
@@ -201,3 +206,202 @@ def reset_index(settings, session, *, config=None, index_id=None):
         corpus = load_corpus(config.corpus.directory)
         index_id = make_identity(config, corpus, library_versions(store.server_version())).index_id
     return store.reset(index_id)
+
+
+def _api_address(settings):
+    url = urlparse(settings.rag_api_url)
+    if (
+        url.scheme != 'http'
+        or url.hostname not in ('127.0.0.1', 'localhost')
+        or url.path not in ('', '/')
+        or url.query
+        or url.fragment
+        or url.username
+    ):
+        raise RagError('invalid_api_url', 'RAG_API_URL must be a local http://host:port URL')
+    try:
+        return url.hostname, url.port or 8000
+    except ValueError as exc:
+        raise RagError('invalid_api_url', 'RAG_API_URL must have a valid port') from exc
+
+
+def _preflight_http(settings, *, demo):
+    addresses = [_api_address(settings)]
+    if demo:
+        addresses.append(('127.0.0.1', 8501))
+    if len({port for host, port in addresses}) != len(addresses):
+        raise RagError('invalid_api_url', 'API and UI must use different ports')
+    for host, port in addresses:
+        try:
+            with socket.socket() as probe:
+                # Match Uvicorn's bind: TIME_WAIT from our last run is not a listener.
+                probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                probe.bind((host, port))
+        except OSError as exc:
+            raise RagError(
+                'http_conflict', f'Cannot bind {host}:{port}; stop the conflicting service'
+            ) from exc
+
+
+def _load_retriever(index, config, settings):
+    from dnd_rag.indexing.embedding import QueryEncoder
+    from dnd_rag.retrieval import Retriever
+
+    encoder = QueryEncoder(config.embedding, settings)
+    return Retriever(index, config, encoder, QdrantStore(settings))
+
+
+def _start_llm(settings, profile, session):
+    from dnd_rag.runtime.llama import start_llama
+
+    return start_llama(settings, profile, session)
+
+
+def _make_app(retriever, rag):
+    from dnd_rag.api import create_app
+
+    return create_app(retriever, rag)
+
+
+def _start_ui(settings, session):
+    log_path = settings.project_root / '.runtime/ui.log'
+    with log_path.open('a', encoding='utf-8') as stream:
+        return session.spawn(
+            [
+                sys.executable,
+                '-m',
+                'streamlit',
+                'run',
+                str(Path(__file__).resolve().parents[1] / 'ui.py'),
+                '--server.address',
+                '127.0.0.1',
+                '--server.port',
+                '8501',
+                '--server.headless',
+                'true',
+                '--server.fileWatcherType',
+                'none',
+                '--browser.gatherUsageStats',
+                'false',
+            ],
+            env={'RAG_API_URL': settings.rag_api_url},
+            stdout=stream,
+        )
+
+
+def _serve_http(app, settings, session, on_ready):
+    import uvicorn
+
+    host, port = _api_address(settings)
+    server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, workers=1, reload=False))
+    stopped, failures = Event(), []
+
+    def supervise():
+        try:
+            deadline = monotonic() + 60
+            with httpx.Client(timeout=2) as client:
+                while not stopped.is_set():
+                    if server.started:
+                        try:
+                            response = client.get(settings.rag_api_url.rstrip('/') + '/health')
+                            if response.status_code == 200:
+                                child = on_ready()
+                                break
+                        except httpx.TransportError:
+                            pass
+                    if monotonic() >= deadline:
+                        raise RagError(
+                            'api_startup_timeout', 'API did not become ready within 60 seconds'
+                        )
+                    stopped.wait(0.1)
+                else:
+                    return
+            while not stopped.wait(0.25):
+                if child is not None and child.poll() is not None:
+                    raise RagError('ui_exited', 'Streamlit exited; see .runtime/ui.log')
+        except Exception as exc:
+            failures.append(exc)
+            server.should_exit = True
+
+    monitor = Thread(target=supervise, name='dnd-service-supervisor', daemon=True)
+    monitor.start()
+    try:
+        server.run()
+    finally:
+        stopped.set()
+        monitor.join(timeout=5)
+    if failures:
+        raise failures[0]
+
+
+def _run_service(config_path, settings, *, profile_path=None, rebuild=False, on_event=None):
+    from dnd_rag.config import load_experiment, load_llm_profile, resolve_path
+    from dnd_rag.runtime.processes import RuntimeSession
+
+    config = load_experiment(config_path, project_root=settings.project_root)
+    profile = (
+        load_llm_profile(resolve_path(profile_path, settings.project_root))
+        if profile_path is not None
+        else None
+    )
+    events, llm = [], None
+    started = perf_counter()
+    report_path = settings.project_root / '.runtime/startup.json'
+    report = {'mode': 'qa' if profile else 'retrieval_only', 'pid': os.getpid(), 'events': events}
+
+    def event(name):
+        item = {'name': name, 'elapsed_ms': (perf_counter() - started) * 1000}
+        events.append(item)
+        report_path.write_text(json.dumps(report, indent=2), encoding='utf-8')
+        print(json.dumps(item), file=sys.stderr, flush=True)
+        if on_event:
+            on_event(name)
+
+    with RuntimeSession(settings.project_root) as session:
+        _preflight_http(settings, demo=profile is not None)
+        try:
+            ensured = ensure_index(config, settings, session, rebuild=rebuild)
+            report.update(
+                index_action=ensured.action,
+                index_id=ensured.index.index_id,
+                build_id=ensured.index.build_id,
+                ensure_stages=[stage.model_dump(mode='json') for stage in ensured.stages],
+            )
+            event('index_ready')
+            # ensure_index returns only after the GPU worker exits. Reuse spawns none.
+            event('gpu_worker_exited')
+            retriever = _load_retriever(ensured.index, config, settings)
+            event('cpu_query_loaded')
+            rag = None
+            if profile is not None:
+                from dnd_rag.rag.service import RagService
+
+                llm = _start_llm(settings, profile, session)
+                rag = RagService(retriever, llm, profile)
+                event('llm_ready')
+            app = _make_app(retriever, rag)
+
+            def ready():
+                event('api_ready')
+                if profile is not None:
+                    process = _start_ui(settings, session)
+                    event('ui_started')
+                    return process
+                return None
+
+            _serve_http(app, settings, session, ready)
+        finally:
+            if llm is not None:
+                llm.close()
+
+
+def serve_retrieval(config_path, settings, *, rebuild=False, on_event=None):
+    """Ensure the index, load one CPU query encoder and run a single API worker."""
+    _run_service(config_path, settings, rebuild=rebuild, on_event=on_event)
+
+
+def run_demo(config_path, profile_path, settings, *, rebuild=False, on_event=None):
+    """Own the complete index → CPU → LLM → API → HTTP-only UI lifecycle."""
+    _run_service(
+        config_path, settings, profile_path=profile_path, rebuild=rebuild, on_event=on_event
+    )

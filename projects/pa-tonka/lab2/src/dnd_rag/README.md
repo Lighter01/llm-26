@@ -13,6 +13,8 @@ RetrievalResult с ranked raw chunks и временем embedding/search. LLM/H
 [Архитектура](../../docs/user_docs/ARCHITECTURE.md).
 
 [Evaluation](evaluation/README.md) содержит gold, чистые метрики, run artifacts,
-аналитический runner и карту сравнений. `__main__.py` — тонкий CLI build-index,
-reset-index, experiment. QA/API/UI добавляются после C2.
+аналитический runner и карту сравнений. [RAG](rag/README.md) — точный бюджет,
+локальная LLM и Citation Registry. `api.py` задаёт stateless HTTP-контракт,
+`ui.py` — Streamlit-клиент без моделей. `__main__.py` — тонкий CLI build-index,
+reset-index, experiment, serve-retrieval, demo.
 

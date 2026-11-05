@@ -94,3 +94,11 @@ def test_empty_vs_dependency_error(inputs):
     for question, limit in [('', None), ('ok', 0), ('ok', 11), ('ok', True)]:
         with pytest.raises(RagError):
             retriever.retrieve(question, limit)
+
+
+def test_health_checks_live_index_without_encoding(inputs):
+    retriever, _, client = inputs()
+    retriever.encoder.encode = lambda q: pytest.fail('Health must not embed a query')
+    assert retriever.readiness() == {'index_ready': True, 'query_encoder_ready': True}
+    del client.collections[retriever.index.collection]
+    assert retriever.readiness() == {'index_ready': False, 'query_encoder_ready': True}

@@ -4,6 +4,7 @@
 uv run --group test python -m pytest tests/rag
 uv run --group test python -m pytest tests/rag/integration/test_embedding_live.py --run-models
 uv run --group test python -m pytest tests/rag/integration/test_qdrant_live.py --run-qdrant
+uv run --group test python -m pytest tests/rag/integration/test_llama_live.py --run-llama
 ```
 
 Unit tests используют малые LF-книги, fake encoders/client и реальные короткие
@@ -17,3 +18,10 @@ subprocesses для lock/parent death/cleanup. По умолчанию live test
 `test_metrics.py` содержит независимые математические fixtures. `test_retrieval_run.py`
 проверяет сохранность failed-run, отсутствие новых index side effects при повторном
 имени и пересчёт метрик из artifacts после отключения fake store.
+
+`test_context`/`test_citations`/`test_qa_service` проверяют бюджет полного prompt,
+целые удаления, frozen registry, Markdown exclusions и один generate. `test_api`
+проверяет строгие входы, error envelope, readiness, stateless и 429 при занятой QA.
+`test_launcher` повторяет parent-death/cleanup с реальными Uvicorn/Streamlit,
+без моделей; `test_ui` использует Streamlit AppTest и fake HTTP. Живой Nemotron
+проверяет точный count/usage и установленный chat template; его запуск держит lock.
