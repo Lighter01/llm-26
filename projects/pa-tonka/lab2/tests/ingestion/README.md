@@ -2,6 +2,10 @@
 
 [markdown_export](markdown_export/README.md) — отдельный Python pytest-набор: unit/fixtures, регрессии на готовых книгах, full corpus и воспроизводимость. Для integration требуется явный `--input-build`; сборщик не запускается.
 
+[question_validation](question_validation/README.md) — самостоятельные проверки схемы,
+цитат, координат, API/CLI и публикации на маленьких синтетических книгах:
+`uv run --group test python -m pytest tests/ingestion/question_validation`.
+
 Тесты согласованы со сборщиком `src/dnd_rag/ingestion/book_assembly`. [book_assembly](book_assembly/README.md) разделён на unit, integration, smoke и helpers. Имена файлов отражают production-модули. Native runtime/CLI запускаются отдельными процессами; реальные данные берутся только из pinned clone.
 
 ```bash

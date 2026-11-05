@@ -7,11 +7,12 @@ authors = [
     { name = "Lighter01", email = "petrton31@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["PyYAML>=5.4,<7"]
 
 [dependency-groups]
-test = ["pytest>=9,<10", "markdown-it-py>=4,<5", "PyYAML>=5.4,<7"]
+test = ["pytest>=9,<10", "markdown-it-py>=4,<5"]
 lint = ["ruff>=0.15,<0.16"]
+dev = []
 
 [tool.ruff]
 target-version = "py313"
@@ -19,6 +20,8 @@ line-length = 100
 include = [
     "src/dnd_rag/ingestion/markdown_export/**/*.py",
     "tests/ingestion/markdown_export/**/*.py",
+    "src/dnd_rag/ingestion/question_validation/**/*.py",
+    "tests/ingestion/question_validation/**/*.py",
 ]
 
 [tool.ruff.lint]
@@ -32,7 +35,7 @@ quote-style = "single"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests/ingestion/markdown_export"]
-testpaths = ["tests/ingestion/markdown_export"]
+testpaths = ["tests/ingestion/markdown_export", "tests/ingestion/question_validation"]
 addopts = "-ra --strict-markers"
 cache_dir = ".cache/ingestion/markdown-tests/pytest-cache"
 junit_family = "legacy"

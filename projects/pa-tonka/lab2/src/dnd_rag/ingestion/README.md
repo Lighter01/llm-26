@@ -140,5 +140,6 @@ uv run python -m dnd_rag.ingestion.markdown_export \
 - [book_assembly](book_assembly/README.md) — production pipeline; CLI в `resolution/`.
 - [dev](dev/README.md) — recon, chapter probe и самостоятельные developer стадии.
 - [markdown_export](markdown_export/README.md) — самостоятельный Python-рендерер книг и карты разделов, CLI и публикация с `--force`.
+- [question_validation](question_validation/README.md) — строгая проверка оценочных вопросов и цитат по готовому Markdown-корпусу, API/CLI и отчёт.
 - [Техническая документация](../../../docs/ingestion/README.md) — архитектура, модель данных, алгоритм, разработка и проверенный результат.
 - [Тесты](../../../tests/ingestion/README.md) и [инструменты](../../../tools/ingestion/README.md).
