@@ -8,7 +8,7 @@
 
 [RAG](rag/README.md): конфиги/корпус/точный чанкинг, embedding adapters на fakes,
 Qdrant state/fingerprint, runtime subprocesses, retrieval, gold/метрики и runner, LLM budget/citations,
-API429/readiness и Streamlit AppTest.
+API429/readiness,Streamlit AppTest,QA-run audit/worksheet и study/offline summary.
 Обычный pytest не загружает модели и не удаляет рабочие коллекции. Реальные
 модельные и Qdrant-пробы — explicit opt-in. Quick/full команды —
 в [CLI](../docs/user_docs/CLI.md).

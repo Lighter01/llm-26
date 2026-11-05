@@ -160,3 +160,9 @@ Retrieval продолжает обслуживаться. Конфиг, мод�
 пустые смысловые оценки для отдельного рецензента. Primary20 и optional insufficient3
 имеют разные сводки, в том числе при failed-run. Общие snapshots/provenance/statistics
 разделены с retrieval runner в artifacts.py.
+
+`evaluation/study.py` проверяет явные базы и точные дельты полноценных YAML;
+зависимая группа без выбранного completed reference блокируется. `summary.py`
+читает saved run/metrics без runtime/.env/моделей и строит CSV с отдельными
+dataset cohorts и контрольными ссылками. Сводка не выполняет новый retrieval.
+Фактические10 профилей,выборы G1/G2 и QA-профиль — [EXPERIMENTS](../rag/EXPERIMENTS.md).

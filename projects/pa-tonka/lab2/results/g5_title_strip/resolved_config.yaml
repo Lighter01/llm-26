@@ -1,0 +1,62 @@
+schema_version: 1
+corpus:
+  directory: /home/lighter_01/projects/itmo/LLMs/llm-26/projects/pa-tonka/lab2/data/markdown/5etools/c3d53956346388b222aaaaf4637776f563e201b8
+chunking:
+  strategy: source_map_recursive
+  chunk_size: 512
+  chunk_overlap: 64
+  max_heading_level: 4
+embedding:
+  model_id: google/embeddinggemma-2
+  revision: f9972ac22e696a105c482202646979e33e4b5a1e
+  dimension: 768
+  include_title: true
+  strip_markdown_headings: true
+  query_prompt_name: QuestionAnswering
+  document_dtype: bfloat16
+  document_batch_size: 16
+index:
+  hnsw:
+    m: 16
+    ef_construction: 100
+  quantization: none
+retrieval:
+  mode: dense
+  limit: 10
+  ef_search: 128
+  hybrid_candidates_per_branch: 20
+  rrf_constant: 2
+bm25:
+  tokenizer: word
+  lowercase: true
+  stemmer:
+    type: snowball
+    language: english
+  stopwords: english
+  k1: 1.2
+  b: 0.75
+evaluation:
+  questions: /home/lighter_01/projects/itmo/LLMs/llm-26/projects/pa-tonka/lab2/data/questions/validated/questions.yaml
+  k:
+  - 1
+  - 5
+  - 10
+  mrr_k: 10
+fixed:
+  text_only: true
+  distance: Cosine
+  normalize_embeddings: true
+  stored_datatype: float32
+  vector_name: dense
+  shard_number: 1
+  indexing_threshold_kb: 1
+  full_scan_threshold_kb: 10
+  document_device: cuda
+  query_device: cpu
+  query_dtype: float32
+  quantization_rescore: false
+  quantization_ignore: false
+  rrf_weights:
+  - 1.0
+  - 1.0
+  max_embedding_input_tokens: 8192

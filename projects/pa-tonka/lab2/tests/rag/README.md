@@ -25,3 +25,8 @@ subprocesses для lock/parent death/cleanup. По умолчанию live test
 `test_launcher` повторяет parent-death/cleanup с реальными Uvicorn/Streamlit,
 без моделей; `test_ui` использует Streamlit AppTest и fake HTTP. Живой Nemotron
 проверяет точный count/usage и установленный chat template; его запуск держит lock.
+
+`test_qa_run` проверяет запись фактических messages/registry без второго retrieval,
+not_reviewed поля, раздельные20/3, partial failed-run и защиту правок CSV.
+`test_study` проверяет точные дельты10 полных YAML, выбранные completed references,
+offline cohorts/failed/reuse; CLI-test доказывает,что summary не читает runtime settings.

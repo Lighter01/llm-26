@@ -2,7 +2,7 @@ schema_version: 1
 corpus:
   directory: data/markdown/5etools/c3d53956346388b222aaaaf4637776f563e201b8
 chunking:
-  strategy: markdown
+  strategy: source_map_recursive
   chunk_size: 768
   chunk_overlap: 64
   max_heading_level: 4

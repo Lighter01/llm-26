@@ -258,7 +258,7 @@ def write_summary(study, study_path, output, root):
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name('.' + output.name + '.tmp')
     with temporary.open('w', encoding='utf-8', newline='') as stream:
-        writer = csv.DictWriter(stream, fieldnames=FIELDS)
+        writer = csv.DictWriter(stream, fieldnames=FIELDS, lineterminator='\n')
         writer.writeheader()
         writer.writerows(_rows(study, data))
     temporary.replace(output)

@@ -162,7 +162,7 @@ class RunWriter:
         target = self.path / name
         new = not target.exists()
         with target.open('a', encoding='utf-8', newline='') as stream:
-            writer = csv.DictWriter(stream, fieldnames=fields)
+            writer = csv.DictWriter(stream, fieldnames=fields, lineterminator='\n')
             if new:
                 writer.writeheader()
             if row is not None:

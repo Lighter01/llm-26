@@ -1,12 +1,12 @@
 # Проверка реализации
 
-Этап C3: Tasks 1–11. Реализованы локальная LLM, QA/API/UI. Полная серия экспериментов,
-QA20 и финальное независимое ревью относятся к следующим этапам. Skipped live tests не считаются доказательством.
+Этап C4: Tasks1–13. Реализованы LLM/QA/API/UI и auditable QA-run; выполнены10 retrieval
+конфигураций. Реальный QA20 и финальное независимое ревью — Task14. Skipped live tests не считаются доказательством.
 
 | Требование | Проверенное поведение / доказательство |
 | --- | --- |
 | A01 | Готовый corpus: 687745 слов, 4536 sections; XPHB имеет262 различных явно атрибутированных печатных page endpoints (больше50). Gold20+3/59 facts, hashes и exact slices проверены read-only. |
-| A02–A03 | Три реальные splitter по embedding tokenizer, max512; exact-slice violations=0, repeated paths/Unicode/ownership/partial headings покрыты unit tests. |
+| A02–A03 | Три реальные splitter по embedding tokenizer,baseline512/64 и experimental768/64; exact-slice violations=0, repeated paths/Unicode/ownership/partial headings покрыты unit tests. |
 | A04 | EG2 revision f9972ac..., text-only BF16 GPU/FP32 CPU, finite shape128/256/512/768; full input без truncation. |
 | A05 | Qdrant1.20 server/client, BM25/RRF/quantization реальные запросы, HNSW1024 indexed, persistence restart. |
 | A06–A07 | Fingerprint excludes query/batch/inactive BM25, stable UUIDs/upsert, building not ready, safe targeted reset twice, foreign/network errors do not delete. |
@@ -15,7 +15,9 @@ QA20 и финальное независимое ревью относятся 
 | A10–A11 | Точный полный prompt, whole-tail budget и Markdown Citation Registry:21 unit tests PASS; реальный count/usage23/6027, C3 inputs1683–6220. |
 | A12 | Живые serve-retrieval/demo, один CPU encoder/API worker; Streamlit HTTP health и AppTest с настоящим QA API PASS. |
 | A13 | Runtime lock и QA429; parent-death/cleanup повторены с реальными Uvicorn/Streamlit, чужой sentinel сохраняется; быстрый restart после TIME_WAIT проверен. |
-| A16 частично | ARCHITECTURE/CLI/config reference/module navigation обновлены для Tasks1–11. Команды следующих задач будут документированы вместе с реализацией. |
+| A14 | Все10 полных профилей completed/built;14 CSV строк,1 corpus/gold cohort, все метрики пересчитаны офлайн; выборы и причины в study/EXPERIMENTS. |
+| A15 частично | evaluate-qa и not_reviewed worksheet реализованы, trace/ошибка/20+3/защита CSV проверены на fakes. Реальный QA20 — Task14. |
+| A16 частично | ARCHITECTURE/CLI/config reference/module navigation обновлены для Tasks1–13. Все7 публичных команд документированы; окончательный handoff — Task14. |
 | A17 частично | Targeted tests и Ruff выполнены. Независимое review запланировано после полного плана. |
 
 ## C2 — baseline и reuse: PASS
@@ -73,8 +75,8 @@ live probes выполнены отдельно и описаны в C1. Пер�
 
 ## Ограничения текущего этапа
 
-QA20 и его review worksheet ещё не выполнены (A15). Девять остальных configs и
-групповые сравнения ещё не выполнены (A14). Независимое ревью — после полного плана.
+Реальный QA20 ещё не выполнен (A15); инфраструктура сохранения/worksheet готова.
+Независимое ревью и итоговый handoff — после Task14. Все10 retrieval runs выполнены (A14).
 Литературный отчёт и семантическое рецензирование QA пользователь поручит отдельно.
 
 ## C3 — Nemotron, API и Streamlit: PASS
@@ -133,3 +135,33 @@ C1/Task9/C3 живые пробы. Targeted API/launcher/UI/store/retrieval/CLI 
 до добавления двух socket-регрессий; обе socket-регрессии затем PASS, входят в полный
 suite. Wheel содержит system.txt с исходными bytes, cwd-independent загрузка PASS.
 Ruff check/format — PASS,121 файлов отформатированы. Обязательная пауза после Task11.
+
+## C4 — эксперименты и выбор профиля: PASS
+
+[Полное сравнение](EXPERIMENTS.md) · [CSV](../../results/retrieval_comparison.csv) ·
+[Study](../../configs/experiments/study.yaml) · [Evidence](../../.agents/work/implementation/c4-evidence.json).
+Десять unique config/index/build IDs,все completed/built,20 вопросов/0 errors
+в каждом. Один corpus/gold cohort;14 CSV строк =10 comparison+4 references.
+
+G1 выбран source_map_recursive H4 по EC5=.9700/MRR10=.9750; после G2 сохранён
+512/64. G3/G5 происходят от этого dense-контроля; оба G4 — независимо от g3_hybrid.
+Hybrid EC5=.946667, no-stem профиль=.9600, исходный dense=.9700. Strip=true
+не меняет EC@5 по20 вопросам/MRR, но raw_tokens@5 чуть больше; title=false ухудшает EC/MRR.
+QA selection:configs/experiments/g1_splitters/source_map_recursive.yaml,
+dense,title=true,strip=false,5578 points,raw_tokens@5=1099.45. Причины и все
+индивидуальные question deltas сохранены; оптимальность за пределами gold20 не заявляется.
+
+Audit:все10 метрик P/R/EC@1/5/10/MRR10 совпали с offline recompute,source YAML
+совпали с snapshots/config_id; native Qdrant green/ready/points/indexed_vectors PASS.
+Raw G5 manifests совпали по body/ranges/lines/tokens. Измерены allocated/apparent
+collection bytes,controls не пересобирались. После этапа runtime lock свободен,
+GPU фон735MiB,Qdrant и результаты сохранены.
+
+Полный Python suite:671 passed,3 explicit-live skipped за64.06s; Ruff check/format
+PASS,124 файла. Новые QA-run тесты доказывают actual trace без второго retrieval,
+раздельные20/3,пустые grades,неперезапись reviewer CSV и retained failed-run.
+Семантический QA20/independent review пока не проведены; обязательная пауза перед14.
+
+CSV exporters используют LF;Git diff --check проверяет и сгенерированную сводку.
+У strip EC@10=.9900 vs.9700 контроля:эффект отражён в CSV/EXPERIMENTS,выбор QA
+сохраняет принятый приоритет EC@5 и лимит5 передаваемых чанков.

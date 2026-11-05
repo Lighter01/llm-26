@@ -3,8 +3,11 @@ groups:
   G1:
     requires_base: false
     selected_base_run: g1_markdown_initial
-    selection_reason: 'Контроль G1: исходный Markdown512/64; победитель будет выбран
-      по трём фактическим runs.'
+    selection_reason: 'Контроль G1 — исходный Markdown512/64. G1: source_map_recursive
+      H4 выбран по EC@5=.9700 и MRR@10=.9750 против Markdown .841667/.7375 и Recursive
+      .8075/.7450. Улучшение EC на4 вопросах, ухудшений0; raw_tokens@5 1099.45 против1930.85
+      у Markdown. Цена:5578 чанков и178.91s вместо3175/133.06s. Приоритет покрытия
+      оправдывает стоимость на этом gold20.'
     comparisons:
     - config: configs/experiments/g1_splitters/markdown.yaml
       run: g1_markdown_initial
@@ -22,61 +25,84 @@ groups:
       - chunking.strategy
   G2:
     requires_base: true
-    selected_base_run: null
-    selection_reason: null
+    selected_base_run: g1_source_map_recursive
+    selection_reason: 'G1: source_map_recursive H4 выбран по EC@5=.9700 и MRR@10=.9750
+      против Markdown .841667/.7375 и Recursive .8075/.7450. Улучшение EC на4 вопросах,
+      ухудшений0; raw_tokens@5 1099.45 против1930.85 у Markdown. Цена:5578 чанков
+      и178.91s вместо3175/133.06s. Приоритет покрытия оправдывает стоимость на этом
+      gold20.'
     comparisons:
     - config: configs/experiments/g2_chunks/overlap_128.yaml
       run: g2_overlap_128
-      reference_run: null
+      reference_run: g1_source_map_recursive
       changed_parameters:
       - chunking.chunk_overlap
     - config: configs/experiments/g2_chunks/size_768.yaml
       run: g2_size_768
-      reference_run: null
+      reference_run: g1_source_map_recursive
       changed_parameters:
       - chunking.chunk_size
   G3:
     requires_base: true
-    selected_base_run: null
-    selection_reason: null
+    selected_base_run: g1_source_map_recursive
+    selection_reason: Лучшая dense-база после G2 — g1_source_map_recursive H4,512/64:EC5=.9700/MRR10=.9750.
+      Overlap128 даёт ту же EC.9700, но MRR.9500 и больший context1183.9 vs1099.45.
+      Size768 даёт MRR1.0, но EC.9100 с потерями на multi_01/03/05,context1352.3 и195.59s.
+      Приоритет EC5 сохраняет исходный контроль; обе G5 вариации остаются dense.
     comparisons:
     - config: configs/experiments/g3_search/hybrid.yaml
       run: g3_hybrid
-      reference_run: null
+      reference_run: g1_source_map_recursive
       changed_parameters:
       - retrieval.mode
   G4:
     requires_base: true
-    selected_base_run: null
-    selection_reason: null
+    selected_base_run: g3_hybrid
+    selection_reason: Обе независимые G4 вариации берутся от одной измеренной hybrid-базы
+      g3_hybrid H4,512/64 (EC5=.946667,MRR10=.9750). Dense-контроль имеет EC5=.9700;
+      выбор G4 базы задан программой, а не превосходством hybrid. BM25 no-stem не
+      наследует усиленный HNSW;lowercase/stopwords/candidates/RRF остаются baseline.
     comparisons:
     - config: configs/experiments/g4_index/hnsw_32_200_256.yaml
       run: g4_hnsw_32_200_256
-      reference_run: null
+      reference_run: g3_hybrid
       changed_parameters:
       - index.hnsw.m
       - index.hnsw.ef_construction
       - retrieval.ef_search
     - config: configs/experiments/g4_index/bm25_no_stem.yaml
       run: g4_bm25_no_stem
-      reference_run: null
+      reference_run: g3_hybrid
       changed_parameters:
       - bm25.stemmer
       - bm25.k1
       - bm25.b
   G5:
     requires_base: true
-    selected_base_run: null
-    selection_reason: null
+    selected_base_run: g1_source_map_recursive
+    selection_reason: Лучшая dense-база после G2 — g1_source_map_recursive H4,512/64:EC5=.9700/MRR10=.9750.
+      Overlap128 даёт ту же EC.9700, но MRR.9500 и больший context1183.9 vs1099.45.
+      Size768 даёт MRR1.0, но EC.9100 с потерями на multi_01/03/05,context1352.3 и195.59s.
+      Приоритет EC5 сохраняет исходный контроль; обе G5 вариации остаются dense.
     comparisons:
     - config: configs/experiments/g5_headings/title_strip.yaml
       run: g5_title_strip
-      reference_run: null
+      reference_run: g1_source_map_recursive
       changed_parameters:
       - embedding.strip_markdown_headings
     - config: configs/experiments/g5_headings/no_title_keep.yaml
       run: g5_no_title_keep
-      reference_run: null
+      reference_run: g1_source_map_recursive
       changed_parameters:
       - embedding.include_title
-qa_selection: null
+qa_selection:
+  run: g1_source_map_recursive
+  config: configs/experiments/g1_splitters/source_map_recursive.yaml
+  reason: Выбран dense H4,512/64,title=true,strip=false по EC5=.9700,затем MRR10=.9750.
+    Overlap128:EC=.9700,MRR=.9500;size768:.9100/1.0;hybrid:.946667/.9750;HNSW G4:.946667/.9750;BM25
+    no-stem:.9600/.9750;title=false:.953333/.9250. Title_strip даёт те же EC@5 на
+    всех20 вопросах и тот же MRR, но raw_tokens@5=1128.85 против1099.45;преимущества
+    по EC@5/MRR@10 нет. EC@10 у strip=.9900 против.9700 у контроля;QA получает максимум5
+    чанков,поэтому это не меняет согласованный выбор. Сохраняется исходный H4 профиль
+    с меньшим контекстом. Выбор только по gold20, без утверждения общей оптимальности
+    или качества QA.

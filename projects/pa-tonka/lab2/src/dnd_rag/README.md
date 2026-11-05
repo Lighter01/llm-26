@@ -16,5 +16,5 @@ RetrievalResult с ranked raw chunks и временем embedding/search. LLM/H
 аналитический runner и карту сравнений. [RAG](rag/README.md) — точный бюджет,
 локальная LLM и Citation Registry. `api.py` задаёт stateless HTTP-контракт,
 `ui.py` — Streamlit-клиент без моделей. `__main__.py` — тонкий CLI build-index,
-reset-index, experiment, serve-retrieval, demo.
+reset-index, experiment, serve-retrieval, demo, evaluate-qa, summarize-results.
 

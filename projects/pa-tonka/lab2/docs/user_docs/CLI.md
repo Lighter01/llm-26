@@ -351,3 +351,14 @@ uv run python -m dnd_rag summarize-results --study configs/experiments/study.yam
 и несовпадающие corpus/gold показаны явно, reuse не получает build_time=0. Столбцы,
 семантика стадий и все10 профилей — в [справочнике](../../configs/experiments/README.md).
 Выбор QA-профиля хранится в study.qa_selection и выполняется до финального QA20.
+
+Выбранный по C4 профиль для демонстрации и следующего QA20:
+
+```bash
+uv run python -m dnd_rag demo \
+  --config configs/experiments/g1_splitters/source_map_recursive.yaml --llm-profile configs/llm/local.yaml
+```
+
+[Результаты C4](../rag/EXPERIMENTS.md) содержат все10 runs,контрольные ссылки,
+метрики/объёмы/времена и основания выбора. Это retrieval-оценка; реальный финальный
+QA20 выполняется отдельной evaluate-qa командой в Task14.

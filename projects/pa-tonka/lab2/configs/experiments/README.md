@@ -49,12 +49,13 @@ gold и batch не меняют fingerprint. Dense игнорирует BM25 п�
 Готовая совместимая коллекция переиспользуется целиком; `--rebuild` повторяет все
 стадии. Кэшей chunks/vectors и достройки dense → hybrid нет.
 
-Подготовлены10 полных YAML, включая [baseline G1](g1_splitters/markdown.yaml).
+Измерены10 полных YAML (C4), включая [baseline G1](g1_splitters/markdown.yaml).
 В resolved snapshot сохраняются shard=1, datatype=float32, Cosine,
 indexing_threshold=1 KB (build) и full_scan_threshold=10 KB (planner).
 При grey после restart меняется только runtime max_optimization_threads на 1/2;
 фактическое действие сохраняется в metadata коллекции.
-Карта групп и выбранные базы — [study.yaml](study.yaml); измерения выполняются последовательно.
+Карта групп и выбранные базы — [study.yaml](study.yaml); все10 runs completed.
+Результаты/условия/причины — [EXPERIMENTS](../../docs/rag/EXPERIMENTS.md).
 
 ## Карта study
 
@@ -87,7 +88,7 @@ Run/base/reference — безопасные имена папок, config — я
 В репозитории10 полных YAML, без наследования. G1:markdown/recursive/source_map_recursive
 (512/64,H4). G2:копии победителя G1 с512/128 и768/64. G3:hybrid-копия лучшей dense
 базы G1/G2. G4:две независимые копии G3 — HNSW32/200/256 и stemmer=null,k1=1.5,b=.5.
-G5:копии той же dense базы с title/strip=true/true иfalse/false. Невыбранные
+G5:копии той же dense базы с title/strip=true/true иfalse/false. До выбора
 зависимости в study имеют selected_base_run=null; соответствующие YAML — заготовки,
 которые полностью обновляются по фактическим результатам до запуска.
 
@@ -115,3 +116,9 @@ original_preparation_ms — та же сумма из сохранённого �
 не время её повторения. Пропущенные стадии пусты, а не фиктивные нули.
 Общий wall_time_ms включает проверку/reuse, CPU model и20 запросов. Пути к исходным
 run/config snapshots сохранены. Сводку можно перезаписать; файлы внутри run защищены.
+
+C4 завершён:QA selection — dense source_map_recursive H4,512/64,title=true,strip=false.
+EC@5=.9700,MRR@10=.9750 на gold20. G2/G3/G5 selected base=g1_source_map_recursive;
+G4 selected base=g3_hybrid. Все9 новые вариации построены полностью,без кэшей стадий;
+ранее выполненный g1_markdown_initial включён по ссылке. Reuse-check остаётся вне
+обязательных сравнений. Полная CSV:results/retrieval_comparison.csv.

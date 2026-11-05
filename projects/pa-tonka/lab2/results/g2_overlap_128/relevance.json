@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "threshold": 0.5,
+  "formula": "intersection/min(chunk_length,evidence_length) >= 0.5, same file/body",
+  "questions": {
+    "phb_01": {
+      "relevant_ids": [
+        "da7955d9-f4f2-58df-9ade-30e3446413a0"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_02": {
+      "relevant_ids": [
+        "005a1d9a-d091-588b-a8aa-3cd987099ee3",
+        "7c405304-7ff8-5131-bf7f-8ea201bc595c",
+        "a9580d19-2a4d-59e3-afc6-1ba575109f3c",
+        "aa4c76dd-8d0c-5a42-b9d0-5351e0b9cc3c",
+        "e7671add-3e0b-5a0a-9458-05fae86cbfe6"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_03": {
+      "relevant_ids": [
+        "f55a8c78-267b-54d1-8369-430ceb324d02"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_04": {
+      "relevant_ids": [
+        "7acdf386-5daa-5eb3-b67a-7db97d548ebb"
+      ],
+      "no_relevant_chunks": false
+    },
+    "phb_05": {
+      "relevant_ids": [
+        "44626885-7809-543e-ad24-99a93af55fb0",
+        "a9658ccd-7f3b-5e85-a085-a04f3a194f2a",
+        "ff94c778-359d-52f6-a36c-3320e2c5ecf4"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_01": {
+      "relevant_ids": [
+        "86d5d2c8-aac9-5aa7-8bd7-eb2b76e309df",
+        "97a90287-a9d7-55d8-93c1-a2868da61acc"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_02": {
+      "relevant_ids": [
+        "1b6e6c20-6547-5182-99a5-73553acc2990",
+        "ed419424-5b4d-5859-99ae-d3358929e243"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_03": {
+      "relevant_ids": [
+        "091de99e-776a-55b0-a6a3-d0842306b5ac"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_04": {
+      "relevant_ids": [
+        "fbf22d2d-06ac-5e8e-9d72-cfe4200ef3db"
+      ],
+      "no_relevant_chunks": false
+    },
+    "dmg_05": {
+      "relevant_ids": [
+        "275fc9e1-1ba1-5034-868b-fab3a590c116",
+        "3a7372e7-27bf-52f6-8e94-9228adce0840",
+        "70a43d70-27f6-548e-ad98-d380b1c708e1",
+        "8d622037-76d5-5a30-bc71-fae12d4e9b7e"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_01": {
+      "relevant_ids": [
+        "93d123bc-e905-5df9-81a1-541a85214fa6"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_02": {
+      "relevant_ids": [
+        "23a40e3d-ae3e-5130-8064-935aae7b9a2c"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_03": {
+      "relevant_ids": [
+        "ab5ccfbc-f39b-50df-ac6c-31e1c9bfa5d9"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_04": {
+      "relevant_ids": [
+        "8e72f0f3-d54e-5140-8274-d09ad2077a4f"
+      ],
+      "no_relevant_chunks": false
+    },
+    "mm_05": {
+      "relevant_ids": [
+        "4066b316-1f6e-5ae0-8387-2d0d0fccb63c",
+        "4bd1dafa-5e7c-5ee7-948f-8b7ff4c568b8"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_01": {
+      "relevant_ids": [
+        "2e39c8d3-7ad9-5afb-85a7-84bc4c9f39ed",
+        "61181d09-d628-58ac-97b1-bc44a378e46e"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_02": {
+      "relevant_ids": [
+        "23a40e3d-ae3e-5130-8064-935aae7b9a2c",
+        "25fdaa51-8b3a-51c8-893d-b643c3b6d59b"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_03": {
+      "relevant_ids": [
+        "46ab1383-7ff7-5bce-97b0-7c052966d425",
+        "9bcb7b33-2ee2-538b-ab63-c7d418a1cbeb",
+        "af60eed9-d42c-51b3-8b4a-cc51cee43893",
+        "b2cdc69e-1f8d-5a0d-a391-158e3bcc28d1"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_04": {
+      "relevant_ids": [
+        "04416149-f20f-5425-8d5c-66a357789dfa",
+        "359b00ed-22ce-57a0-ac8f-2ef85f1a69c6",
+        "51fc3707-1bbd-5f98-8189-af1dbd5c35d0",
+        "7bfe5067-82a4-574e-a458-17d9a4d012f7",
+        "c35c1cc2-30c4-5380-8ecf-74bfb5f385a8",
+        "c3a39432-502a-5756-ab24-b00bcbf57035",
+        "d22ef308-9cc4-5ac1-ac27-86bffae7d569",
+        "f2419b5f-7c89-540b-b9fe-9f9c4d729332"
+      ],
+      "no_relevant_chunks": false
+    },
+    "multi_05": {
+      "relevant_ids": [
+        "570bf7e8-a6b7-52e1-8fcb-cecc496bcf5f",
+        "93d123bc-e905-5df9-81a1-541a85214fa6",
+        "aa4c76dd-8d0c-5a42-b9d0-5351e0b9cc3c",
+        "e7671add-3e0b-5a0a-9458-05fae86cbfe6"
+      ],
+      "no_relevant_chunks": false
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Технические пробы
 
-2026-11-06, Europe/Moscow. Реализация Tasks 1–11. Непроведённые проверки не считаются PASS.
+2026-11-06, Europe/Moscow. Реализация Tasks1–13. Непроведённые проверки не считаются PASS.
 
 | Проверка | Наблюдение |
 | --- | --- |
@@ -135,3 +135,21 @@ Real parent-death/cleanup Uvicorn/Streamlit unit probes PASS, inherited flock
 SIGINT завершает LLM/UI и освобождает lock; Qdrant остаётся. Быстрый restart проверяет
 SO_REUSEADDR как Uvicorn, TIME_WAIT не принимается за чужой listener. Live C3
 не заменяет QA20/содержательное рецензирование и выбор retrieval-конфига следующих задач.
+
+## C4 — native индексы и офлайн-пересчёт: PASS
+
+Все10 обязательных retrieval конфигураций completed/built на общем gold20.
+Native10 коллекций green/ready,points/build IDs совпали с паспортами,
+indexed_vectors>0. Проверены фактические HNSW m/ef_construct иfull_scan_threshold10,
+optimizer indexing_threshold1,dimension768/Cosine. У7 dense нет page_content
+text index,у3 hybrid он присутствует; native schema сохранены в C4 evidence.
+
+Все P/R/EC@1/5/10/MRR10 точно совпали с offline recompute. Current YAML равны
+run snapshots/config_id; G5 body/char/line/token ranges неизменны. CSV14 строк
+(10 comparison+4 reference),1 dataset cohort. allocated/apparent volume bytes
+измерены после readiness; GPU workers завершены,flock свободен.
+
+Выбран dense H4,512/64,title=true,strip=false:EC5.9700/MRR10.9750.
+Полная [таблица и причины](EXPERIMENTS.md),[паспорт C4](../../.agents/work/implementation/c4-evidence.json).
+671 Python tests PASS,3 live opt-in skipped; Ruff124 файла PASS. Финальный QA20
+и независимый code review относятся к Task14, не к этой технической пробе.
