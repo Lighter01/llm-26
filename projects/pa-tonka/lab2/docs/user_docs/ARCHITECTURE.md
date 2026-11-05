@@ -35,3 +35,13 @@ overlap измеряются токенами без special tokens, пробе�
 Адаптер сопоставляет последовательные выходные строки с исходным локальным участком,
 проверяет непрерывность покрытия и однозначность offsets. Неоднозначность/потеря текста
 завершает сборку диагностикой; tokenizer overlap не трактуется как число символов.
+
+`indexing/embedding.py` загружает закреплённый tokenizer отдельно от SentenceTransformer.
+DocumentEncoder явно требует CUDA и выбранный BF16/FP32; QueryEncoder загружается
+один раз на CPU FP32. Неиспользуемые vision/audio encoders отключены через config_kwargs.
+Производный input имеет ровно один `title: ... | text: ...`; независимые title/strip
+не меняют raw content. Удаляются только пересечения с настоящими mapped H1–H6,
+в том числе частично разрезанными. Document encode получает пустой prompt override,
+query — штатный prompt_name модели. Весь input считается со special tokens до encode,
+без silent truncation. Размерность сокращается библиотечным API, Normalize сохраняется;
+векторы проверяются на форму/конечность и передаются в float32.

@@ -1,3 +1,4 @@
+import subprocess
 import sys
 
 import pytest
@@ -63,5 +64,9 @@ def test_baseline_contract(tmp_path):
 
 
 def test_config_import_does_not_load_models():
-    assert 'sentence_transformers' not in sys.modules
-    assert 'torch' not in sys.modules
+    code = (
+        'import sys; import dnd_rag.config; '
+        'assert "sentence_transformers" not in sys.modules; '
+        'assert "torch" not in sys.modules'
+    )
+    subprocess.run([sys.executable, '-c', code], check=True)

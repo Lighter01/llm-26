@@ -5,6 +5,9 @@
 - `chunking.py`: `split_corpus(corpus, ChunkingConfig, count_tokens) -> list[ChunkDraft]`;
   готовые LangChain Markdown/Recursive splitters и custom H1–H4 → Recursive.
   `primary_spans` выделяет неперекрывающиеся исходные участки custom.
+- `embedding.py`: `prepare_embedding_text`, `load_token_counter`, `DocumentEncoder`
+  (GPU batched iterator) и `QueryEncoder.encode(question)` (CPU FP32).
+  Тяжёлые импорты только при явной загрузке tokenizer/модели.
 
 ChunkDraft ещё не имеет index_id/chunk_id. Metadata и текст описаны в общих
 [contracts](../contracts.py). API не запускает ingestion и не меняет корпус.
