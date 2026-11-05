@@ -18,6 +18,9 @@ __pycache__/
 .codex
 .agents/skills/
 skills-lock.json
+.env
+/.runtime/
+*.runtime.log
 
 # misc
 external/how_to_update.md
