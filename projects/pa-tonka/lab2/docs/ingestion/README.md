@@ -17,4 +17,4 @@
 
 Каноническая [JSON Schema](../../src/dnd_rag/ingestion/book_assembly/resolution/resolved-book.schema.json) остаётся в исходниках. В final dataset сохраняются книги и manifest; временные входы и opt-in diagnostics не являются дополнительным книжным корпусом.
 
-Документы описывают runtime решения, source-specific наблюдения, модель происхождения, правила scope и evidence. Исторические версии готовых книг не удаляются. Markdown-экспортёр — отдельный потребитель resolved JSON. RAG pipeline остаётся будущей задачей.
+Документы описывают runtime решения, source-specific наблюдения, модель происхождения, правила scope и evidence. Исторические версии готовых книг не удаляются. Markdown-экспортёр — отдельный потребитель resolved JSON. Основной RAG-конвейер реализован; его устройство и запуск описаны в [пользовательских руководствах](../user_docs/README.md).

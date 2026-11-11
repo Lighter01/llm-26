@@ -1,0 +1,240 @@
+{
+  "reference": {
+    "run": "g1_source_map_recursive",
+    "index_action": "built",
+    "index_id": "c15629b74de71e32103d4e142cbe77d37573c7d50be3fab0450aef14feff6d7a",
+    "build_id": "76ed503e-a0a2-4312-a35e-337280402003",
+    "metrics": {
+      "mrr@10": 0.975,
+      "precision@1": 0.95,
+      "precision@5": 0.37,
+      "precision@10": 0.195,
+      "recall@1": 0.6329166666666667,
+      "recall@5": 0.8979166666666667,
+      "recall@10": 0.9270833333333334,
+      "evidence_coverage@1": 0.7166666666666667,
+      "evidence_coverage@5": 0.97,
+      "evidence_coverage@10": 0.97
+    },
+    "points": 5578,
+    "manifest_raw_tokens": 1085193,
+    "raw_tokens_at5_mean": 1099.45,
+    "raw_tokens_at10_mean": 2291.8,
+    "retrieval_warm_ms": {
+      "mean": 122.51940057907824,
+      "median": 121.54463100159774,
+      "max": 157.33216099761194,
+      "min": 98.08507300112979
+    },
+    "wall_seconds": 178.91106571599812
+  },
+  "comparisons": [
+    {
+      "run": "g3_hybrid",
+      "index_action": "built",
+      "index_id": "5d946901e7d338406a8fc08cc769ac42863d4d26e94145b0722363f673455a13",
+      "build_id": "c840edc2-5abb-48ff-aa40-63b7a76b55cf",
+      "metrics": {
+        "mrr@10": 0.975,
+        "precision@1": 0.95,
+        "precision@5": 0.35000000000000003,
+        "precision@10": 0.195,
+        "recall@1": 0.6329166666666667,
+        "recall@5": 0.8629166666666667,
+        "recall@10": 0.9229166666666667,
+        "evidence_coverage@1": 0.725,
+        "evidence_coverage@5": 0.9466666666666667,
+        "evidence_coverage@10": 0.99
+      },
+      "points": 5578,
+      "manifest_raw_tokens": 1085193,
+      "raw_tokens_at5_mean": 1187.85,
+      "raw_tokens_at10_mean": 2377.9,
+      "retrieval_warm_ms": {
+        "mean": 137.0808921050124,
+        "median": 134.345434998977,
+        "max": 170.57425800157944,
+        "min": 107.54628900031094
+      },
+      "wall_seconds": 194.46132592800132,
+      "delta_ec5": -0.023333333333333317,
+      "delta_mrr10": 0.0,
+      "ec5_improved": [
+        "multi_05"
+      ],
+      "ec5_worse": [
+        "multi_02",
+        "multi_03"
+      ],
+      "ec5_equal_count": 17,
+      "per_question": [
+        {
+          "question_id": "multi_02",
+          "old_ec5": 1.0,
+          "new_ec5": 0.6666666666666666,
+          "delta_ec5": -0.33333333333333337,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "multi_03",
+          "old_ec5": 1.0,
+          "new_ec5": 0.6666666666666666,
+          "delta_ec5": -0.33333333333333337,
+          "old_rr": 0.5,
+          "new_rr": 0.5
+        },
+        {
+          "question_id": "dmg_01",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "dmg_02",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "dmg_03",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "dmg_04",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "dmg_05",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "mm_01",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "mm_02",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "mm_03",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "mm_04",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "mm_05",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "multi_01",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "multi_04",
+          "old_ec5": 0.8,
+          "new_ec5": 0.8,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "phb_01",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "phb_02",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "phb_03",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "phb_04",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "phb_05",
+          "old_ec5": 1.0,
+          "new_ec5": 1.0,
+          "delta_ec5": 0.0,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        },
+        {
+          "question_id": "multi_05",
+          "old_ec5": 0.6,
+          "new_ec5": 0.8,
+          "delta_ec5": 0.20000000000000007,
+          "old_rr": 1.0,
+          "new_rr": 1.0
+        }
+      ],
+      "categories_ec5": {
+        "phb": 1.0,
+        "dmg": 1.0,
+        "mm": 1.0,
+        "multi": 0.7866666666666666
+      }
+    }
+  ]
+}

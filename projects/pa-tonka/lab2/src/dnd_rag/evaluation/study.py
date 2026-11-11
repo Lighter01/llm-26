@@ -79,7 +79,9 @@ def read_study_entry(
             and comparison.reference_run is not None
             and comparison.reference_run != entry.selected_base_run
         ):
-            raise ValueError('A dependent comparison must use its group selected base')
+            raise ValueError(
+                'Set reference_run to the selected base run for this group (selected_base_run).'
+            )
         reference = comparison.reference_run or entry.selected_base_run
         # A selected base and an explicit reference must both be completed.
         for name in dict.fromkeys(n for n in (entry.selected_base_run, reference) if n is not None):

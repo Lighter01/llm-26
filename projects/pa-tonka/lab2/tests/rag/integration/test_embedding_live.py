@@ -18,7 +18,7 @@ pytestmark = pytest.mark.rag_models
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_real_corpus_offsets_and_text_only_encoders():
+def test_real_corpus_offsets_and_text_only_encoders(tmp_path):
     import torch
 
     settings = load_settings(ROOT)
@@ -85,5 +85,5 @@ def test_real_corpus_offsets_and_text_only_encoders():
         assert len(vector) == dimension and np.isfinite(vector).all()
         report['dimensions'][dimension]['cpu_shape'] = [len(vector)]
     report['cpu_query_ms_sequential'] = query_times
-    output = ROOT / '.agents/work/implementation/embedding-probe.json'
+    output = tmp_path / 'embedding-probe.json'
     output.write_text(json.dumps(report, indent=2) + '\n')

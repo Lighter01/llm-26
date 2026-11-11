@@ -46,10 +46,6 @@ def ensure_qdrant(settings, session):
                 cwd=settings.project_root,
                 capture_output=True,
                 text=True,
-                env={
-                    **__import__('os').environ,
-                    'QDRANT_STORAGE_VOLUME': settings.qdrant_storage_volume,
-                },
                 timeout=180,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:

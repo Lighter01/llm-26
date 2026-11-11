@@ -7,26 +7,14 @@ uv run --group test python -m pytest tests/rag/integration/test_qdrant_live.py -
 uv run --group test python -m pytest tests/rag/integration/test_llama_live.py --run-llama
 ```
 
-Unit tests используют малые LF-книги, fake encoders/client и реальные короткие
-subprocesses для lock/parent death/cleanup. По умолчанию live tests skip до setup.
-Модельная проба только split/tokenize полного корпуса и ограниченные GPU/CPU embeddings;
-она не векторизует все книги. Qdrant-проба использует собственные disposable collections
-и fixed vectors, проверяет три quantization режима, BM25/RRF и restart persistence.
-Индекс baseline и результаты не удаляются. Запускайте живые пробы последовательно,
-когда другой runtime проекта остановлен.
+Unit tests используют малые LF-книги, fake encoders/client и реальные короткие subprocesses для lock/parent death/cleanup. По умолчанию live tests skip до setup. Модельная проба только split/tokenize полного корпуса и ограниченные GPU/CPU embeddings; она не векторизует все книги. Qdrant-проба использует собственные disposable collections и fixed vectors, проверяет три quantization режима, BM25/RRF и restart persistence. Индекс baseline и результаты не удаляются. Запускайте живые пробы последовательно, когда другой runtime проекта остановлен.
 
-`test_metrics.py` содержит независимые математические fixtures. `test_retrieval_run.py`
-проверяет сохранность failed-run, отсутствие новых index side effects при повторном
-имени и пересчёт метрик из artifacts после отключения fake store.
+`test_metrics.py` содержит независимые математические fixtures. `test_retrieval_run.py` проверяет сохранность failed-run, отсутствие новых index side effects при повторном имени и пересчёт метрик из artifacts после отключения fake store.
 
-`test_context`/`test_citations`/`test_qa_service` проверяют бюджет полного prompt,
-целые удаления, frozen registry, Markdown exclusions и один generate. `test_api`
-проверяет строгие входы, error envelope, readiness, stateless и 429 при занятой QA.
-`test_launcher` повторяет parent-death/cleanup с реальными Uvicorn/Streamlit,
-без моделей; `test_ui` использует Streamlit AppTest и fake HTTP. Живой Nemotron
-проверяет точный count/usage и установленный chat template; его запуск держит lock.
+`test_context`/`test_citations`/`test_qa_service` проверяют бюджет полного prompt, целые удаления, frozen registry, Markdown exclusions и один generate. `test_api` проверяет строгие входы, error envelope, readiness, stateless и 429 при занятой QA. `test_launcher` повторяет parent-death/cleanup с реальными Uvicorn/Streamlit, без моделей; `test_ui` использует Streamlit AppTest и fake HTTP. Живой Nemotron проверяет точный count/usage и установленный chat template; его запуск держит lock.
 
-`test_qa_run` проверяет запись фактических messages/registry без второго retrieval,
-not_reviewed поля, раздельные20/3, partial failed-run и защиту правок CSV.
-`test_study` проверяет точные дельты10 полных YAML, выбранные completed references,
-offline cohorts/failed/reuse; CLI-test доказывает,что summary не читает runtime settings.
+`test_qa_run` проверяет запись фактических messages/registry без второго retrieval, not_reviewed поля, раздельные 20/3, partial failed-run и защиту правок CSV. `test_study` проверяет точные дельты 10 полных YAML, выбранные completed references, offline cohorts/failed/reuse; CLI-test доказывает, что summary не читает runtime settings.
+
+Регрессии финального ревью: `test_preflight` различает ECONNREFUSED/timeout/DNS/protocol и проверяет native /health для /v1 и /v1/; никакой неопределённый ответ не разрешает GPU/LLM/Compose. `test_runtime` проверяет живого потомка после выхода wrapper, TERM-ignoring потомка и чужую группу, самостоятельно открывшую тот же lock-файл. `test_study` проверяет собственный explicit reference строки (cohort/failed/missing) и dependent base drift, даже после ручного изменения карты перед offline-summary.
+
+Все JSON и копии логов трёх live-проб направлены в `tmp_path` соответствующего теста. Их сохранение и очистка подчиняются стандартным настройкам pytest; пробы не пишут постоянные экспериментальные результаты.

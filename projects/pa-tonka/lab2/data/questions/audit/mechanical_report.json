@@ -1,7 +1,6 @@
 {
   "input": "data/questions/questions_codex.yaml",
   "raw_input_sha256": "5d6672fc4f4974596fd1d7e0af5ef3cd755a6a9d3e7e999f1f4a995f08305478",
-  "prompt_sha256": "a122b90a5f83aa469d9522f20614a6a80e6bf359cba17a68a41ac0af04638c3f",
   "source_map_sha256": "385b102e47afaaf19d77fd4318622f9cc1889a538e73d5e059a375460a9b4577",
   "corpus": {
     "xphb.md": {

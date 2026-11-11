@@ -1,7 +1,6 @@
 """Strict, model-free configuration and explicit project-relative paths."""
 
 import os
-import re
 from pathlib import Path
 from typing import Literal
 
@@ -172,7 +171,6 @@ class LLMProfile(ConfigModel):
 class RuntimeSettings(ConfigModel):
     project_root: Path
     qdrant_url: str = 'http://127.0.0.1:6333'
-    qdrant_storage_volume: str = 'dnd_rag_lab2_qdrant'
     llama_server_bin: str = 'llama-server'
     model_path: Path
     llm_base_url: str = 'http://127.0.0.1:8080/v1'
@@ -216,13 +214,9 @@ def load_settings(project_root: Path) -> RuntimeSettings:
         return values.get(key) or default
 
     cache = value('EMBEDDING_CACHE_DIR', None)
-    volume = value('QDRANT_STORAGE_VOLUME', 'dnd_rag_lab2_qdrant')
-    if not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]*', volume):
-        raise RagError('invalid_config', 'Invalid QDRANT_STORAGE_VOLUME')
     return RuntimeSettings(
         project_root=project_root.resolve(),
         qdrant_url=value('QDRANT_URL', 'http://127.0.0.1:6333'),
-        qdrant_storage_volume=volume,
         llama_server_bin=value('LLAMA_SERVER_BIN', 'llama-server'),
         model_path=resolve_path(
             value(

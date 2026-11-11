@@ -18,7 +18,7 @@ pytestmark = pytest.mark.rag_llama
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_real_template_token_parity():
+def test_real_template_token_parity(tmp_path):
     settings = load_settings(ROOT)
     profile = load_llm_profile(ROOT / 'configs/llm/local.yaml')
     report = {'profile': profile.model_dump(), 'cases': []}
@@ -108,8 +108,8 @@ def test_real_template_token_parity():
         report['child_peak_rss_bytes'] = (
             resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * 1024
         )
-        target = ROOT / '.agents/work/implementation/llama-probe.json'
+        target = tmp_path / 'llama-probe.json'
         target.write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
         log = ROOT / '.runtime/llama/server.log'
         if log.exists():
-            shutil.copyfile(log, ROOT / '.agents/work/implementation/llama-probe-server.log')
+            shutil.copyfile(log, tmp_path / 'llama-probe-server.log')

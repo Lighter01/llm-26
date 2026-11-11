@@ -244,7 +244,7 @@ def _rows(study, data):
             ):
                 row.update(
                     comparison_eligible=False,
-                    comparison_error='A dependent comparison must use its group selected base',
+                    comparison_error='Set reference_run to the selected base run for this group (selected_base_run).',
                 )
             rows.append(row)
     return rows

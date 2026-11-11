@@ -149,6 +149,4 @@ def test_native_bm25_rrf_quantization_and_persistence(tmp_path):
             assert store.reset(identity.index_id) is False
         finally:
             store.reset(identity.index_id)
-    (ROOT / '.agents/work/implementation/qdrant-probe.json').write_text(
-        json.dumps(report, indent=2) + '\n'
-    )
+    (tmp_path / 'qdrant-probe.json').write_text(json.dumps(report, indent=2) + '\n')

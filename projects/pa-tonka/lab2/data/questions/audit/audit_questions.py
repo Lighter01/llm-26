@@ -14,14 +14,15 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[3]
 CORPUS = ROOT / 'data/markdown/5etools/c3d53956346388b222aaaaf4637776f563e201b8'
 INPUT = ROOT / 'data/questions/questions_codex.yaml'
 OUTPUT = Path(__file__).resolve().parent
-EXPECTED = [f'{group}_{n:02}' for group, count in
-            (('phb', 5), ('dmg', 5), ('mm', 5), ('multi', 5), ('insufficient', 3))
-            for n in range(1, count + 1)]
+EXPECTED = [
+    f'{group}_{n:02}'
+    for group, count in (('phb', 5), ('dmg', 5), ('mm', 5), ('multi', 5), ('insufficient', 3))
+    for n in range(1, count + 1)
+]
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -56,8 +57,13 @@ def markdown_sections(body):
         heading = re.sub(r'\\+(?=[\[\]])', '', match.group(2))
         while stack and stack[-1]['level'] >= level:
             stack.pop()['end_char'] = match.start()
-        item = {'level': level, 'heading_path': [r['heading'] for r in stack] + [heading],
-                'heading': heading, 'start_char': match.start(), 'end_char': len(body)}
+        item = {
+            'level': level,
+            'heading_path': [r['heading'] for r in stack] + [heading],
+            'heading': heading,
+            'start_char': match.start(),
+            'end_char': len(body),
+        }
         records.append(item)
         stack.append(item)
     return records
@@ -96,19 +102,31 @@ def main():
         assert full.startswith('---\n')
         close = full.index('\n---\n', 4) + len('\n---\n')
         assert full[close] == '\n'
-        prefix = full[:close + 1]
-        body = full[close + 1:]
+        prefix = full[: close + 1]
+        body = full[close + 1 :]
         source_map = [r for r in records if r['file'] == filename]
         independent = markdown_sections(body)
-        expected_ranges = {(tuple(r['heading_path']), r['start_char'], r['end_char']) for r in source_map}
-        parsed_ranges = {(tuple(r['heading_path']), r['start_char'], r['end_char']) for r in independent}
-        assert parsed_ranges == expected_ranges, f'Independent heading tree disagrees for {filename}'
+        expected_ranges = {
+            (tuple(r['heading_path']), r['start_char'], r['end_char']) for r in source_map
+        }
+        parsed_ranges = {
+            (tuple(r['heading_path']), r['start_char'], r['end_char']) for r in independent
+        }
+        assert parsed_ranges == expected_ranges, (
+            f'Independent heading tree disagrees for {filename}'
+        )
         assert len(source_map) == len(independent)
-        corpus[filename] = {'body': body, 'sections': source_map, 'independent': independent,
-                            'prefix_lines': prefix.count('\n'), 'file_sha256': digest(data),
-                            'body_sha256': digest(body.encode('utf-8'))}
+        corpus[filename] = {
+            'body': body,
+            'sections': source_map,
+            'independent': independent,
+            'prefix_lines': prefix.count('\n'),
+            'file_sha256': digest(data),
+            'body_sha256': digest(body.encode('utf-8')),
+        }
 
     styles = collections.Counter()
+
     def check_styles(node, field=None):
         if isinstance(node, yaml.MappingNode):
             for key, val in node.value:
@@ -123,6 +141,7 @@ def main():
                 styles[field] += 1
             else:
                 assert node.style == '"', (field, node.value)
+
     check_styles(tree)
 
     per_question = []
@@ -158,12 +177,21 @@ def main():
                 book = corpus[alt['file']]
                 sections = [r for r in book['sections'] if r['heading_path'] == alt['heading_path']]
                 matches = spans(book['body'], alt['quote'])
-                scoped = [(s, e) for s, e in matches
-                          if any(r['start_char'] <= s and e <= r['end_char'] for r in sections)]
-                independent = [(s, e) for s, e in matches
-                               if any(r['heading_path'] == alt['heading_path']
-                                      and r['start_char'] <= s and e <= r['end_char']
-                                      for r in book['independent'])]
+                scoped = [
+                    (s, e)
+                    for s, e in matches
+                    if any(r['start_char'] <= s and e <= r['end_char'] for r in sections)
+                ]
+                independent = [
+                    (s, e)
+                    for s, e in matches
+                    if any(
+                        r['heading_path'] == alt['heading_path']
+                        and r['start_char'] <= s
+                        and e <= r['end_char']
+                        for r in book['independent']
+                    )
+                ]
                 assert scoped == independent
                 assert len(scoped) == 1, (qid, fi, ai, len(scoped), alt['heading_path'])
                 start, end = scoped[0]
@@ -171,8 +199,14 @@ def main():
                 # The raw input remains coordinate-free; only this separate audit has lines.
                 line_first = book['body'].count('\n', 0, start) + 1 + book['prefix_lines']
                 line_last = book['body'].count('\n', 0, end - 1) + 1 + book['prefix_lines']
-                result = {'alternative_number': ai, 'file': alt['file'], 'heading_path': alt['heading_path'],
-                          'unique_exact_match': True, 'file_line_start': line_first, 'file_line_end': line_last}
+                result = {
+                    'alternative_number': ai,
+                    'file': alt['file'],
+                    'heading_path': alt['heading_path'],
+                    'unique_exact_match': True,
+                    'file_line_start': line_first,
+                    'file_line_end': line_last,
+                }
                 alternatives.append(result)
                 all_alts.append(result)
                 files.add(alt['file'])
@@ -184,32 +218,54 @@ def main():
             facts.append({'fact_number': fi, 'fact': fact['fact'], 'alternatives': alternatives})
         if qid.startswith('multi_'):
             assert not set.intersection(*file_sets), (qid, 'One book supports every labelled fact')
-        per_question.append({'id': qid, 'answerable': q['answerable'], 'fact_count': len(facts),
-                             'alternative_count': sum(len(f['alternatives']) for f in facts),
-                             'own_book_paths': [list(p) for p in sorted(own_paths)], 'facts': facts})
+        per_question.append(
+            {
+                'id': qid,
+                'answerable': q['answerable'],
+                'fact_count': len(facts),
+                'alternative_count': sum(len(f['alternatives']) for f in facts),
+                'own_book_paths': [list(p) for p in sorted(own_paths)],
+                'facts': facts,
+            }
+        )
     cross_section = {}
     for group in ('phb', 'dmg', 'mm'):
-        cross_section[group] = [q['id'] for q in per_question
-                                if q['id'].startswith(group + '_') and len(q['own_book_paths']) > 1]
+        cross_section[group] = [
+            q['id']
+            for q in per_question
+            if q['id'].startswith(group + '_') and len(q['own_book_paths']) > 1
+        ]
         assert cross_section[group]
-    summary = {'status': 'PASS', 'questions': len(questions),
-               'answerable': sum(q['answerable'] for q in questions),
-               'insufficient': sum(not q['answerable'] for q in questions),
-               'facts': sum(len(q['evidence']) for q in questions),
-               'alternatives': len(all_alts), 'unique_exact_matches': len(all_alts),
-               'structural_errors': 0, 'quote_or_path_errors': 0,
-               'facts_with_multiple_alternatives': sum(len(f['alternatives']) > 1 for q in questions for f in q['evidence']),
-               'cross_section_candidates': cross_section,
-               'independent_heading_tree_matches_source_map': True,
-               'literal_scalar_counts': dict(styles)}
-    report = {'input': str(INPUT.relative_to(ROOT)), 'raw_input_sha256': digest(raw),
-              'prompt_sha256': digest((ROOT / '.agents/.old_prompts/QUESTION_GENERATION_PROMPT.md').read_bytes()),
-              'source_map_sha256': digest(map_bytes),
-              'corpus': {name: {k: book[k] for k in ('file_sha256', 'body_sha256')}
-                         for name, book in corpus.items()},
-              'summary': summary, 'questions': per_question,
-              'scope': 'PASS covers structure, exact unique quotes, both heading trees, and labelled file coverage. '
-                       'Truth, evidence sufficiency, source necessity, language, and insufficient cases are reviewed separately.'}
+    summary = {
+        'status': 'PASS',
+        'questions': len(questions),
+        'answerable': sum(q['answerable'] for q in questions),
+        'insufficient': sum(not q['answerable'] for q in questions),
+        'facts': sum(len(q['evidence']) for q in questions),
+        'alternatives': len(all_alts),
+        'unique_exact_matches': len(all_alts),
+        'structural_errors': 0,
+        'quote_or_path_errors': 0,
+        'facts_with_multiple_alternatives': sum(
+            len(f['alternatives']) > 1 for q in questions for f in q['evidence']
+        ),
+        'cross_section_candidates': cross_section,
+        'independent_heading_tree_matches_source_map': True,
+        'literal_scalar_counts': dict(styles),
+    }
+    report = {
+        'input': str(INPUT.relative_to(ROOT)),
+        'raw_input_sha256': digest(raw),
+        'source_map_sha256': digest(map_bytes),
+        'corpus': {
+            name: {k: book[k] for k in ('file_sha256', 'body_sha256')}
+            for name, book in corpus.items()
+        },
+        'summary': summary,
+        'questions': per_question,
+        'scope': 'PASS covers structure, exact unique quotes, both heading trees, and labelled file coverage. '
+        'Truth, evidence sufficiency, source necessity, language, and insufficient cases are reviewed separately.',
+    }
     path = OUTPUT / args.report
     assert path.parent == OUTPUT
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
