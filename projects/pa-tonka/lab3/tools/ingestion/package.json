@@ -1,0 +1,22 @@
+{
+  "name": "dnd-rag-ingestion-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Isolated Node.js runtime for the 5etools ingestion adapter",
+  "scripts": {
+    "recon": "node ../../src/dnd_rag/ingestion/dev/reconnaissance.mjs",
+    "prototype": "node ../../src/dnd_rag/ingestion/dev/chapter_probe.mjs",
+    "inventory": "node ../../src/dnd_rag/ingestion/book_assembly/inventory/inventory.mjs",
+    "assemble": "node ../../src/dnd_rag/ingestion/book_assembly/assembly/assemble_books.mjs",
+    "enrich": "node ../../src/dnd_rag/ingestion/book_assembly/enrichment/enrich_books.mjs",
+    "resolve": "node ../../src/dnd_rag/ingestion/book_assembly/resolution/resolve_books.mjs",
+    "test": "node run_tests.mjs",
+    "test:unit": "node run_tests.mjs --suite unit",
+    "test:smoke": "node run_tests.mjs --suite smoke",
+    "test:integration": "node run_tests.mjs --suite integration"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "node": "24.22.2"
+  }
+}

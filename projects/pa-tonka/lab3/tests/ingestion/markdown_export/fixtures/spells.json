@@ -1,0 +1,607 @@
+{
+  "Cure Wounds": {
+    "name": "Cure Wounds",
+    "source": "XPHB",
+    "page": 259,
+    "srd52": true,
+    "basicRules2024": true,
+    "referenceSources": [
+      "UtHftLH"
+    ],
+    "level": 1,
+    "school": "A",
+    "time": [
+      {
+        "number": 1,
+        "unit": "action"
+      }
+    ],
+    "range": {
+      "type": "point",
+      "distance": {
+        "type": "touch"
+      }
+    },
+    "components": {
+      "v": true,
+      "s": true
+    },
+    "duration": [
+      {
+        "type": "instant"
+      }
+    ],
+    "entries": [
+      "A creature you touch regains a number of {@variantrule Hit Points|XPHB} equal to {@dice 2d8} plus your spellcasting ability modifier."
+    ],
+    "entriesHigherLevel": [
+      {
+        "type": "entries",
+        "name": "Using a Higher-Level Spell Slot",
+        "entries": [
+          "The healing increases by {@scaledice 2d8|1-9|2d8} for each spell slot level above 1."
+        ]
+      }
+    ],
+    "miscTags": [
+      "HL"
+    ],
+    "areaTags": [
+      "ST"
+    ],
+    "__prop": "spell",
+    "classes": {
+      "fromClassList": [
+        {
+          "name": "Bard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Ranger",
+          "source": "XPHB"
+        },
+        {
+          "name": "Paladin",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ],
+      "fromSubclass": [
+        {
+          "class": {
+            "name": "Bard",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "College of Lore",
+            "shortName": "Lore",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Life Domain",
+            "shortName": "Life",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Druid",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Circle of Wildfire",
+            "shortName": "Wildfire",
+            "source": "TCE"
+          }
+        },
+        {
+          "class": {
+            "name": "Druid",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Circle of the Moon",
+            "shortName": "Moon",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Sorcerer",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Divine Soul",
+            "shortName": "Divine Soul",
+            "source": "XGE"
+          }
+        },
+        {
+          "class": {
+            "name": "Sorcerer",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Spellfire Sorcery",
+            "shortName": "Spellfire",
+            "source": "FRHoF"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Celestial Patron",
+            "shortName": "Celestial",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Vestige Patron",
+            "shortName": "Vestige",
+            "source": "AU",
+            "subSubclass": "Life Domain"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Life Domain",
+            "shortName": "Life",
+            "source": "PHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Druid",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Circle of Wildfire",
+            "shortName": "Wildfire",
+            "source": "TCE"
+          }
+        },
+        {
+          "class": {
+            "name": "Sorcerer",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Divine Soul",
+            "shortName": "Divine Soul",
+            "source": "XGE"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "The Celestial",
+            "shortName": "Celestial",
+            "source": "XGE"
+          }
+        }
+      ]
+    },
+    "races": [
+      {
+        "name": "Halfling (Mark of Healing)",
+        "source": "ERLW",
+        "baseName": "Halfling",
+        "baseSource": "PHB"
+      }
+    ],
+    "backgrounds": [
+      {
+        "name": "Witherbloom Student",
+        "source": "SCC"
+      }
+    ],
+    "feats": [
+      {
+        "name": "Artificer Initiate",
+        "source": "TCE"
+      },
+      {
+        "name": "Boon of Magic School Mastery",
+        "source": "AU"
+      },
+      {
+        "name": "Magic Connoisseur",
+        "source": "AU"
+      },
+      {
+        "name": "Divinely Favored",
+        "source": "DSotDQ"
+      },
+      {
+        "name": "Gift of the Metallic Dragon",
+        "source": "FTD"
+      },
+      {
+        "name": "Magic Initiate",
+        "source": "PHB"
+      },
+      {
+        "name": "Magic Initiate",
+        "source": "XPHB"
+      },
+      {
+        "name": "Mark of Healing",
+        "source": "EFA"
+      },
+      {
+        "name": "Strixhaven Initiate",
+        "source": "SCC"
+      }
+    ],
+    "rewards": [
+      {
+        "name": "Charm of Cure Wounds",
+        "source": "IDRotF"
+      }
+    ],
+    "_isMutEntity": true,
+    "_tmpSourcesInit": true,
+    "_tmpClasses": {},
+    "_tmpRaces": [],
+    "_tmpBackgrounds": [],
+    "_tmpFeats": [],
+    "_tmpOptionalfeatures": [],
+    "_tmpGroups": []
+  },
+  "Fireball": {
+    "name": "Fireball",
+    "source": "XPHB",
+    "page": 274,
+    "srd52": true,
+    "basicRules2024": true,
+    "referenceSources": [
+      "DrDe-SD",
+      "FFotR",
+      "HotB",
+      "UtHftLH"
+    ],
+    "level": 3,
+    "school": "V",
+    "time": [
+      {
+        "number": 1,
+        "unit": "action"
+      }
+    ],
+    "range": {
+      "type": "point",
+      "distance": {
+        "type": "feet",
+        "amount": 150
+      }
+    },
+    "components": {
+      "v": true,
+      "s": true,
+      "m": "a ball of bat guano and sulfur"
+    },
+    "duration": [
+      {
+        "type": "instant"
+      }
+    ],
+    "entries": [
+      "A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius {@variantrule Sphere [Area of Effect]|XPHB|Sphere} centered on that point makes a Dexterity saving throw, taking {@damage 8d6} Fire damage on a failed save or half as much damage on a successful one.",
+      "Flammable objects in the area that aren't being worn or carried start {@hazard burning|XPHB}."
+    ],
+    "entriesHigherLevel": [
+      {
+        "type": "entries",
+        "name": "Using a Higher-Level Spell Slot",
+        "entries": [
+          "The damage increases by {@scaledamage 8d6|3-9|1d6} for each spell slot level above 3."
+        ]
+      }
+    ],
+    "damageInflict": [
+      "fire"
+    ],
+    "savingThrow": [
+      "dexterity"
+    ],
+    "miscTags": [
+      "BO",
+      "OBJ"
+    ],
+    "areaTags": [
+      "S"
+    ],
+    "hasFluffImages": true,
+    "__prop": "spell",
+    "classes": {
+      "fromClassList": [
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        }
+      ],
+      "fromSubclass": [
+        {
+          "class": {
+            "name": "Artificer",
+            "source": "TCE"
+          },
+          "subclass": {
+            "name": "Artillerist",
+            "shortName": "Artillerist",
+            "source": "TCE"
+          }
+        },
+        {
+          "class": {
+            "name": "Artificer",
+            "source": "EFA"
+          },
+          "subclass": {
+            "name": "Artillerist",
+            "shortName": "Artillerist",
+            "source": "EFA"
+          }
+        },
+        {
+          "class": {
+            "name": "Bard",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "College of Lore",
+            "shortName": "Lore",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Zeal Domain (PSA)",
+            "shortName": "Zeal (PSA)",
+            "source": "PSA"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Light Domain",
+            "shortName": "Light",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Druid",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Circle of the Land",
+            "shortName": "Land",
+            "source": "XPHB",
+            "subSubclass": "Arid Land"
+          }
+        },
+        {
+          "class": {
+            "name": "Fighter",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Eldritch Knight",
+            "shortName": "Eldritch Knight",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Monk",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Warrior of the Mystic Arts",
+            "shortName": "Mystic Arts",
+            "source": "AU"
+          }
+        },
+        {
+          "class": {
+            "name": "Rogue",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Arcane Trickster",
+            "shortName": "Arcane Trickster",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "The Genie",
+            "shortName": "Genie",
+            "source": "TCE",
+            "subSubclass": "Efreeti"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Fiend Patron",
+            "shortName": "Fiend",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Vestige Patron",
+            "shortName": "Vestige",
+            "source": "AU",
+            "subSubclass": "Light Domain"
+          }
+        },
+        {
+          "class": {
+            "name": "Wizard",
+            "source": "XPHB"
+          },
+          "subclass": {
+            "name": "Evoker",
+            "shortName": "Evoker",
+            "source": "XPHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Light Domain",
+            "shortName": "Light",
+            "source": "PHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Cleric",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Zeal Domain (PSA)",
+            "shortName": "Zeal (PSA)",
+            "source": "PSA"
+          }
+        },
+        {
+          "class": {
+            "name": "Fighter",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Eldritch Knight",
+            "shortName": "Eldritch Knight",
+            "source": "PHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Rogue",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "Arcane Trickster",
+            "shortName": "Arcane Trickster",
+            "source": "PHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "The Fiend",
+            "shortName": "Fiend",
+            "source": "PHB"
+          }
+        },
+        {
+          "class": {
+            "name": "Warlock",
+            "source": "PHB"
+          },
+          "subclass": {
+            "name": "The Genie",
+            "shortName": "Genie",
+            "source": "TCE",
+            "subSubclass": "Efreeti"
+          }
+        }
+      ]
+    },
+    "optionalfeatures": [
+      {
+        "name": "Flames of the Phoenix",
+        "source": "PHB",
+        "featureType": [
+          "ED"
+        ]
+      }
+    ],
+    "feats": [
+      {
+        "name": "Boon of Magic School Mastery",
+        "source": "AU"
+      },
+      {
+        "name": "Evocation Adept",
+        "source": "AU"
+      },
+      {
+        "name": "Boon of Siberys",
+        "source": "EFA"
+      }
+    ],
+    "_isMutEntity": true,
+    "_tmpSourcesInit": true,
+    "_tmpClasses": {},
+    "_tmpRaces": [],
+    "_tmpBackgrounds": [],
+    "_tmpFeats": [],
+    "_tmpOptionalfeatures": [],
+    "_tmpGroups": []
+  }
+}

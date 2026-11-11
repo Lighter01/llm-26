@@ -1,0 +1,28 @@
+{
+  "quality": {
+    "x": "evidence_coverage@5",
+    "y": "mrr@10",
+    "directions": [
+      "max",
+      "max"
+    ],
+    "nondominated": [
+      "R3",
+      "R5",
+      "R9"
+    ]
+  },
+  "context": {
+    "x": "raw_tokens@5_mean",
+    "y": "evidence_coverage@5",
+    "directions": [
+      "min",
+      "max"
+    ],
+    "nondominated": [
+      "R3",
+      "R10"
+    ]
+  },
+  "ties": "Equal coordinate pairs remain nondominated together; no coordinate jitter."
+}

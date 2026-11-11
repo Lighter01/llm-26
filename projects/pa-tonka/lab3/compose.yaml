@@ -1,0 +1,10 @@
+name: dnd-rag-lab3
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:6343:6333'
+      - '127.0.0.1:6344:6334'
+    volumes:
+      - ./data/qdrant:/qdrant/storage

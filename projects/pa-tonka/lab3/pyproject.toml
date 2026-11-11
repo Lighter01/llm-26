@@ -1,0 +1,65 @@
+[project]
+name = "dnd-rag"
+version = "0.1.0"
+description = "Local D&D retrieval augmented question answering"
+readme = "README.md"
+authors = [
+    { name = "Lighter01", email = "petrton31@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "accelerate==1.15.0",
+    "fastapi==0.162.0",
+    "httpx==0.28.1",
+    "langchain-core==1.7.6",
+    "langchain-openai==1.7.4",
+    "langchain-text-splitters==1.1.3",
+    "markdown-it-py==4.2.0",
+    "pydantic==2.14.3",
+    "python-dotenv==1.2.4",
+    "PyYAML>=5.4,<7",
+    "qdrant-client==1.20.0",
+    "sentence-transformers==6.2.0",
+    "streamlit==1.66.1",
+    "torch==2.15.0",
+    "torchvision>=0.29.2",
+    "transformers==5.22.1",
+    "uvicorn>=0.35,<1",
+]
+
+[dependency-groups]
+test = ["pytest>=9,<10", "markdown-it-py>=4,<5"]
+lint = ["ruff>=0.15,<0.16"]
+dev = []
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+include = ["src/**/*.py", "tests/**/*.py"]
+extend-exclude = ["src/dnd_rag/ingestion/book_assembly/**"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["dnd_rag", "helpers"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests/ingestion/markdown_export"]
+testpaths = ["tests/ingestion/markdown_export", "tests/ingestion/question_validation", "tests/rag"]
+addopts = "-ra --strict-markers"
+cache_dir = ".cache/ingestion/markdown-tests/pytest-cache"
+junit_family = "legacy"
+markers = [
+    "integration: requires an explicit existing resolved build; never runs the assembler",
+    "rag_qdrant: explicit live Qdrant probe with disposable collections",
+    "rag_models: explicit model/tokenizer/CUDA probe",
+    "rag_llama: explicit live llama.cpp probe",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.6,<0.12.0"]
+build-backend = "uv_build"

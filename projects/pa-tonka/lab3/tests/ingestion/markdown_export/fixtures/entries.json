@@ -1,0 +1,19 @@
+[
+  {"type":"section","name":"Options","entries":[
+    {"type":"options","count":2,"prerequisite":[{"level":3}],"entries":["Pick carefully."]},
+    {"type":"list","style":"list-decimal","start":3,"items":["Alpha",{"type":"item","name":"Beta","entries":["First line.",{"type":"list","items":["Nested one","Nested two"]}]}]},
+    {"type":"insetReadaloud","name":"A Voice","entries":["Hear {@b this}.",{"type":"list","items":["One","Two"]}]},
+    {"type":"quote","entries":["Remember the sky."],"by":"A Reader","from":"Old Tome"},
+    {"type":"gallery","images":[{"type":"image","href":{"type":"internal","path":"unavailable.webp"}}]},
+    {"type":"image","title":"No invented caption","href":{"type":"external","url":"https://example.invalid/picture"}},
+    "Text after images."
+  ]},
+  {"type":"tableGroup","name":"Travel Tables","tables":[
+    {"type":"table","caption":"Terrain","intro":["Before the table."],
+     "colLabelRows":[[{"type":"cellHeader","entry":"Checks","width":2},"Notes"],["Roll","Result","Notes"]],
+     "rows":[[{"type":"cell","roll":{"min":1,"max":9,"pad":true}},"a | b",{"type":"entries","entries":["Line 1.","Line 2."]}],
+             {"type":"row","row":[{"type":"cell","entry":"10","width":2},"Wide note"]}],
+     "footnotes":["Footnote retained."],"outro":["After the table."]},
+    {"type":"table","colLabels":["Bonus","Speed","Dice"],"rows":[[{"type":"bonus","value":2},{"type":"bonusSpeed","value":10},{"type":"dice","toRoll":[{"number":2,"faces":6,"modifier":3}]}]]}
+  ]}
+]

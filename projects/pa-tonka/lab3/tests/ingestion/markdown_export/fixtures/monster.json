@@ -1,0 +1,23 @@
+{
+  "__prop": "monster", "name": "Fixture Sentinel", "source": "XMM", "page": 12,
+  "size": ["L"], "type": "construct", "alignment": ["L", "N"],
+  "str": 19, "dex": 13, "con": 16, "int": 8, "wis": 15, "cha": 6,
+  "ac": [{"ac": 17, "from": ["natural armor"]}], "hp": {"average": 85, "formula": "10d10 + 30"},
+  "speed": {"walk": 30, "fly": {"number": 40, "condition": "(hover)"}, "canHover": true},
+  "initiative": {"proficiency": 2}, "save": {"str": "+7", "wis": "+5"},
+  "skill": {"perception": "+8", "survival": "+5"}, "senses": ["darkvision 60 ft."], "passive": 18,
+  "resist": ["fire", {"resist": ["bludgeoning", "piercing"], "note": "from nonmagical attacks"}],
+  "immune": ["poison"], "conditionImmune": ["poisoned"], "vulnerable": ["thunder"],
+  "languages": ["Common"], "gear": [{"item": "Spear|XPHB", "quantity": 2}], "cr": "5",
+  "trait": [{"name": "Ward", "entries": ["The sentinel has {@variantrule Advantage|XPHB} on saves."]}],
+  "action": [{"name": "Slam", "entries": ["{@atkr m} {@hit 7}, reach 10 ft. {@h}12 ({@damage 2d6 + 5}) Force damage."]}],
+  "bonus": [{"name": "Step", "entries": ["Move 10 feet."]}],
+  "reaction": [{"name": "Retort", "entries": ["Deal {@damage 1d4} Force damage."]}],
+  "legendary": [{"name": "Watch", "entries": ["Make a Wisdom (Perception) check."]}],
+  "legendaryActions": 2, "legendaryActionsLair": 3,
+  "spellcasting": [{"name": "Spellcasting", "displayAs": "action", "ability": "wis",
+    "headerEntries": ["Wisdom is the spellcasting ability (spell save {@dc 15})."],
+    "will": ["{@spell Light|XPHB}"], "daily": {"1e": ["{@spell Shield|XPHB}", "{@spell Fly|XPHB}"]},
+    "spells": {"1": {"slots": 2, "spells": ["{@spell Magic Missile|XPHB}"]}},
+    "footerEntries": ["No Material components required."]}]
+}
