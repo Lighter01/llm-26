@@ -241,3 +241,26 @@ def prepare_game_catalog(source_root: Path, output_root: Path):
         return compile_catalog(raw, output_root, revision=revision)
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         raise RagError('game_prepare_failed', str(exc)) from exc
+
+
+def ensure_game_catalog(project_root):
+    from dnd_rag.config import read_yaml, resolve_path
+    from dnd_rag.game.catalog import load_catalog
+
+    config = read_yaml(project_root / 'configs/game.yaml')
+    source = resolve_path(config['source_root'], project_root)
+    output = resolve_path(config['output_root'], project_root)
+    revision = subprocess.check_output(
+        ['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True
+    ).strip()
+    target = output / revision
+    if not (target / 'manifest.json').exists():
+        target = prepare_game_catalog(source, output)
+    catalog = load_catalog(target)
+    for name, digest in catalog.manifest.get('inputs', {}).items():
+        if sha256((source / name).read_bytes()).hexdigest() != digest:
+            raise RagError(
+                'catalog_input_mismatch',
+                'Prepared catalog inputs differ from the pinned local source; rerun prepare-game-data',
+            )
+    return catalog

@@ -31,3 +31,7 @@ CodexRunner вызывает exec и exec resume по точному ID, без 
 ## Подготовленные игровые сущности
 
 Каталог отделён от retrieval: guarded local 5etools → нормализация503 XMM monsters и legendary groups → concrete approved item variants →24 XDMG magic tables, individual/hoard и бюджетная таблица2024. Нет сетевого игрового API. Хэши всех семи фактических JSON inputs и четырёх output files связываются с SHA upstream. Каталоги не изменяются при запросе агента. Item groups и generic entries раскрываются до конкретных предметов; отсутствие варианта не превращается в пустую награду.
+
+## Пять инструментов
+
+search_rules возвращает исходные фрагменты; lookup_monsters — актуальные ограниченные XMM stat blocks; evaluate_encounter оценивает точный состав; build_encounter подбирает ограниченный состав, сохраняя все обязательные количества; generate_loot бросает реальные деньги/предметы XDMG. Арифметика и случайность находятся в Python, агент выбирает последовательность вызовов и объясняет их результаты. Для группы добыча individual умножает один бросок; для hoard нужны CR владельца, уровень партии и тема. Полный список параметров и технические границы опубликованы в [game](../../src/dnd_rag/game/README.md).

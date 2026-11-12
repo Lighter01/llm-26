@@ -100,7 +100,7 @@ class AgentGuard(AgentMiddleware):
                     status='error',
                 )
             data = tool_data(result)
-            failed = result.status == 'error' or 'error' in data
+            failed = result.status == 'error' or bool(data.get('error'))
             observation.update(output=data, level='WARNING' if failed else 'DEFAULT')
             if call['name'] == 'search_rules' and 'hits' in data:
                 service.recorder.retrieval(data)

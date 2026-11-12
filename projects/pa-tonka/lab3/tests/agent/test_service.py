@@ -95,14 +95,52 @@ def test_invalid_tool_call_can_be_corrected_and_limits_are_explicit(tmp_path):
 def test_turn_timeout_and_tool_limit_do_not_report_success(tmp_path):
     from dnd_rag.agent.observability import ObservationRecorder
     from dnd_rag.agent.service import AgentService
+
     class SlowModel(ScriptedModel):
-        async def _agenerate(self,*args,**kwargs):
+        async def _agenerate(self, *args, **kwargs):
             await asyncio.sleep(1)
-            return self._generate(*args,**kwargs)
-    slow=AgentService(model=SlowModel(),tools=[],recorder=ObservationRecorder(tmp_path),config=AgentConfig(timeout_seconds=0.01))
-    reply=asyncio.run(slow.ainvoke('slow','Hi',turn_id='one'))
-    assert reply.status=='timeout' and reply.usage['input_tokens'] is None
-    calls=[AIMessage(content='',tool_calls=[{'id':str(i),'name':'double','args':{'n':3}}]) for i in range(3)]
-    limited=AgentService(model=ScriptedModel(replies=calls),tools=[double],recorder=ObservationRecorder(tmp_path),config=AgentConfig(max_tool_calls=1))
-    reply=asyncio.run(limited.ainvoke('tool-limit','Double',turn_id='one'))
-    assert reply.status=='step_limit' and reply.usage['tool_calls']==1
+            return self._generate(*args, **kwargs)
+
+    slow = AgentService(
+        model=SlowModel(),
+        tools=[],
+        recorder=ObservationRecorder(tmp_path),
+        config=AgentConfig(timeout_seconds=0.01),
+    )
+    reply = asyncio.run(slow.ainvoke('slow', 'Hi', turn_id='one'))
+    assert reply.status == 'timeout' and reply.usage['input_tokens'] is None
+    calls = [
+        AIMessage(content='', tool_calls=[{'id': str(i), 'name': 'double', 'args': {'n': 3}}])
+        for i in range(3)
+    ]
+    limited = AgentService(
+        model=ScriptedModel(replies=calls),
+        tools=[double],
+        recorder=ObservationRecorder(tmp_path),
+        config=AgentConfig(max_tool_calls=1),
+    )
+    reply = asyncio.run(limited.ainvoke('tool-limit', 'Double', turn_id='one'))
+    assert reply.status == 'step_limit' and reply.usage['tool_calls'] == 1
+
+
+def test_nullable_error_field_in_successful_tool_result_is_not_an_error(tmp_path):
+    from dnd_rag.agent.observability import ObservationRecorder
+    from dnd_rag.agent.service import AgentService
+
+    @tool
+    def successful_game() -> str:
+        """Return a successful game calculation."""
+        return json.dumps({'status': 'success', 'total_xp': 4600, 'error': None})
+
+    model = ScriptedModel(
+        replies=[
+            AIMessage(content='', tool_calls=[{'id': 'c', 'name': 'successful_game', 'args': {}}]),
+            AIMessage(content='4600'),
+        ]
+    )
+    service = AgentService(
+        model=model, tools=[successful_game], recorder=ObservationRecorder(tmp_path)
+    )
+    reply = asyncio.run(service.ainvoke('success', 'Evaluate', turn_id='one'))
+    assert reply.status == 'completed'
+    assert service.last_records['success']['tools'][0]['status'] == 'completed'

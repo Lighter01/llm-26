@@ -3,3 +3,26 @@ search_rules: >-
   excerpts with scores, exact source coordinates and stable chunk/index identifiers.
   Use this to ground rules answers. Refine the query if evidence is insufficient.
   limit defaults to 5 and must be between 1 and 10. It does not generate an answer.
+lookup_monsters: >-
+  Look up current XMM (2025) monsters by exact name, stable monster_id or partial name,
+  optionally filtered by habitat and creature_type. Returns at most limit stat blocks
+  (default 5, maximum 10), including CR/XP and combat abilities. Multiple partial-name
+  matches are ambiguous: ask which one is intended before evaluating an exact encounter.
+evaluate_encounter: >-
+  Evaluate the user's exact monster composition using XDMG 2024 XP sums without 2014
+  group multipliers. Required: party_size, common party_level 1..20, monsters with monster_id
+  and positive count. IDs or unambiguous current names are accepted. Returns XP, party
+  low/moderate/high budgets and difficulty, including explicit above_high. Does not generate.
+build_encounter: >-
+  Generate an encounter for party_size, common party_level 1..20 and difficulty
+  low/moderate/high. Optional habitat, creature_type, exact total_count, required_monsters
+  with exact positive counts. All filters apply to every creature. Required counts are
+  preserved and never expanded. Uses bounded search (256 forms, <=3 stat blocks; automatic
+  count1..min(12,2*party_size)). A conflict or search_exhausted is not a successful build.
+generate_loot: >-
+  Roll actual treasure using XDMG 2024, and preserve the result for later recall. Required
+  kind individual|hoard and standard cr (number or fraction). individual: homogeneous count
+  defaults to1 and multiplies one money roll. hoard: count must1; explicitly require
+  party_level1..20 and treasure_theme Arcana|Armaments|Implements|Relics. Hoard CR is the
+  owner's CR, never a sum of encounter CRs; ask if owner is ambiguous. Returns actual coins,
+  concrete named magic items/rarities, rolls and source tables. Do not reroll for recall.

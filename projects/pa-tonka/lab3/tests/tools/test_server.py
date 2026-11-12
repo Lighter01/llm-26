@@ -63,3 +63,64 @@ def test_empty_hits_and_retrieval_failure_differ():
         assert broken['error']['code'] == 'qdrant_timeout'
 
     asyncio.run(check())
+
+
+def test_five_real_tools_share_catalog_and_return_structured_conflicts():
+    import dnd_rag.tools.server as server
+    from tests.game.fixtures import catalog
+
+    mcp = server.create_mcp_server(
+        server.ToolServices(NS(retrieve=lambda *a, **k: None), catalog=catalog())
+    )
+
+    async def check():
+        tools = await mcp.list_tools()
+        assert {t.name for t in tools} == {
+            'search_rules',
+            'lookup_monsters',
+            'evaluate_encounter',
+            'build_encounter',
+            'generate_loot',
+        }
+        monsters = (await mcp.call_tool('lookup_monsters', {'query': 'Mage'}))[1]
+        assert monsters['monsters'][0]['xp'] == 2300
+        result = (
+            await mcp.call_tool(
+                'evaluate_encounter',
+                {
+                    'party_size': 4,
+                    'party_level': 6,
+                    'monsters': [{'monster_id': 'mage', 'count': 2}],
+                },
+            )
+        )[1]
+        assert result['total_xp'] == 4600 and result['difficulty'] == 'high'
+        conflict = (
+            await mcp.call_tool(
+                'build_encounter',
+                {
+                    'party_size': 4,
+                    'party_level': 1,
+                    'difficulty': 'low',
+                    'required_monsters': [{'monster_id': 'mage', 'count': 1}],
+                },
+            )
+        )[1]
+        assert conflict['status'] == 'conflict'
+        unknown = (
+            await mcp.call_tool(
+                'evaluate_encounter',
+                {
+                    'party_size': 4,
+                    'party_level': 6,
+                    'monsters': [{'monster_id': 'No Such Monster', 'count': 1}],
+                },
+            )
+        )[1]
+        assert unknown['error']['code'] == 'unknown_monster'
+        loot = (await mcp.call_tool('generate_loot', {'kind': 'individual', 'cr': 1, 'count': 2}))[
+            1
+        ]
+        assert 6 <= loot['coins']['gp'] <= 36 and loot['count'] == 2
+
+    asyncio.run(check())

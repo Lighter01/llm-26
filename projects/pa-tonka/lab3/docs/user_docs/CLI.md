@@ -75,3 +75,17 @@ uv run python -m dnd_rag prepare-game-data --output data/game/5etools
 | `-h`, `--help` | Справка |
 
 Пути относительно корня проекта. Требуется Node22+ (проверен24.22.2 из ingestion), pinned submodule и установленные ingestion dependencies. Повторная подготовка детерминирована; несовместимый manifest/неразрешённая ссылка — ошибка. Игровые данные игнорируются Git; воспроизводимая команда остаётся в репозитории.
+
+## Параметры MCP tools
+
+Это инструменты агента, не отдельные CLI-команды. Все обязательные поля перечислены ниже; неизвестное/неоднозначное имя требует уточнения.
+
+| Tool | Обязательные поля | Необязательные поля/default |
+|---|---|---|
+| search_rules | query (непустая строка) | limit=5,1..10 |
+| lookup_monsters | Нет: query/filters задают поисковый запрос | query=None, habitat=None, creature_type=None, limit=5,1..10 |
+| evaluate_encounter | party_size>0, party_level1..20, monsters (непустой список monster_id/count>0) | Нет |
+| build_encounter | party_size>0, party_level1..20, difficulty=low/moderate/high | habitat=None, creature_type=None, total_count=None (>0 если задан), required_monsters=[] (monster_id/count) |
+| generate_loot | kind=individual/hoard, cr (стандартное число или дробь0..30) | count=1; hoard требует party_level1..20 и treasure_theme=Arcana/Armaments/Implements/Relics, count=1 |
+
+Encounter build: ≤256 форм, ≤3 различных stat blocks, auto count1..min(12,2×party_size); явный total_count точный. Conflict/search_exhausted не выдаются за успешный подбор. Hoard CR относится к владельцу, individual count — к одинаковым существам. Полные фактические rolls и sources входят в result.
