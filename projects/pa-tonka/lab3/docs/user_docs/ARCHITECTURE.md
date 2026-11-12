@@ -22,7 +22,7 @@ Langfuse SDK5.2.0 отправляет данные в локальный Compos
 
 ## Два агентных адаптера
 
-Собственный AgentService использует LangChain create_agent, native tools, checkpointer/thread_id и middleware лимитов12 model/16 tool calls/300s на реплику. Tool errors доступны модели для исправления; timeout/step_limit/context_budget — явные статусы с trace. Native HTTP guard остаётся физической защитой от переполнения. Полноценное summary подключается отдельной стадией.
+Собственный AgentService использует LangChain create_agent, native tools, checkpointer/thread_id и middleware лимитов12 model/16 tool calls/300s на реплику. Tool errors доступны модели для исправления; timeout/step_limit/context_budget — явные статусы с trace. Native HTTP guard остаётся физической защитой от переполнения. Память сокращает полный предыдущий prefix через SummarizationMiddleware.
 
 CodexRunner вызывает exec и exec resume по точному ID, без личного config и эталонов, из пустого /tmp cwd. Исходный rollout сохраняется независимо от compaction. Явный model catalog выбирает direct tools и16K; stock base instruction и алгоритм local compaction сохраняются. Из-за фактического несовпадения форматов Codex0.167 и llama11046 используется тонкий proxy8081→8080: additional_tools/namespace переводятся в обычные Responses functions и обратно. Оба клиента используют те же weights, MCP game tools и профиль генерации; original/effective payload и count/usage доступны для аудита. Сравнение учитывает внутренний prompt и счётчик Codex как свойство готового агента.
 
@@ -35,3 +35,11 @@ CodexRunner вызывает exec и exec resume по точному ID, без 
 ## Пять инструментов
 
 search_rules возвращает исходные фрагменты; lookup_monsters — актуальные ограниченные XMM stat blocks; evaluate_encounter оценивает точный состав; build_encounter подбирает ограниченный состав, сохраняя все обязательные количества; generate_loot бросает реальные деньги/предметы XDMG. Арифметика и случайность находятся в Python, агент выбирает последовательность вызовов и объясняет их результаты. Для группы добыча individual умножает один бросок; для hoard нужны CR владельца, уровень партии и тема. Полный список параметров и технические границы опубликованы в [game](../../src/dnd_rag/game/README.md).
+
+## Память и компактизация
+
+Собственный агент применяет LangChain SummarizationMiddleware при полном native input выше11000: порог включает system и пять tool schemas. Summary получает весь заменяемый prefix вместе с предыдущим summary; недавний suffix ориентирован на2048 tokens. Последний пользовательский запрос и все его вызовы/результаты защищены как одна операция. Пары tool call/result не разрываются. После прерванной операции отсутствующий результат закрывается явным ToolMessage error, без утверждения об исполнении.
+
+Summary reserve1024 находится внутри общего completion reserve2048, safety256 остаётся отдельно. Payload самого summary проверяется по физическому окну16384. В установленном LangChain overflow-retry умеет удалять середину даже при trim_tokens_to_summarize=None; собственный summarizer отключает этот путь. Полный prefix либо отправляется целиком, либо возникает диагностическая ошибка. После summary повторно проверяется полный следующий body. Если текущая защищённая операция не помещается, приложение предлагает уменьшить выдачу или начать новый диалог; последние15 сообщений не подставляются скрыто.
+
+Structured English summary сохраняет party, ограничения, обязательных существ, принятые составы, фактическую добычу, источники и открытые вопросы. Summary+recent позволяет продолжать обсуждение с исходными формулировками последних действий. Простое удаление старых сообщений теряло бы первые результаты бросков; отдельный fact store потребовал бы второй недоказанной модели извлечения и синхронизации. Summary также может потерять факт: гарантия касается полного входа и явных ошибок, а семантическую сохранность проверяет длинный сценарий. Исходный JSONL остаётся целиком; summary usage и Langfuse span относятся к вызвавшему его turn. Codex сохраняет собственную native compaction.

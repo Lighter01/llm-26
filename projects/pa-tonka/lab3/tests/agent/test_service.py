@@ -144,3 +144,38 @@ def test_nullable_error_field_in_successful_tool_result_is_not_an_error(tmp_path
     reply = asyncio.run(service.ainvoke('success', 'Evaluate', turn_id='one'))
     assert reply.status == 'completed'
     assert service.last_records['success']['tools'][0]['status'] == 'completed'
+
+
+def test_interrupted_tool_exchange_is_closed_before_next_user_turn(tmp_path):
+    from dnd_rag.agent.observability import ObservationRecorder
+    from dnd_rag.agent.service import AgentService
+
+    model = ScriptedModel(
+        replies=[
+            AIMessage(content='', tool_calls=[{'id': 'done', 'name': 'double', 'args': {'n': 3}}]),
+            AIMessage(
+                content='', tool_calls=[{'id': 'not-run', 'name': 'double', 'args': {'n': 9}}]
+            ),
+            AIMessage(content='The interrupted call was not executed.'),
+        ]
+    )
+    service = AgentService(
+        model=model,
+        tools=[double],
+        recorder=ObservationRecorder(tmp_path),
+        config=AgentConfig(max_tool_calls=1),
+    )
+
+    async def run():
+        assert (
+            await service.ainvoke('same', 'Double repeatedly', turn_id='one')
+        ).status == 'step_limit'
+        assert (
+            await service.ainvoke('same', 'What happened?', turn_id='two')
+        ).status == 'completed'
+
+    asyncio.run(run())
+    messages = model.seen[-1]
+    closures = [m for m in messages if isinstance(m, ToolMessage) and m.tool_call_id == 'not-run']
+    assert len(closures) == 1 and closures[0].status == 'error'
+    assert 'unavailable' in closures[0].content.lower()

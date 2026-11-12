@@ -148,7 +148,7 @@ class AgentService:
             input_tokens=count,
             agent_limit=self.config.context_limit,
             server_window=self.native.profile.context_size if self.native else 16384,
-            compacted=compacted,
+            compacted=compacted or turn.get('compacted', False),
         )
         turn['context'] = stats
         turn['max_context'] = max(turn['max_context'], count)
@@ -157,8 +157,17 @@ class AgentService:
 
     def _wire_payload(self, payload, count):
         if _turn.get():
-            self.measure(count)
-            self.recorder.write('wire_input', {'payload': payload, 'input_tokens': count})
+            phase = _turn.get().get('phase', 'agent')
+            if phase == 'agent':
+                self.measure(count)
+            else:
+                self.emit(
+                    'summary_input_measured',
+                    {'input_tokens': count, 'server_window': self.native.profile.context_size},
+                )
+            self.recorder.write(
+                'wire_input', {'payload': payload, 'input_tokens': count, 'phase': phase}
+            )
 
     async def _graph(self, session_id):
         if session_id not in self.graphs:
@@ -174,11 +183,28 @@ class AgentService:
                     }
                 )
                 tools = await client.get_tools()
+            middleware = []
+            if self.native:
+                from dnd_rag.agent.memory import build_memory_middleware
+
+                middleware.append(
+                    build_memory_middleware(
+                        self.native,
+                        self.native.profile,
+                        self.emit,
+                        config=self.config,
+                        tools=tools,
+                        system_prompt=SYSTEM_PROMPT,
+                        recorder=self.recorder,
+                        turn_getter=lambda: _turn.get(),
+                    )
+                )
+            middleware.append(AgentGuard(self))
             self.graphs[session_id] = create_agent(
                 self.model,
                 tools=tools,
                 system_prompt=SYSTEM_PROMPT,
-                middleware=[AgentGuard(self)],
+                middleware=middleware,
                 checkpointer=self.checkpointer,
             )
         return self.graphs[session_id]
@@ -187,6 +213,8 @@ class AgentService:
         before = perf_counter()
         turn = {
             'model_calls': 0,
+            'phase': 'agent',
+            'compacted': False,
             'tool_calls': 0,
             'generations': [],
             'tools': [],
@@ -231,6 +259,7 @@ class AgentService:
                     status = rag.code if rag else 'error'
                     error = rag.as_dict() if rag else {'code': 'agent_error', 'message': str(exc)}
                 if error:
+                    await self._close_interrupted_tools(session_id)
                     self.emit('error', error)
                 usage = {}
                 for key in ['input_tokens', 'output_tokens', 'total_tokens']:
@@ -267,6 +296,44 @@ class AgentService:
         finally:
             _turn.reset(token)
             self.recorder.flush()
+
+    async def _close_interrupted_tools(self, session_id):
+        """Preserve history and explicitly close calls with no available result."""
+        graph = self.graphs.get(session_id)
+        if graph is None:
+            return
+        config = {'configurable': {'thread_id': session_id}}
+        state = await graph.aget_state(config)
+        messages = state.values.get('messages', [])
+        answered = {m.tool_call_id for m in messages if isinstance(m, ToolMessage)}
+        pending = [
+            call
+            for m in messages
+            if isinstance(m, AIMessage)
+            for call in m.tool_calls
+            if call['id'] not in answered
+        ]
+        if pending:
+            closures = [
+                ToolMessage(
+                    content=json.dumps(
+                        {
+                            'error': {
+                                'code': 'interrupted',
+                                'message': 'Tool result unavailable after interrupted turn; no successful execution is asserted',
+                            }
+                        }
+                    ),
+                    tool_call_id=call['id'],
+                    name=call['name'],
+                    status='error',
+                )
+                for call in pending
+            ]
+            await graph.aupdate_state(config, {'messages': closures}, as_node='tools')
+            self.recorder.write(
+                'interrupted_tool_closures', {'call_ids': [c['id'] for c in pending]}
+            )
 
     async def aclose(self):
         self.recorder.flush()
