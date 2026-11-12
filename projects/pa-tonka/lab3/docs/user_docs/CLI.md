@@ -53,3 +53,9 @@ uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml
 ```
 
 `--llm-profile PATH` обязателен, YAML относительно project root; `-h/--help` — справка. Других параметров нет. `LLAMA_SERVER_BIN` — исполняемый файл (default llama-server), `LLM_MODEL_PATH` — GGUF, `LLM_BASE_URL` — loopback endpoint с `/v1` (default http://127.0.0.1:8080/v1). Запуск держит блокировку проекта и завершается Ctrl+C с cleanup дочерней модели. [Профили и ограничения thinking](../../configs/llm/README.md).
+
+## Setup Langfuse и Codex
+
+Поднимите [Langfuse Compose](../../infra/README.md), создайте локальный проект в http://127.0.0.1:3000 и сохраните SDK keys в `.env`. Можно инициализировать проект через LANGFUSE_INIT_*; все соответствующие credentials должны быть заданы до первого старта. Web/worker4.79.0, Node24.22.2, закреплённый официальный exporter и способ установки описаны в [baseline](../../configs/baseline/README.md). Используйте pnpm frozen lock; npm install без lock обнаружил peer conflict.
+
+MCP diagnostic: `uv run python -m dnd_rag.tools.server`, параметров нет; bind127.0.0.1:8765/mcp, Ctrl+C завершает сервер. Этот отдельный процесс держит lock проекта: не запускайте одновременно вторую управляющую команду.

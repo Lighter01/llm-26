@@ -1,0 +1,37 @@
+# Passed as explicit CLI overrides; personal config is never edited.
+model = "dnd-nemotron"
+model_provider = "lab3"
+model_context_window = 16384
+model_auto_compact_token_limit = 8192
+model_reasoning_effort = "none"
+model_reasoning_summary = "none"
+approval_policy = "never"
+sandbox_mode = "read-only"
+web_search = "disabled"
+tool_output_token_limit = 12000
+
+[model_providers.lab3]
+name = "Lab3 local llama.cpp"
+base_url = "http://127.0.0.1:8080/v1"
+wire_api = "responses"
+requires_openai_auth = false
+request_max_retries = 0
+stream_max_retries = 0
+
+[model_providers.lab3.capabilities]
+remote_compaction = "unsupported"
+
+[features]
+apps = false
+shell_tool = false
+unified_exec = false
+multi_agent = false
+js_repl = false
+memory_tool = false
+
+[mcp_servers.dnd]
+url = "http://127.0.0.1:8765/mcp"
+required = true
+enabled_tools = ["search_rules", "lookup_monsters", "evaluate_encounter", "build_encounter", "generate_loot"]
+startup_timeout_sec = 60.0
+tool_timeout_sec = 120.0
