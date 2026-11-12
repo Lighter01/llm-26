@@ -1,10 +1,14 @@
 # Пакет dnd_rag
 
-Основной Python-пакет проекта. [Ingestion](ingestion/README.md) — готовая подготовка книжного JSON/Markdown и gold. Node runtime изолирован в `tools/ingestion`. `config.py` и `contracts.py` задают строгие настройки и общие объекты без загрузки моделей.
+Автономный поиск по локальному каноническому корпусу. Импорт конфигурации/контрактов не загружает модели.
 
-## Retrieval
+- `config.py`: строгие RagConfig, RuntimeSettings, YAML и разрешение путей.
+- `contracts.py`: ошибки, точные chunks/provenance, index и retrieval результаты.
+- `retrieval.py`: `Retriever.retrieve(question, limit)` → ранжированные исходные chunks.
+- `indexing/`: corpus/source_map → tokenizer/chunks → GPU embeddings → Qdrant.
+- `runtime/`: locks, владение процессами, подготовка/reuse/reset индекса, llama launcher.
+- `evaluation/`: чистые evidence-контракты и retrieval-метрики.
+- `ingestion/`: самостоятельная подготовка книг, сохранённая без изменения корпуса.
+- `__main__.py`: административные команды с ленивыми импортами.
 
-`retrieval.py`: общее stateless ядро `Retriever.retrieve(question, limit=None)`. Получает готовый index/config, CPU QueryEncoder и QdrantStore; возвращает RetrievalResult с ranked raw chunks и временем embedding/search. LLM/HTTP/UI не нужны. [Indexing](indexing/README.md) · [Runtime](runtime/README.md) · [Архитектура](../../docs/user_docs/ARCHITECTURE.md).
-
-[Evaluation](evaluation/README.md) содержит gold, чистые метрики, run artifacts, аналитический runner и карту сравнений. [RAG](rag/README.md) — точный бюджет, локальная LLM и Citation Registry. `api.py` задаёт stateless HTTP-контракт, `ui.py` — Streamlit-клиент без моделей. `__main__.py` — тонкий CLI build-index, reset-index, experiment, serve-retrieval, demo, evaluate-qa, summarize-results.
-
+Потребитель вызывает `runtime.index.prepare_retriever(config, settings, session)` один раз и затем использует тот же CPU encoder. Retrieval не читает эталоны, старые результаты, LLM или интерфейс.

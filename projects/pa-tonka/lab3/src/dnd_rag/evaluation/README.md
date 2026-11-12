@@ -1,13 +1,5 @@
-# Evaluation
+# Оценивание retrieval
 
-- `gold.py`: `load_gold(path, corpus, report_path) -> GoldSet`; строгие schema, matching PASS report, hashes, exact evidence/section/line/char ranges. 20 answerable и 3 insufficient хранятся раздельно.
-- `metrics.py`: чистые `evaluate_question` и `aggregate_metrics`. Relevance считается по всему manifest, EC — union top-k → best alternative → mean facts/questions. Никаких моделей, сети, fuzzy match или автоматического semantic judge.
+`evidence.py`: EvidenceSpan, EvidenceFact, EvidenceCase и проверка точного текста, хэша, координат и section attribution канонического корпуса. Формат не фиксирует число задач и не требует reference_answer.
 
-Метрики используют body Unicode ranges, а не названия sections или актуальные chunk IDs из gold. Manifest пересчитывается для каждого индекса. [Формулы и поток](../../../docs/user_docs/ARCHITECTURE.md).
-
-- `artifacts.py`: RunWriter резервирует `results/<name>`, сохраняет input snapshots, JSON/JSONL и атомарные running/completed/failed паспорта.
-- `retrieval_run.py`: полный runner от corpus/gold до метрик без LLM; `recompute_saved_metrics` для офлайн-проверки сохранённого completed-run.
-- `study.py`: strict карта групп, completed base/reference и точные config deltas. StudySelection — immutable происхождение сравнения, не механизм наследования.
-- `qa_run.py`: `run_qa_evaluation` сохраняет один фактический AskTrace на вопрос, profile/prompts snapshots, JSONL, not_reviewed CSV и раздельные сводки для 20 основных и 3 дополнительных вопросов. Ошибка сохраняет частичный failed-run; смысловые оценки приложение не выставляет. Общие snapshot/provenance/statistics функции находятся в `artifacts.py`.
-
-- `summary.py`: офлайн-строки CSV из сохранённых run/metrics, dataset cohorts, явные failed/missing, честные reused/original build timings и ссылки на контрольные запуски. Публичный `study.summarize_results` читает строгую карту и вызывает exporter.
+`metrics.py`: `evaluate_question(case, hits, full_manifest)` и `aggregate_metrics`. Релевантность требует совпадения file/body hash и пересечения ≥ половины меньшего span. Precision@k делится на k даже при короткой выдаче; Recall — на релевантные chunks полного manifest; MRR@10 использует первый релевантный hit; EC объединяет пересечения без двойного учёта и усредняет независимые факты. Оцениваются фактические hits, повторный поиск ради оценки не выполняется.

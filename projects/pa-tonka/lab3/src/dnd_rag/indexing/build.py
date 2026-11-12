@@ -8,7 +8,7 @@ import traceback
 from pathlib import Path
 from time import perf_counter
 
-from dnd_rag.config import ExperimentConfig, RuntimeSettings
+from dnd_rag.config import RagConfig, RuntimeSettings
 from dnd_rag.contracts import IndexIdentity, RagError, StageEvent
 from dnd_rag.indexing.chunking import split_corpus
 from dnd_rag.indexing.corpus import load_corpus
@@ -103,7 +103,7 @@ def main():
     try:
         fd = int(os.environ['DND_RAG_LOCK_FD'])
         os.fstat(fd)
-        config = ExperimentConfig.model_validate_json(json.dumps(request['config']))
+        config = RagConfig.model_validate_json(json.dumps(request['config']))
         settings = RuntimeSettings.model_validate_json(json.dumps(request['settings']))
         identity = IndexIdentity.model_validate(request['identity'])
         ready = build_index(config, settings, identity, on_stage=on_stage)

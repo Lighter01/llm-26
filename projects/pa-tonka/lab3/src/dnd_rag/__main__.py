@@ -1,60 +1,35 @@
-"""Thin CLI; only the selected command loads its runtime dependencies."""
+"""Administrative CLI with lazy model imports and project-relative configuration."""
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
-from dnd_rag.config import load_experiment, load_settings
+from dnd_rag.config import load_rag_config, load_settings
 from dnd_rag.contracts import RagError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def parser():
-    root = argparse.ArgumentParser(prog='python -m dnd_rag', description='Local D&D RAG')
+    root = argparse.ArgumentParser(prog='python -m dnd_rag', description='Local D&D DM assistant')
     commands = root.add_subparsers(dest='command', required=True)
-    build = commands.add_parser('build-index', help='Ensure a complete compatible index')
-    build.add_argument('--config', type=Path, required=True)
-    build.add_argument('--rebuild', action='store_true', help='Repeat all preparation stages')
-    reset = commands.add_parser('reset-index', help='Delete one owned index; missing is a no-op')
+    for command in ('build-index', 'inspect-index'):
+        sub = commands.add_parser(
+            command,
+            help='Prepare index'
+            if command == 'build-index'
+            else 'Inspect selected index without loading models',
+        )
+        sub.add_argument(
+            '--config', type=Path, help='RAG YAML; environment/.env/default R3 otherwise'
+        )
+        if command == 'build-index':
+            sub.add_argument('--rebuild', action='store_true', help='Repeat all build stages')
+    reset = commands.add_parser('reset-index', help='Delete one owned collection')
     selector = reset.add_mutually_exclusive_group(required=True)
     selector.add_argument('--config', type=Path)
-    selector.add_argument('--index-id', help='Full SHA256 from a previous run')
-    experiment = commands.add_parser(
-        'experiment', help='Run a full retrieval experiment without LLM'
-    )
-    experiment.add_argument('--config', type=Path, required=True)
-    experiment.add_argument(
-        '--experiment-name', required=True, help='Unique safe results directory name'
-    )
-    experiment.add_argument('--rebuild', action='store_true')
-    experiment.add_argument('--study', type=Path, help='Optional study map; requires --group')
-    experiment.add_argument('--group', help='Group in the study; requires --study')
-    serve = commands.add_parser('serve-retrieval', help='Run a retrieval-only API without LLM/UI')
-    serve.add_argument('--config', type=Path, required=True)
-    serve.add_argument('--rebuild', action='store_true')
-    demo = commands.add_parser('demo', help='Run the local Q&A API and Streamlit interface')
-    demo.add_argument('--config', type=Path, required=True)
-    demo.add_argument('--llm-profile', type=Path, required=True)
-    demo.add_argument('--rebuild', action='store_true')
-    qa = commands.add_parser(
-        'evaluate-qa', help='Save QA answers, actual traces and an unjudged worksheet'
-    )
-    qa.add_argument('--config', type=Path, required=True)
-    qa.add_argument('--llm-profile', type=Path, required=True)
-    qa.add_argument('--experiment-name', required=True)
-    qa.add_argument(
-        '--include-insufficient',
-        action='store_true',
-        help='Add three separate insufficient-context cases',
-    )
-    summary = commands.add_parser(
-        'summarize-results', help='Export comparison CSV from saved runs without models or services'
-    )
-    summary.add_argument('--study', type=Path, required=True)
-    summary.add_argument('--output', type=Path, required=True)
+    selector.add_argument('--index-id', help='Full lowercase SHA256 index ID')
     return root
 
 
@@ -64,61 +39,21 @@ def main(argv=None):
     except SystemExit as exc:
         return exc.code
     try:
+        import re
+
         if (
             args.command == 'reset-index'
             and args.index_id
             and not re.fullmatch('[a-f0-9]{64}', args.index_id)
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
-        if args.command == 'summarize-results':
-            from dnd_rag.evaluation.study import summarize_results
-
-            path = summarize_results(args.study, args.output, project_root=PROJECT_ROOT)
-            print(json.dumps({'summary': str(path)}))
-            return 0
         settings = load_settings(PROJECT_ROOT)
-        if args.command == 'evaluate-qa':
-            from dnd_rag.evaluation.qa_run import run_qa_evaluation
-
-            path = run_qa_evaluation(
-                args.config,
-                args.llm_profile,
-                args.experiment_name,
-                settings,
-                include_insufficient=args.include_insufficient,
-            )
-            print(json.dumps({'results': str(path)}))
-            return 0
-        if args.command in ('serve-retrieval', 'demo'):
-            from dnd_rag.runtime.application import run_demo, serve_retrieval
-
-            if args.command == 'demo':
-                run_demo(args.config, args.llm_profile, settings, rebuild=args.rebuild)
-            else:
-                serve_retrieval(args.config, settings, rebuild=args.rebuild)
-            return 0
-        if args.command == 'experiment':
-            from dnd_rag.evaluation.retrieval_run import run_retrieval_experiment
-            from dnd_rag.evaluation.study import read_study_entry
-
-            if bool(args.study) != bool(args.group):
-                raise RagError('invalid_study', '--study and --group must be supplied together')
-            selection = (
-                read_study_entry(args.study, args.group, args.config, PROJECT_ROOT)
-                if args.study
-                else None
-            )
-            path = run_retrieval_experiment(
-                args.config,
-                args.experiment_name,
-                settings,
-                rebuild=args.rebuild,
-                selection=selection,
-            )
-            print(json.dumps({'results': str(path)}))
-            return 0
-        config = load_experiment(args.config, project_root=PROJECT_ROOT) if args.config else None
-        from dnd_rag.runtime.application import ensure_index, reset_index
+        config = (
+            load_rag_config(args.config, project_root=PROJECT_ROOT)
+            if args.command != 'reset-index' or args.config
+            else None
+        )
+        from dnd_rag.runtime.index import ensure_index, reset_index
         from dnd_rag.runtime.processes import RuntimeSession
 
         with RuntimeSession(PROJECT_ROOT) as session:
@@ -131,26 +66,41 @@ def main(argv=None):
                     on_stage=lambda e: print(e.model_dump_json(), file=sys.stderr, flush=True),
                 )
                 print(result.model_dump_json(indent=2))
+            elif args.command == 'inspect-index':
+                from dnd_rag.indexing.corpus import load_corpus
+                from dnd_rag.indexing.identity import library_versions, make_identity
+                from dnd_rag.runtime.index import ensure_qdrant
+
+                store = ensure_qdrant(settings, session)
+                identity = make_identity(
+                    config,
+                    load_corpus(config.corpus.directory),
+                    library_versions(store.server_version()),
+                )
+                from dataclasses import asdict
+
+                inspection = store.inspect(identity)
+                print(
+                    json.dumps(
+                        asdict(inspection), default=lambda v: v.model_dump(mode='json'), indent=2
+                    )
+                )
             else:
-                deleted = reset_index(settings, session, config=config, index_id=args.index_id)
-                print(json.dumps({'deleted': deleted}))
+                print(
+                    json.dumps(
+                        {
+                            'deleted': reset_index(
+                                settings, session, config=config, index_id=args.index_id
+                            )
+                        }
+                    )
+                )
         return 0
     except RagError as exc:
         print(json.dumps({'error': exc.as_dict()}, ensure_ascii=False), file=sys.stderr)
         return 2 if exc.code.startswith('invalid_') else 1
     except KeyboardInterrupt:
         print('Runtime interrupted; owned children stopped.', file=sys.stderr)
-        return 1
-    except Exception as exc:
-        import traceback
-
-        log_directory = PROJECT_ROOT / '.runtime'
-        log_directory.mkdir(exist_ok=True)
-        with (log_directory / 'errors.log').open('a') as stream:
-            traceback.print_exc(file=stream)
-        print(
-            json.dumps({'error': {'code': 'runtime_error', 'message': str(exc)}}), file=sys.stderr
-        )
         return 1
 
 

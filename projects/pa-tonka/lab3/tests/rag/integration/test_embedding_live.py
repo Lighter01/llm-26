@@ -9,7 +9,7 @@ from time import perf_counter
 import numpy as np
 import pytest
 
-from dnd_rag.config import load_experiment, load_settings
+from dnd_rag.config import load_rag_config, load_settings
 from dnd_rag.indexing.chunking import split_corpus
 from dnd_rag.indexing.corpus import load_corpus
 from dnd_rag.indexing.embedding import DocumentEncoder, QueryEncoder, load_token_counter
@@ -22,7 +22,7 @@ def test_real_corpus_offsets_and_text_only_encoders(tmp_path):
     import torch
 
     settings = load_settings(ROOT)
-    config = load_experiment(
+    config = load_rag_config(
         Path('configs/experiments/g1_splitters/markdown.yaml'), project_root=ROOT
     )
     corpus = load_corpus(config.corpus.directory)

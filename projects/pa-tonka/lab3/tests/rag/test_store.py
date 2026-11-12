@@ -2,7 +2,7 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from dnd_rag.config import load_experiment, load_settings
+from dnd_rag.config import load_rag_config, load_settings
 from dnd_rag.contracts import RagError
 from dnd_rag.indexing.chunking import split_corpus
 from dnd_rag.indexing.corpus import load_corpus
@@ -83,7 +83,7 @@ class FakeClient:
 
 @pytest.fixture
 def store_inputs(tmp_path):
-    config = load_experiment(
+    config = load_rag_config(
         write_yaml(tmp_path / 'c.yaml', baseline_data()), project_root=tmp_path
     )
     corpus = load_corpus(make_corpus(tmp_path / 'corpus'))

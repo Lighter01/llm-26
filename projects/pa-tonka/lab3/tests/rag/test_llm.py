@@ -8,8 +8,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from dnd_rag.config import LLMProfile, load_settings
 from dnd_rag.contracts import RagError
-from dnd_rag.rag.llm import LLMClient
 from dnd_rag.runtime import llama
+from dnd_rag.runtime.llm import LLMClient
 
 
 def profile(**changes):

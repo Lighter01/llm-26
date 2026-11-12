@@ -8,7 +8,7 @@ from time import monotonic, sleep
 import numpy as np
 import pytest
 
-from dnd_rag.config import load_experiment, load_settings
+from dnd_rag.config import load_rag_config, load_settings
 from dnd_rag.contracts import ChunkDraft, DraftMetadata
 from dnd_rag.indexing.corpus import load_corpus
 from dnd_rag.indexing.embedding import EmbeddedBatch
@@ -25,7 +25,7 @@ def test_native_bm25_rrf_quantization_and_persistence(tmp_path):
 
     data = baseline_data()
     data.update(embedding={**data['embedding'], 'dimension': 128}, retrieval={'mode': 'hybrid'})
-    config = load_experiment(write_yaml(tmp_path / 'c.yaml', data), project_root=tmp_path)
+    config = load_rag_config(write_yaml(tmp_path / 'c.yaml', data), project_root=tmp_path)
     corpus = load_corpus(make_corpus(tmp_path / 'corpus'))
     store = QdrantStore(load_settings(ROOT))
     assert store.server_version() == '1.20.0'

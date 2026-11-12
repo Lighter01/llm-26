@@ -24,3 +24,6 @@ skills-lock.json
 
 # misc
 external/how_to_update.md
+
+/data/game/
+/results/lab3/*/raw/

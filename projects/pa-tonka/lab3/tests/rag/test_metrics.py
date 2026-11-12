@@ -1,7 +1,7 @@
 import pytest
 
 from dnd_rag.contracts import Chunk, ChunkMetadata, ChunkRef, RetrievalHit
-from dnd_rag.evaluation.gold import EvidenceFact, EvidenceSpan, GoldQuestion
+from dnd_rag.evaluation.evidence import EvidenceCase, EvidenceFact, EvidenceSpan
 from dnd_rag.evaluation.metrics import aggregate_metrics, evaluate_question
 
 
@@ -19,10 +19,8 @@ def span(start, end, file='xphb.md'):
 
 
 def question(*alternatives):
-    return GoldQuestion(
+    return EvidenceCase(
         id='q',
-        question='What?',
-        reference_answer='Answer',
         answerable=True,
         evidence=[
             EvidenceFact(fact=f'Fact{i}', alternatives=list(a)) for i, a in enumerate(alternatives)

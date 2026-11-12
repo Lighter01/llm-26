@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from hashlib import sha256
 from importlib.metadata import version
 
-from dnd_rag.config import ExperimentConfig
+from dnd_rag.config import RagConfig
 from dnd_rag.contracts import Chunk, ChunkDraft, ChunkMetadata, IndexIdentity
 from dnd_rag.indexing.corpus import CorpusSnapshot
 
@@ -44,7 +44,7 @@ def library_versions(server_version: str) -> dict[str, str]:
 
 
 def make_identity(
-    config: ExperimentConfig, corpus: CorpusSnapshot, versions: dict[str, str]
+    config: RagConfig, corpus: CorpusSnapshot, versions: dict[str, str]
 ) -> IndexIdentity:
     chunking = config.chunking.model_dump()
     if config.chunking.strategy != 'source_map_recursive':
@@ -107,7 +107,7 @@ def assign_ids(drafts: Sequence[ChunkDraft], identity: IndexIdentity) -> list[Ch
     result, seen = [], {}
     for draft in drafts:
         m = draft.metadata
-        name = 'dnd-rag-lab2:' + canonical_json(
+        name = 'dnd-rag-lab3:' + canonical_json(
             [identity.index_id, m.source_file, m.start_char, m.end_char]
         )
         chunk_id = str(uuid.uuid5(uuid.NAMESPACE_URL, name))

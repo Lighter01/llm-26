@@ -59,10 +59,11 @@ def test_real_template_token_parity(tmp_path):
                     SystemMessage(content='Answer in English, briefly.'),
                     HumanMessage(content='Say ready.'),
                 ]
-                run_path = ROOT / 'results/g1_markdown_initial/per_question.jsonl'
-                row = json.loads(next(run_path.open(encoding='utf-8')))
-                fragments = [h['chunk']['page_content'] for h in row['retrieval']['hits']]
-                content = 'Question: ' + row['question'] + '\n\nD&D RULES:\n'
+                from dnd_rag.config import load_rag_config
+                from dnd_rag.indexing.corpus import load_corpus
+                corpus = load_corpus(load_rag_config(None, project_root=ROOT).corpus.directory)
+                fragments = [book.body[:2000] for book in corpus.books.values()]
+                content = 'Explain these D&D rules:\n'
                 # Fill with real source passages to approach the accepted full-input bound.
                 position = 0
                 while True:

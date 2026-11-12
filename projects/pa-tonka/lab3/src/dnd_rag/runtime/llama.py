@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import httpx
 
 from dnd_rag.contracts import RagError
-from dnd_rag.rag.llm import LLMClient
+from dnd_rag.runtime.llm import LLMClient
 from dnd_rag.runtime.preflight import connection_refused
 
 

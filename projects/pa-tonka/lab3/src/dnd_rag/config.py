@@ -103,19 +103,7 @@ class BM25Config(ConfigModel):
     b: float = Field(default=0.75, ge=0, le=1, allow_inf_nan=False)
 
 
-class EvaluationConfig(ConfigModel):
-    questions: Path = Path('data/questions/validated/questions.yaml')
-    k: list[int] = Field(default_factory=lambda: [1, 5, 10])
-    mrr_k: Literal[10] = 10
-
-    @model_validator(mode='after')
-    def check_ks(self):
-        if self.k != [1, 5, 10]:
-            raise ValueError('evaluation.k must be [1, 5, 10]')
-        return self
-
-
-class ExperimentConfig(ConfigModel):
+class RagConfig(ConfigModel):
     schema_version: Literal[1] = 1
     corpus: CorpusConfig
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
@@ -123,12 +111,9 @@ class ExperimentConfig(ConfigModel):
     index: IndexConfig = Field(default_factory=IndexConfig)
     retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
     bm25: BM25Config = Field(default_factory=BM25Config)
-    evaluation: EvaluationConfig = Field(default_factory=EvaluationConfig)
 
     @model_validator(mode='after')
     def check_limits(self):
-        if self.retrieval.limit < max(self.evaluation.k):
-            raise ValueError('retrieval.limit must cover evaluation.k')
         if (
             self.retrieval.mode == 'hybrid'
             and self.retrieval.hybrid_candidates_per_branch < self.retrieval.limit
@@ -172,7 +157,7 @@ class RuntimeSettings(ConfigModel):
     project_root: Path
     qdrant_url: str = 'http://127.0.0.1:6343'
     llama_server_bin: str = 'llama-server'
-    model_path: Path
+    model_path: Path | None = None
     llm_base_url: str = 'http://127.0.0.1:8080/v1'
     embedding_cache_dir: Path | None = None
     rag_api_url: str = 'http://127.0.0.1:8000'
@@ -183,21 +168,17 @@ def resolve_path(path: str | Path, root: Path) -> Path:
     return (root / path).resolve() if not path.is_absolute() else path.resolve()
 
 
-def load_experiment(path: Path, *, project_root: Path) -> ExperimentConfig:
-    data = read_yaml(resolve_path(path, project_root))
+def load_rag_config(path: str | Path | None = None, *, project_root: Path) -> RagConfig:
+    values = {**dotenv_values(project_root / '.env'), **os.environ}
+    selected = path if path is not None else values.get('RAG_CONFIG_PATH') or 'configs/rag/r3.yaml'
+    data = read_yaml(resolve_path(selected, project_root))
     try:
-        # Convert only path fields explicitly; all other YAML types remain strict.
         corpus = data.get('corpus', {})
         if isinstance(corpus, dict) and isinstance(corpus.get('directory'), str):
             corpus['directory'] = resolve_path(corpus['directory'], project_root)
-        evaluation = data.setdefault('evaluation', {})
-        if isinstance(evaluation, dict):
-            questions = evaluation.get('questions', 'data/questions/validated/questions.yaml')
-            if isinstance(questions, str):
-                evaluation['questions'] = resolve_path(questions, project_root)
-        return ExperimentConfig.model_validate(data)
+        return RagConfig.model_validate(data)
     except (ValidationError, ValueError, TypeError) as exc:
-        raise RagError('invalid_config', f'{path}: {exc}') from exc
+        raise RagError('invalid_config', f'{selected}: {exc}') from exc
 
 
 def load_llm_profile(path: Path) -> LLMProfile:

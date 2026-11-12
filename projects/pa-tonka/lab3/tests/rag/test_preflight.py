@@ -12,7 +12,8 @@ from qdrant_client.http.exceptions import ResponseHandlingException
 from dnd_rag.config import LLMProfile, load_settings
 from dnd_rag.contracts import RagError
 from dnd_rag.indexing.store import QdrantStore
-from dnd_rag.runtime import application, llama
+from dnd_rag.runtime import index as application
+from dnd_rag.runtime import llama
 
 
 def failure(kind, request=None):

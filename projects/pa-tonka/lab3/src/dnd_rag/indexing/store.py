@@ -20,7 +20,7 @@ from dnd_rag.contracts import (
 )
 from dnd_rag.indexing.identity import FULL_SCAN_THRESHOLD, INDEXING_THRESHOLD, digest
 
-OWNER = 'dnd_rag_lab2'
+OWNER = 'dnd_rag_lab3'
 
 
 def utc_now():
