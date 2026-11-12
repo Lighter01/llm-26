@@ -117,7 +117,7 @@ class CodexRunner:
         mode='off',
         artifacts_dir=None,
         timeout_seconds=300,
-        context_limit=11000,
+        context_limit=9500,
     ):
         self.root = Path(project_root)
         from dnd_rag.agent.citations import CitationRegistry

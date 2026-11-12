@@ -42,7 +42,7 @@ async def run_cli(
     sid, last_trace, stats = (
         str(uuid.uuid4()),
         None,
-        ContextStats(agent_limit=getattr(getattr(service, 'config', None), 'context_limit', 11000)),
+        ContextStats(agent_limit=getattr(getattr(service, 'config', None), 'context_limit', 9500)),
     )
     console.print(
         Panel(
@@ -91,9 +91,7 @@ async def run_cli(
                     str(uuid.uuid4()),
                     None,
                     ContextStats(
-                        agent_limit=getattr(
-                            getattr(service, 'config', None), 'context_limit', 11000
-                        )
+                        agent_limit=getattr(getattr(service, 'config', None), 'context_limit', 9500)
                     ),
                 )
                 console.print(f'New dialog: {sid}')

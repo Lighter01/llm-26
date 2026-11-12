@@ -2,7 +2,7 @@
 
 `codex.toml` задаёт явные overrides для установленного Codex 0.167.0-alpha.4.1. Runner применяет их к `codex exec --ignore-user-config --strict-config --json --skip-git-repo-check` в пустом cwd, затем использует конкретный session ID для `exec resume`. Личный config не редактируется. Сервисы: тот же llama-server Responses endpoint и общий MCP; пять разрешённых MCP names. Shell, unified exec, apps, JS, memory и multi-agent отключены, web disabled. Фактический набор проверяется live, внутренние инструкции Codex остаются свойством готового агента.
 
-`remote_compaction="unsupported"` в capabilities провайдера выбирает штатную local compaction, серверное окно16384 и auto_compact11000 заданы явно. Сжатие не подменяется middleware собственного агента. Effort none используется только для off; budgeted runner заменяет транспортное effort на medium, реальный бюджет512 задаёт общий серверный профиль. Native low/minimal этим не обещаются.
+`remote_compaction="unsupported"` в capabilities провайдера выбирает штатную local compaction, серверное окно16384 и auto_compact9500 заданы явно. Сжатие не подменяется middleware собственного агента. Effort none используется только для off; budgeted runner заменяет транспортное effort на medium, реальный бюджет512 задаёт общий серверный профиль. Native low/minimal этим не обещаются.
 
 Официальный [Codex observability plugin](https://github.com/langfuse/codex-observability-plugin/tree/e1d02be28e6bacbfe350a1bc1ccf861e54edee17) закреплён на commit e1d02be28e6bacbfe350a1bc1ccf861e54edee17. Установка после clone в `.runtime/codex-plugin`:
 

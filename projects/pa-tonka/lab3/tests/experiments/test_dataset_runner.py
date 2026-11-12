@@ -112,6 +112,7 @@ def test_exact_evidence_resolver_rejects_hash_ambiguity_and_changed_coordinates(
         resolve_evidence({**result.model_dump(), 'start_char': 1}, corpus)
 
 
+@pytest.mark.integration
 def test_actual_dataset_validates_all_independent_spans():
     from dnd_rag.config import load_rag_config
     from dnd_rag.experiments.dataset import load_dataset

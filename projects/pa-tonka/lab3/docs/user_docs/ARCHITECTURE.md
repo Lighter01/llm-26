@@ -12,7 +12,7 @@ RuntimeSession владеет lock и дочерними process groups. Сме�
 
 NativeLLM переиспользует ChatOpenAI и родной GGUF tokenizer. HTTP-hook видит итоговый wire body после сериализации OpenAI: system, messages, schemas, calls/results, template и reasoning поля. Перед отправкой body без изменения передаётся native input_tokens. Guard проверяет `input + completion reserve + safety <= server window`; после ответа проверяет parity с usage. Messages-only счётчик и tiktoken не используются как замена полной проверки.
 
-Предварительный body для middleware строится тем же ChatOpenAI serializer. Счётчик физического окна остаётся последней защитой в самом transport. Отдельный порог приложения 11000 нужен для последующего сокращения; он не равен окну сервера 16384. Off отправляет enable_thinking=false/effort=none/budget0, budgeted — true/budget512 без none; CLI сервера получает тот же профиль.
+Предварительный body для middleware строится тем же ChatOpenAI serializer. Счётчик физического окна остаётся последней защитой в самом transport. Отдельный порог приложения 9500 нужен для последующего сокращения; он не равен окну сервера 16384. Off отправляет enable_thinking=false/effort=none/budget0, budgeted — true/budget512 без none; CLI сервера получает тот же профиль.
 
 ## Наблюдаемость и общий транспорт
 
@@ -26,7 +26,7 @@ Langfuse SDK5.2.0 отправляет данные в локальный Compos
 
 CodexRunner вызывает exec и exec resume по точному ID, без личного config и эталонов, из пустого /tmp cwd. Исходный rollout сохраняется независимо от compaction. Явный model catalog выбирает direct tools и16K; stock base instruction и алгоритм local compaction сохраняются. Из-за фактического несовпадения форматов Codex0.167 и llama11046 используется тонкий proxy8081→8080: additional_tools/namespace переводятся в обычные Responses functions и обратно. Оба клиента используют те же weights, MCP game tools и профиль генерации; original/effective payload и count/usage доступны для аудита. Сравнение учитывает внутренний prompt и счётчик Codex как свойство готового агента.
 
-Рабочий общий порог установлен11000 по smoke: при исходных8192 служебный Codex prefix5314 + выдача8252 вызывали повторное сокращение до ответа. Оба агента используют11000 при том же окне16384, reserve2048/safety256. Внутренний Codex счётчик отличается от native wire count; последнее число сохраняется отдельно.
+Рабочий общий порог установлен9500 после длинного regression probe: при исходных8192 служебный Codex prefix5314 + выдача8252 вызывали повторное сокращение до ответа. Порог11000 прошёл ранний smoke, но в Orla дал полный input14686 + output2048 > window16384; диагностический прогон сохранён, итоговая матрица повторяется на общем9500. Оба агента используют9500 при том же окне16384, reserve2048/safety256. Внутренний Codex счётчик отличается от native wire count; последнее число сохраняется отдельно.
 
 ## Подготовленные игровые сущности
 

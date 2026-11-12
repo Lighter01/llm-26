@@ -10,7 +10,7 @@ from statistics import mean, median
 from dnd_rag.contracts import ChunkRef, RagError
 from dnd_rag.evaluation.metrics import aggregate_metrics
 from dnd_rag.experiments.contracts import AgentDataset
-from dnd_rag.experiments.scoring import evaluate_retrieval_calls, evaluate_turn
+from dnd_rag.experiments.scoring import evaluate_retrieval_calls, evaluate_turn, normalized_tools
 
 
 def save_json(path, data):
@@ -119,7 +119,8 @@ def score_records(dataset, records, manifest, review=None):
         if key not in valid or key in seen:
             raise RagError('invalid_artifacts', 'Unknown or duplicate saved turn')
         seen.add(key)
-        record = {**raw, 'history': histories[raw['case_id']]}
+        restored_tools = normalized_tools(raw.get('raw_records', {}).get('tools', raw['tools']))
+        record = {**raw, 'tools': restored_tools, 'history': histories[raw['case_id']]}
         case = lookup[raw['case_id']].turns[raw['turn'] - 1]
         scores = evaluate_turn(case, record, annotation=review.get((raw['case_id'], raw['turn'])))
         retrieval = evaluate_retrieval_calls(case, record['tools'], manifest)
@@ -128,6 +129,7 @@ def score_records(dataset, records, manifest, review=None):
         scored.append(
             {
                 **raw,
+                'tools': restored_tools,
                 'scores': {**scores.model_dump(), 'success': scores.success},
                 'retrieval_metrics': retrieval_metrics,
                 'retrieval_status': 'missing_expected_call'
@@ -144,7 +146,7 @@ def score_records(dataset, records, manifest, review=None):
                 ],
             }
         )
-        histories[raw['case_id']].append(raw)
+        histories[raw['case_id']].append({**raw, 'tools': restored_tools})
     return scored
 
 
@@ -317,6 +319,21 @@ def recompute(directory, *, review_path=None, write=False):
     metrics = summarize_records(dataset, records)
     if write:
         save_json(directory / 'metrics.json', metrics)
+        with (directory / 'scored_tool_calls.jsonl').open('w') as stream:
+            for row in records:
+                for tool in row['tools']:
+                    stream.write(
+                        json.dumps(
+                            {
+                                'case_id': row['case_id'],
+                                'turn': row['turn'],
+                                'session_id': row['session_id'],
+                                **tool,
+                            },
+                            ensure_ascii=False,
+                        )
+                        + '\n'
+                    )
         with (directory / 'scored_turns.jsonl').open('w') as stream:
             for row in records:
                 stream.write(json.dumps(row, ensure_ascii=False) + '\n')

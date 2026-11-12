@@ -103,7 +103,7 @@ uv run python -m dnd_rag run --interface cli --llm-profile configs/llm/off.yaml
 | `--interface cli` | Необязательный, default cli; Streamlit пока не реализован |
 | `--llm-profile PATH` | Необязательный YAML относительно project root; default configs/llm/off.yaml, другой штатный configs/llm/budgeted.yaml |
 | `--config PATH` | Необязательный RAG YAML, иначе обычный приоритет RAG_CONFIG_PATH/.env/R3 |
-| `--context-limit INT` | Необязательный native full-input порог, default11000, минимум1024; порог+output reserve+safety должны помещаться в server window |
+| `--context-limit INT` | Необязательный native full-input порог, default9500, минимум1024; порог+output reserve+safety должны помещаться в server window |
 | `--rebuild` | Необязательный, default false; принудительно пересобрать индекс до модели |
 | `-h/--help` | Справка |
 
@@ -136,7 +136,7 @@ uv run python -m dnd_rag evaluate-agents --dataset data/tasks/lab3.yaml --agent 
 | `--results-dir PATH` | Необязательный корень; default results/lab3 |
 | `--config PATH` | Необязательный RAG YAML, обычный приоритет env/.env/R3 |
 | `--llm-profile PATH` | Необязательный; default configs/llm/<mode>.yaml; thinking обязан совпадать с mode |
-| `--context-limit INT` | Необязательный общий input threshold; default11000, минимум1024 |
+| `--context-limit INT` | Необязательный общий input threshold; default9500, минимум1024 |
 | `--timeout SECONDS` | Необязательный положительный per-turn timeout, default300 |
 | `--only ID [ID ...]` | Необязательный явный smoke subset; только существующие IDs, selection сохраняется в manifest |
 | `--rebuild` | Необязательный, default false; перестроить индекс перед моделью |

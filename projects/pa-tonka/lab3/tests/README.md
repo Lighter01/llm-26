@@ -7,3 +7,5 @@
 `agent/` — программный агент, модельный transport, history/limits и Langfuse observations; `tools/` — MCP registry/serialization; `experiments/` — Codex subprocess/resume/export и преобразование реальных protocol payloads. В `agent/integration/` находится явный shared-stack smoke; он требует DM_LIVE_STACK=1 и уже работающего стека.
 
 `game/` проверяет каталоги и чистые игровые правила на маленьких независимых fixtures, без сети и LLM.
+
+`experiments/test_provenance.py` проверяет изменение freeze при изменении tool descriptions/exporter и общий порог9500 после реального overflow. `test_saved_artifacts.py` проверяет выбранные через DM_SAVED_RUNS четыре локальных прогона, полноту ссылок, compaction и идентичность recompute; без переменной явно skipped.

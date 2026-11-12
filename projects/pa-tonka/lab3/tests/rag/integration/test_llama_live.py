@@ -61,6 +61,7 @@ def test_real_template_token_parity(tmp_path):
                 ]
                 from dnd_rag.config import load_rag_config
                 from dnd_rag.indexing.corpus import load_corpus
+
                 corpus = load_corpus(load_rag_config(None, project_root=ROOT).corpus.directory)
                 fragments = [book.body[:2000] for book in corpus.books.values()]
                 content = 'Explain these D&D rules:\n'

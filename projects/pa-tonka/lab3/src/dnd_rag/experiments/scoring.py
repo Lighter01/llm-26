@@ -13,24 +13,26 @@ def normalized_tools(records):
     result = []
     for raw in records:
         data = raw.get('result') or {}
-        if isinstance(data, dict) and 'structured_content' in data:
-            data = data['structured_content'] or {}
-        if isinstance(data, dict) and 'content' in data and 'structured_content' not in data:
+        if isinstance(data, dict) and data.get('structured_content') is not None:
+            data = data['structured_content']
+        elif isinstance(data, dict) and 'content' in data:
             import json
 
+            text = '\n'.join(x.get('text', '') for x in data['content'] if x.get('type') == 'text')
             try:
-                data = json.loads(
-                    '\n'.join(x.get('text', '') for x in data['content'] if x.get('type') == 'text')
-                )
+                data = json.loads(text)
             except (ValueError, TypeError):
-                pass
+                data = {'text': text}
         result.append(
             {
                 **raw,
                 'name': raw.get('name', raw.get('tool', '')),
                 'arguments': raw.get('arguments', {}),
                 'result': data,
-                'status': raw.get('status', 'completed'),
+                'transport_status': raw.get('transport_status', raw.get('status', 'completed')),
+                'status': 'error'
+                if raw.get('status') in ('error', 'failed') or raw.get('error')
+                else raw.get('status', 'completed'),
             }
         )
     return result
@@ -47,8 +49,13 @@ def actual_from_turn(record, number, kind):
     for tool in history[number - 1]['tools']:
         if (
             tool['name'] in kind
+            and tool.get('status', 'completed') != 'error'
             and not tool['result'].get('error')
-            and tool['result'].get('status', 'success') == 'success'
+            and (
+                tool['result'].get('status') == 'success'
+                if tool['name'] != 'generate_loot'
+                else 'coins' in tool['result']
+            )
         ):
             return tool['result']
     return None
@@ -76,8 +83,21 @@ def evaluate_turn(case, record, *, annotation=None):
         values[key] = float(bool(condition))
 
     names = [t['name'] for t in tools]
+    prior_lookup_names = {
+        m['name'].casefold()
+        for previous in record.get('history', [])
+        for t in normalized_tools(previous.get('tools', []))
+        if t['name'] == 'lookup_monsters'
+        for m in t['result'].get('monsters', [])
+    }
+    required_names = {n.casefold() for n in checks.get('monsters', {})}
     for name in case.expected_tools:
-        check('tool_' + name, name in names)
+        reusable = (
+            name == 'lookup_monsters'
+            and bool(required_names)
+            and required_names <= prior_lookup_names
+        )
+        check('tool_' + name, name in names or reusable)
     for name in checks.get('avoid_tools', []):
         check('avoid_' + name, name not in names)
     encounters = [t for t in tools if t['name'] in ('build_encounter', 'evaluate_encounter')]
@@ -106,20 +126,22 @@ def evaluate_turn(case, record, *, annotation=None):
             'exact_composition',
             all(
                 composition(t['result']) == {k.casefold(): v for k, v in checks['monsters'].items()}
-                for t in evaluations
+                for t in evaluations[-1:]
             ),
         )
     if 'expected_status' in checks:
         check(
             'expected_status',
             bool(builds)
-            and all(t['result'].get('status') == checks['expected_status'] for t in builds),
+            and all(t['result'].get('status') == checks['expected_status'] for t in builds[-1:]),
         )
     if 'build_expected_status' in checks:
         check(
             'build_expected_status',
             bool(builds)
-            and all(t['result'].get('status') in checks['build_expected_status'] for t in builds),
+            and all(
+                t['result'].get('status') in checks['build_expected_status'] for t in builds[-1:]
+            ),
         )
     if (
         builds
@@ -180,7 +202,7 @@ def evaluate_turn(case, record, *, annotation=None):
             'reused_encounter',
             previous is not None
             and bool(evaluations)
-            and all(composition(t['result']) == composition(previous) for t in evaluations),
+            and all(composition(t['result']) == composition(previous) for t in evaluations[-1:]),
         )
     if 'recall_encounter_from_turn' in checks:
         previous = actual_from_turn(

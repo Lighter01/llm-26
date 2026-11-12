@@ -2,7 +2,7 @@
 model = "dnd-nemotron"
 model_provider = "lab3"
 model_context_window = 16384
-model_auto_compact_token_limit = 11000
+model_auto_compact_token_limit = 9500
 model_reasoning_effort = "none"
 model_reasoning_summary = "none"
 approval_policy = "never"

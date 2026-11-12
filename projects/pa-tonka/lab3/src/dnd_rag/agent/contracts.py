@@ -7,7 +7,7 @@ from dnd_rag.contracts import Contract
 
 class ContextStats(Contract):
     input_tokens: int | None = None
-    agent_limit: int = 11000
+    agent_limit: int = 9500
     server_window: int = 16384
     compacted: bool = False
 

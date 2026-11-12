@@ -30,8 +30,11 @@ def experiment_provenance(root, app, dataset, agent_config):
     instance = json.loads((root / '.runtime/llama/instance.json').read_text())
     paths = []
     for name in ('agent', 'runtime', 'tools', 'game', 'indexing'):
-        paths.extend((root / 'src/dnd_rag' / name).rglob('*.py'))
-        paths.extend((root / 'src/dnd_rag' / name).rglob('*.txt'))
+        paths.extend(
+            p
+            for p in (root / 'src/dnd_rag' / name).rglob('*')
+            if p.suffix in ('.py', '.txt', '.yaml', '.json', '.toml', '.mjs')
+        )
     paths += [
         root / 'src/dnd_rag/config.py',
         root / 'src/dnd_rag/retrieval.py',
@@ -147,6 +150,20 @@ def score_command(root, args):
     run = json.loads((directory / 'run.json').read_text())
     run['evaluation_status'] = 'pending' if metrics['pending_executions'] else 'completed'
     run['review_file'] = str(review)
+    run['evaluation_provenance'] = {
+        'method': 'explicit-criterion-review',
+        'review_sha256': sha256(review.read_bytes()).hexdigest(),
+        'files': freeze_fingerprint(
+            root,
+            [
+                root / 'src/dnd_rag/experiments/scoring.py',
+                root / 'src/dnd_rag/experiments/artifacts.py',
+                root / 'src/dnd_rag/experiments/contracts.py',
+                root / 'src/dnd_rag/evaluation/evidence.py',
+                root / 'src/dnd_rag/evaluation/metrics.py',
+            ],
+        ),
+    }
     if review != directory / 'review.csv':
         import shutil
 

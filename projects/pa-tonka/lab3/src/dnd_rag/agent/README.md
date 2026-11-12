@@ -1,6 +1,6 @@
 # Агентные контракты
 
-`config.py` — AgentConfig: порог контекста 11000, recent 2048, summary 1024, 12 model calls, 16 tool calls, 300 секунд на реплику и адрес общего MCP. Экспортирует общий LLMProfile без второго набора параметров.
+`config.py` — AgentConfig: порог контекста 9500, recent 2048, summary 1024, 12 model calls, 16 tool calls, 300 секунд на реплику и адрес общего MCP. Экспортирует общий LLMProfile без второго набора параметров.
 
 `contracts.py` — сериализуемые AgentReply, ContextStats и AgentEvent для CLI/runner. Неизвестный input_tokens равен None, а не нулю. Статусы и события одинаковы для интерактивного интерфейса и runner.
 

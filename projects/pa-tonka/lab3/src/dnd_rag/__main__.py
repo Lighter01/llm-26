@@ -57,7 +57,7 @@ def parser():
         sub.add_argument(
             '--context-limit',
             type=int,
-            default=11000,
+            default=9500,
             help='Full input threshold for compaction; server window is separate',
         )
         sub.add_argument(
@@ -82,7 +82,7 @@ def parser():
     evaluate.add_argument(
         '--llm-profile', type=Path, help='Default configs/llm/<mode>.yaml; thinking must match mode'
     )
-    evaluate.add_argument('--context-limit', type=int, default=11000)
+    evaluate.add_argument('--context-limit', type=int, default=9500)
     evaluate.add_argument('--timeout', type=float, default=300.0, help='Per-turn seconds')
     evaluate.add_argument(
         '--only', nargs='+', help='Exact item IDs for an explicitly labelled smoke subset'
