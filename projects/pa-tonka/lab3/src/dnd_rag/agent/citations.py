@@ -88,7 +88,8 @@ class CitationRegistry:
 
 
 def validate_citations(text, registry, scope):
-    numbers = sorted({int(n) for n in re.findall(r'\[(\d{1,6})\]', text)})
+    groups = re.findall(r'\[\s*(\d{1,6}(?:\s*,\s*\d{1,6})*)\s*\]', text)
+    numbers = sorted({int(n.strip()) for group in groups for n in group.split(',')})
     allowed = {r.number: r.source for r in registry.export(scope)}
     valid = [n for n in numbers if n in allowed]
     return CitationValidation(

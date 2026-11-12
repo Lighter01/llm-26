@@ -30,3 +30,15 @@ def test_new_dialog_does_not_inherit_allowed_source_ids_or_fabricate_pages(tmp_p
         s.model_dump(mode='json') for s in hits[0].chunk.metadata.sections
     ]
     assert 'page' not in other[0].source.provenance
+
+
+def test_grouped_numbers_are_validated_individually_and_cannot_hide_unknown_sources(tmp_path):
+    from dnd_rag.agent.citations import CitationRegistry, validate_citations
+
+    registry = CitationRegistry(tmp_path)
+    registry.register('dialog', make_hits(2))
+    result = validate_citations('Rule [1, 2, 99]; repeated [2] and [ 1, 100 ].', registry, 'dialog')
+    assert result.valid_numbers == [1, 2]
+    assert result.unknown_numbers == [99, 100]
+    assert len(result.sources) == 2
+    assert validate_citations('[1, 2]', registry, 'other').unknown_numbers == [1, 2]
