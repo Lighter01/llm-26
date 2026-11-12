@@ -123,11 +123,12 @@ class RagConfig(ConfigModel):
 
 
 class LLMProfile(ConfigModel):
-    context_size: Literal[8192] = 8192
-    max_output_tokens: Literal[1536] = 1536
-    safety_margin: Literal[256] = 256
-    max_context_chunks: Literal[5] = 5
-    thinking: Literal[False] = False
+    context_size: int = Field(default=16384, ge=4096)
+    max_output_tokens: int = Field(default=2048, gt=0)
+    safety_margin: int = Field(default=256, ge=0)
+    thinking: bool = False
+    reasoning_budget_tokens: int = Field(default=0, ge=0)
+    reasoning_effort: Literal['none', 'default'] | None = None
     server_subcommand: Literal['serve'] | None = None
     model_alias: str = 'dnd-nemotron'
     gpu_layers: int | None = Field(default=None, ge=0)
@@ -146,8 +147,25 @@ class LLMProfile(ConfigModel):
     startup_timeout_seconds: float = Field(default=120.0, gt=0)
     http_timeout_seconds: float = Field(default=180.0, gt=0)
 
+    def template_options(self):
+        options = {
+            'chat_template_kwargs': {'enable_thinking': self.thinking},
+            'reasoning_budget_tokens': self.reasoning_budget_tokens,
+        }
+        if not self.thinking:
+            options['reasoning_effort'] = 'none'
+        return options
+
     @model_validator(mode='after')
     def check_batches(self):
+        if self.thinking != (self.reasoning_budget_tokens > 0):
+            raise ValueError('thinking requires a positive reasoning budget; off requires zero')
+        if self.thinking and self.reasoning_effort == 'none':
+            raise ValueError('none conflicts with enabled thinking')
+        if self.reasoning_budget_tokens >= self.max_output_tokens:
+            raise ValueError('Completion limit must leave room after reasoning')
+        if self.max_output_tokens + self.safety_margin >= self.context_size:
+            raise ValueError('Output reserve exceeds context window')
         if self.batch_size and self.ubatch_size and self.ubatch_size > self.batch_size:
             raise ValueError('ubatch_size must not exceed batch_size')
         return self

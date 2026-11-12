@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import httpx
 
 from dnd_rag.contracts import RagError
-from dnd_rag.runtime.llm import LLMClient
+from dnd_rag.runtime.llm import NativeLLM
 from dnd_rag.runtime.preflight import connection_refused
 
 
@@ -94,10 +94,14 @@ def server_argv(settings, profile):
             'off',
             '--no-context-shift',
             '--reasoning',
-            'off',
+            'on' if profile.thinking else 'off',
+            '--reasoning-budget',
+            str(profile.reasoning_budget_tokens),
+            '--reasoning-format',
+            'deepseek',
             '--jinja',
             '--chat-template-kwargs',
-            '{"enable_thinking":false}',
+            json.dumps({'enable_thinking': profile.thinking}),
             '--threads',
             str(profile.threads),
             '--threads-batch',
@@ -139,7 +143,7 @@ def _verify_server(client, settings, profile):
 
 def start_llama(settings, profile, session, *, http_client=None):
     session.require_active()
-    client = LLMClient(settings, profile, http_client=http_client)
+    client = NativeLLM(settings, profile, http_client=http_client)
     try:
         try:
             response = client.http.get(client.native_url + '/health', timeout=2)
@@ -157,7 +161,7 @@ def start_llama(settings, profile, session, *, http_client=None):
                 'its complete launch profile cannot be verified. Stop that server before this managed launch.',
             )
         argv = server_argv(settings, profile)
-        if not settings.model_path.is_file():
+        if settings.model_path is None or not settings.model_path.is_file():
             raise RagError('llm_model_missing', f'GGUF not found: {settings.model_path}')
         version = binary_version(argv[0], profile)
         with settings.model_path.open('rb') as model_file:

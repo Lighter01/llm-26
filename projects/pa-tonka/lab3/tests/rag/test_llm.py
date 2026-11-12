@@ -48,6 +48,8 @@ def transport(requests, *, timeout=False):
         )
         if timeout:
             raise httpx.ReadTimeout('test timeout', request=request)
+        if request.url.path.endswith('/input_tokens'):
+            return httpx.Response(404, json={'error': 'unavailable'})
         if request.url.path == '/apply-template':
             return httpx.Response(200, json={'prompt': 'FULL CHAT TEMPLATE'})
         if request.url.path == '/tokenize':
@@ -122,7 +124,7 @@ def startup_inputs(tmp_path, monkeypatch, *, foreign=False, never_ready=False):
                 200,
                 json={
                     'model_path': '/foreign.gguf' if foreign else str(settings.model_path),
-                    'default_generation_settings': {'n_ctx': 8192},
+                    'default_generation_settings': {'n_ctx': 16384},
                     'total_slots': 1,
                     'chat_template': 'template',
                     'build_info': 'b11046-60081bb2b',
@@ -150,7 +152,7 @@ def test_client_does_not_spawn_per_generate(tmp_path, monkeypatch):
             client.generate([HumanMessage(content='Q?')], max_tokens=10)
     assert len(state['spawns']) == 1
     argv = state['spawns'][0]
-    assert argv[argv.index('--ctx-size') + 1] == '8192'
+    assert argv[argv.index('--ctx-size') + 1] == '16384'
     assert argv[argv.index('--parallel') + 1] == '1'
     assert argv[argv.index('--fit') + 1] == 'off'
     assert '--no-context-shift' in argv and '--no-cache-prompt' in argv

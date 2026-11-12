@@ -43,3 +43,13 @@ uv run python -m dnd_rag reset-index --config configs/rag/r3.yaml
 ## Диагностика
 
 Стадии build идут в stderr, JSON результата — stdout. Локальные worker/llama журналы — `.runtime/`. Прерывание завершает собственные дочерние процессы. Qdrant/data сохраняются. Старые QA/study команды не поддерживаются.
+
+## Административный запуск LLM
+
+После завершения GPU-worker можно проверить сервер отдельно:
+
+```bash
+uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml
+```
+
+`--llm-profile PATH` обязателен, YAML относительно project root; `-h/--help` — справка. Других параметров нет. `LLAMA_SERVER_BIN` — исполняемый файл (default llama-server), `LLM_MODEL_PATH` — GGUF, `LLM_BASE_URL` — loopback endpoint с `/v1` (default http://127.0.0.1:8080/v1). Запуск держит блокировку проекта и завершается Ctrl+C с cleanup дочерней модели. [Профили и ограничения thinking](../../configs/llm/README.md).

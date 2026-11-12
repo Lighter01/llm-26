@@ -59,7 +59,7 @@ def test_baseline_contract(tmp_path):
     assert (cfg.chunking.chunk_size, cfg.chunking.chunk_overlap) == (512, 64)
     assert cfg.embedding.dimension == 768
     profile = load_llm_profile(write_yaml(tmp_path / 'llm.yaml', {}))
-    assert profile.context_size - profile.max_output_tokens - profile.safety_margin == 6400
+    assert profile.context_size - profile.max_output_tokens - profile.safety_margin == 14080
 
 
 def test_config_import_does_not_load_models():

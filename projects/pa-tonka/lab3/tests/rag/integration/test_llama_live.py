@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def test_real_template_token_parity(tmp_path):
     settings = load_settings(ROOT)
-    profile = load_llm_profile(ROOT / 'configs/llm/local.yaml')
+    profile = load_llm_profile(ROOT / 'configs/llm/off.yaml')
     report = {'profile': profile.model_dump(), 'cases': []}
 
     def gpu_sample(stage):

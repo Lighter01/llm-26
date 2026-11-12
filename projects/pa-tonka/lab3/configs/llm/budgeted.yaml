@@ -1,11 +1,9 @@
-# Initial technical profile; measured in the Task 9 live probe.
 server_subcommand: serve
 model_alias: dnd-nemotron
-context_size: 8192
-max_output_tokens: 1536
+context_size: 16384
+max_output_tokens: 2048
 safety_margin: 256
-max_context_chunks: 5
-thinking: false
+thinking: true
 gpu_layers: 99
 batch_size: 512
 ubatch_size: 128
@@ -21,3 +19,4 @@ min_p: 0.0
 seed: 42
 startup_timeout_seconds: 120.0
 http_timeout_seconds: 180.0
+reasoning_budget_tokens: 512
