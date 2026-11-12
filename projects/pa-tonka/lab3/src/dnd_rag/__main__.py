@@ -43,6 +43,63 @@ def parser():
     selector = reset.add_mutually_exclusive_group(required=True)
     selector.add_argument('--config', type=Path)
     selector.add_argument('--index-id', help='Full lowercase SHA256 index ID')
+    for name in ('run', 'smoke-stack'):
+        sub = commands.add_parser(
+            name,
+            help='Start the shared stack and interactive chat'
+            if name == 'run'
+            else 'Verify actual tools, history and traces on the shared stack',
+        )
+        sub.add_argument(
+            '--config', type=Path, help='RAG YAML; environment/.env/default R3 otherwise'
+        )
+        sub.add_argument('--llm-profile', type=Path, default=Path('configs/llm/off.yaml'))
+        sub.add_argument(
+            '--context-limit',
+            type=int,
+            default=11000,
+            help='Full input threshold for compaction; server window is separate',
+        )
+        sub.add_argument(
+            '--rebuild', action='store_true', help='Repeat index preparation before loading the LLM'
+        )
+        if name == 'run':
+            sub.add_argument('--interface', choices=['cli'], default='cli')
+        else:
+            sub.add_argument('--agents', choices=['own', 'codex', 'both'], default='both')
+            sub.add_argument('--output', type=Path, help='Save machine-readable smoke result')
+    evaluate = commands.add_parser(
+        'evaluate-agents', help='Execute a fixed dataset with the selected local agent and mode'
+    )
+    evaluate.add_argument('--dataset', type=Path, default=Path('data/tasks/lab3.yaml'))
+    evaluate.add_argument('--agent', choices=['own', 'codex'], required=True)
+    evaluate.add_argument('--mode', choices=['off', 'budgeted'], required=True)
+    evaluate.add_argument(
+        '--run-id', help='Unique output directory name; timestamped agent/mode otherwise'
+    )
+    evaluate.add_argument('--results-dir', type=Path, default=Path('results/lab3'))
+    evaluate.add_argument('--config', type=Path)
+    evaluate.add_argument(
+        '--llm-profile', type=Path, help='Default configs/llm/<mode>.yaml; thinking must match mode'
+    )
+    evaluate.add_argument('--context-limit', type=int, default=11000)
+    evaluate.add_argument('--timeout', type=float, default=300.0, help='Per-turn seconds')
+    evaluate.add_argument(
+        '--only', nargs='+', help='Exact item IDs for an explicitly labelled smoke subset'
+    )
+    evaluate.add_argument('--rebuild', action='store_true')
+    score = commands.add_parser(
+        'score-agents', help='Recompute saved records with an explicit review CSV'
+    )
+    score.add_argument('--run', type=Path, required=True)
+    score.add_argument('--review', type=Path, help='Default <run>/review.csv')
+    score.add_argument(
+        '--upload-scores', action='store_true', help='Upload reviewed scores to local Langfuse'
+    )
+    compare = commands.add_parser(
+        'summarize-agents', help='Compare frozen compatible run artifacts'
+    )
+    compare.add_argument('--runs', type=Path, nargs='+', required=True)
     return root
 
 
@@ -75,6 +132,45 @@ def main(argv=None):
                 )
             print(json.dumps({'catalog': str(path)}))
             return 0
+        if args.command in ('run', 'smoke-stack'):
+            from dnd_rag.agent.config import AgentConfig
+            from dnd_rag.config import load_llm_profile, resolve_path
+            from dnd_rag.runtime.application import run_application, run_smoke
+
+            settings = load_settings(PROJECT_ROOT)
+            config = load_rag_config(args.config, project_root=PROJECT_ROOT)
+            profile = load_llm_profile(resolve_path(args.llm_profile, PROJECT_ROOT))
+            agent_config = AgentConfig(context_limit=args.context_limit)
+            if args.command == 'run':
+                return run_application(
+                    settings,
+                    agent_config,
+                    profile,
+                    interface=args.interface,
+                    rebuild=args.rebuild,
+                    rag_config=config,
+                )
+            return run_smoke(
+                settings,
+                agent_config,
+                profile,
+                agents=args.agents,
+                output=args.output,
+                rebuild=args.rebuild,
+                rag_config=config,
+            )
+        if args.command in ('evaluate-agents', 'score-agents', 'summarize-agents'):
+            from dnd_rag.experiments.commands import (
+                evaluate_command,
+                score_command,
+                summarize_command,
+            )
+
+            return {
+                'evaluate-agents': evaluate_command,
+                'score-agents': score_command,
+                'summarize-agents': summarize_command,
+            }[args.command](PROJECT_ROOT, args)
         settings = load_settings(PROJECT_ROOT)
         config = (
             load_rag_config(args.config, project_root=PROJECT_ROOT)
@@ -127,6 +223,11 @@ def main(argv=None):
     except RagError as exc:
         print(json.dumps({'error': exc.as_dict()}, ensure_ascii=False), file=sys.stderr)
         return 2 if exc.code.startswith('invalid_') else 1
+    except ValueError as exc:
+        print(
+            json.dumps({'error': {'code': 'invalid_config', 'message': str(exc)}}), file=sys.stderr
+        )
+        return 2
     except KeyboardInterrupt:
         print('Runtime interrupted; owned children stopped.', file=sys.stderr)
         return 1

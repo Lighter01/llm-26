@@ -170,3 +170,34 @@ def test_trace_readback_follows_sdk_pages_without_truncating_first_generations(
     runner = CodexRunner(Path(__file__).resolve().parents[2], artifacts_dir=tmp_path)
     rows = asyncio.run(runner.verify_trace('trace', 'last reply', []))
     assert len(rows) == 101 and rows[-1]['output'] == 'last reply'
+
+
+def test_adapter_construction_does_not_claim_runner_run_directory(tmp_path):
+    from dnd_rag.experiments.codex import CodexRunner
+
+    runner = CodexRunner(
+        Path(__file__).resolve().parents[2], artifacts_dir=tmp_path / 'run' / 'raw' / 'codex'
+    )
+    assert not (tmp_path / 'run').exists()
+    assert runner.directory == tmp_path / 'run' / 'raw' / 'codex'
+
+
+def test_native_wire_usage_includes_compaction_and_missing_response_is_unknown():
+    from dnd_rag.experiments.codex import wire_usage
+
+    rows = [
+        {'kind': 'request', 'id': 'a', 'input_tokens': 100},
+        {
+            'kind': 'response',
+            'id': 'a',
+            'response': {'usage': {'input_tokens': 100, 'output_tokens': 12}},
+        },
+        {'kind': 'request', 'id': 'summary', 'input_tokens': 200},
+        {
+            'kind': 'response',
+            'id': 'summary',
+            'response': {'usage': {'input_tokens': 200, 'output_tokens': 30}},
+        },
+    ]
+    assert wire_usage(rows)['input_tokens'] == 300 and wire_usage(rows)['output_tokens'] == 42
+    assert wire_usage(rows[:-1])['output_tokens'] is None

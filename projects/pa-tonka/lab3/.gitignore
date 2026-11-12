@@ -27,3 +27,6 @@ external/how_to_update.md
 
 /data/game/
 /results/lab3/*/raw/
+
+# Full measured runs are retained locally; commit only curated root summaries/report.
+/results/lab3/*/

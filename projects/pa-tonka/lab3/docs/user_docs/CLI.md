@@ -89,3 +89,77 @@ uv run python -m dnd_rag prepare-game-data --output data/game/5etools
 | generate_loot | kind=individual/hoard, cr (стандартное число или дробь0..30) | count=1; hoard требует party_level1..20 и treasure_theme=Arcana/Armaments/Implements/Relics, count=1 |
 
 Encounter build: ≤256 форм, ≤3 различных stat blocks, auto count1..min(12,2×party_size); явный total_count точный. Conflict/search_exhausted не выдаются за успешный подбор. Hoard CR относится к владельцу, individual count — к одинаковым существам. Полные фактические rolls и sources входят в result.
+
+## run
+
+Запускает полный локальный stack и оформленный чат. Сначала инфраструктура и каталог, затем reuse/build индекса; GPU-worker заканчивается до старта модели. Порты MCP8765/proxy8081 должны быть свободны. На неопределённый health check launcher отвечает ошибкой, не захватывает чужой процесс. После EOF/Ctrl+C/`/exit` модель и локальные серверы останавливаются, Docker и данные остаются.
+
+```bash
+uv run python -m dnd_rag run --interface cli --llm-profile configs/llm/off.yaml
+```
+
+| Флаг | Значение, обязательность и default |
+|---|---|
+| `--interface cli` | Необязательный, default cli; Streamlit пока не реализован |
+| `--llm-profile PATH` | Необязательный YAML относительно project root; default configs/llm/off.yaml, другой штатный configs/llm/budgeted.yaml |
+| `--config PATH` | Необязательный RAG YAML, иначе обычный приоритет RAG_CONFIG_PATH/.env/R3 |
+| `--context-limit INT` | Необязательный native full-input порог, default11000, минимум1024; порог+output reserve+safety должны помещаться в server window |
+| `--rebuild` | Необязательный, default false; принудительно пересобрать индекс до модели |
+| `-h/--help` | Справка |
+
+`/help` объясняет команды, `/new` создаёт UUID нового диалога и сохраняет предыдущие журналы, `/status` показывает model/session/trace URL и последнее измеренное число, `/exit` выходит. История ввода — `.runtime/cli.history`. Индикатор показывает input/agent limit/%; server16384 указан отдельно. Между измерениями счётчик не анимируется вымышленными токенами. Tool error и summary before→after выводятся отдельными событиями.
+
+## smoke-stack
+
+Стартует тот же stack, выполняет два настоящих turn с историей и оценкой двух Mages каждым выбранным агентом, сохраняет полный JSON со статусом/usage/trace/tools. Требует настроенных Langfuse и, для Codex, pinned exporter. Default проверяет обоих.
+
+```bash
+uv run python -m dnd_rag smoke-stack --agents both --output results/smoke.json
+```
+
+Поддерживает те же `--config`, `--llm-profile`, `--context-limit`, `--rebuild`, `-h/--help`, что run. Дополнительно `--agents own|codex|both` (необязательный, default both), `--output PATH` (необязательный JSON-файл; иначе только stdout). Флага `--interface` нет. Exit0 означает completed turns с traces, иначе1; JSON сохраняет причины ошибок. Смысловое качество ответа оценивается по содержимому, а не по exit code.
+
+## evaluate-agents
+
+Выполняет фиксированный набор последовательно через выбранный адаптер и общий launcher. Каждый запуск получает отдельный run-id; существующие результаты не перезаписываются. Pending rubric означает незавершённое оценивание даже при успешном выполнении модели.
+
+```bash
+uv run python -m dnd_rag evaluate-agents --dataset data/tasks/lab3.yaml --agent own --mode off --run-id own-off
+```
+
+| Флаг | Назначение, допустимость и default |
+|---|---|
+| `--agent own|codex` | Обязательный адаптер |
+| `--mode off|budgeted` | Обязательный режим; budgeted использует512 reasoning tokens на блок |
+| `--dataset PATH` | Необязательный YAML; default data/tasks/lab3.yaml, проверяется до старта модели |
+| `--run-id ID` | Необязательный уникальный1..71 символ из letters/digits/._-; default agent-mode-UTC timestamp |
+| `--results-dir PATH` | Необязательный корень; default results/lab3 |
+| `--config PATH` | Необязательный RAG YAML, обычный приоритет env/.env/R3 |
+| `--llm-profile PATH` | Необязательный; default configs/llm/<mode>.yaml; thinking обязан совпадать с mode |
+| `--context-limit INT` | Необязательный общий input threshold; default11000, минимум1024 |
+| `--timeout SECONDS` | Необязательный положительный per-turn timeout, default300 |
+| `--only ID [ID ...]` | Необязательный явный smoke subset; только существующие IDs, selection сохраняется в manifest |
+| `--rebuild` | Необязательный, default false; перестроить индекс перед моделью |
+| `-h/--help` | Справка |
+
+Все пути относительно project root. Exit0 означает complete execution/observability,1 — incomplete execution; semantic review первоначально pending. Режимы own/off, own/budgeted, codex/off, codex/budgeted запускаются отдельно с одним frozen dataset/model/tool fingerprint.
+
+## score-agents
+
+Офлайн пересчитывает формальные и явно заполненные смысловые критерии. Не вызывает LLM и не изменяет исходные turn records.
+
+```bash
+uv run python -m dnd_rag score-agents --run results/lab3/own-off --review results/lab3/own-off/review.csv --upload-scores
+```
+
+`--run PATH` обязателен; `--review PATH` необязателен, default <run>/review.csv; `--upload-scores` необязательный флаг, default false, отправляет scores в локальный Langfuse; `-h/--help` — справка. Без upload сервисы не нужны. Exit0 означает все rubric заполнены,1 — есть pending; failed tasks остаются failed независимо от заполненности.
+
+## summarize-agents
+
+Сводит сохранённые совместимые прогоны в comparison.csv/json рядом с run directories. Различающиеся common fingerprints — ошибка.
+
+```bash
+uv run python -m dnd_rag summarize-agents --runs results/lab3/own-off results/lab3/own-budgeted results/lab3/codex-off results/lab3/codex-budgeted
+```
+
+`--runs PATH [PATH ...]` обязателен; `-h/--help` — справка. Других флагов нет. Сравнение не меняет pending на success. Формулы и формат review описаны в [оценивании](EVALUATION.md).

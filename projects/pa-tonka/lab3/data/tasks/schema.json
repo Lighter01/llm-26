@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lab3 fixed input tasks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "items"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "items": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "metadata",
+          "turns"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "required": [
+              "type",
+              "difficulty",
+              "history_dependent"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "single",
+                  "short_dialogue",
+                  "long_dialogue"
+                ]
+              },
+              "difficulty": {
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ]
+              },
+              "history_dependent": {
+                "type": "boolean"
+              }
+            }
+          },
+          "turns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "input",
+                "rubric"
+              ],
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "rubric": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "expected_tools": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "search_rules",
+                      "lookup_monsters",
+                      "evaluate_encounter",
+                      "build_encounter",
+                      "generate_loot"
+                    ]
+                  }
+                },
+                "checks": {
+                  "type": "object"
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "file": {
+                        "enum": [
+                          "xphb.md",
+                          "xdmg.md",
+                          "xmm.md"
+                        ],
+                        "title": "File",
+                        "type": "string"
+                      },
+                      "heading_path": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "title": "Heading Path",
+                        "type": "array"
+                      },
+                      "quote": {
+                        "minLength": 1,
+                        "title": "Quote",
+                        "type": "string"
+                      },
+                      "line_start": {
+                        "minimum": 1,
+                        "title": "Line Start",
+                        "type": "integer"
+                      },
+                      "line_end": {
+                        "minimum": 1,
+                        "title": "Line End",
+                        "type": "integer"
+                      },
+                      "start_char": {
+                        "minimum": 0,
+                        "title": "Start Char",
+                        "type": "integer"
+                      },
+                      "end_char": {
+                        "exclusiveMinimum": 0,
+                        "title": "End Char",
+                        "type": "integer"
+                      },
+                      "body_sha256": {
+                        "default": "",
+                        "title": "Body Sha256",
+                        "type": "string"
+                      },
+                      "book_id": {
+                        "type": "string"
+                      },
+                      "relative_path": {
+                        "type": "string"
+                      },
+                      "body_hash": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "quote"
+                    ],
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "body_hash"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "body_sha256"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Управление локальным запуском
 
-`index.py` отвечает за `ensure_index`, `prepare_retriever`, `reset_index`, запуск/reuse Qdrant и GPU build-worker. Worker полностью завершается перед возвратом; ready-reuse не загружает document encoder. `application.py` — точка композиции будущего общего запуска. `llama.py` и `llm.py` содержат изолированные примитивы локальной LLM и не импортируются retrieval-ядром.
+`index.py` отвечает за `ensure_index`, `prepare_retriever`, `reset_index`, запуск/reuse Qdrant и GPU build-worker. Worker полностью завершается перед возвратом; ready-reuse не загружает document encoder. `application.py` — общий lifecycle: infrastructure readiness → catalog/index → exited GPU worker → llama → MCP/proxy → CLI/runner. `application_stack` удерживает RuntimeSession; background services проверяют свободный порт и завершаются через try/finally. `llama.py` и `llm.py` содержат изолированные примитивы локальной LLM и не импортируются retrieval-ядром.
 
 `processes.py` предоставляет `RuntimeSession`: одна блокировка проекта, наследование lock descriptor дочерними процессами, группы процессов и cleanup только принадлежащих запуску процессов. `lock.py` реализует блокировку; `preflight.py` различает отказ соединения и неопределённую сетевую ошибку. При timeout нельзя считать endpoint свободным. Контейнеры и их данные после выхода сохраняются.
 

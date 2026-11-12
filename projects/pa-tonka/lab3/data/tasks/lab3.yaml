@@ -1,0 +1,1700 @@
+version: 1
+items:
+- id: single_01_forest_fey
+  metadata:
+    type: single
+    difficulty: medium
+    history_dependent: false
+  turns:
+  - input: 'Build a moderate forest encounter for four level-3 characters: only fey, exactly four creatures,
+      including exactly one Goblin Warrior. First check that stat block. Do not add further copies of
+      the required creature. Report the actual composition, XP and party budgets; explain how all restrictions
+      are satisfied. A short original scene hook is welcome after the verified facts.'
+    expected_tools:
+    - lookup_monsters
+    - build_encounter
+    checks:
+      party_size: 4
+      party_level: 3
+      difficulty: moderate
+      habitat: forest
+      creature_type: fey
+      total_count: 4
+      required_monsters:
+        Goblin Warrior: 1
+      budgets:
+        low: 600
+        moderate: 900
+        high: 1600
+    rubric:
+    - Uses current XMM Goblin Warrior, not a 2014 goblin.
+    - Result contains four forest fey, exactly one Goblin Warrior, and 600 < XP <= 900.
+    - Does not report a constraint conflict or search exhaustion as a successful build.
+    evidence: []
+- id: single_02_mages_budget
+  metadata:
+    type: single
+    difficulty: easy
+    history_dependent: false
+  turns:
+  - input: For four level-6 adventurers, evaluate exactly two Mages from the current Monster Manual. Look
+      up Mage first. Show each CR/XP, total XP and all three party budgets. Tell me the 2024 difficulty
+      and whether it exceeds high. Explain the budget method from the book; do not redesign the encounter.
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    - search_rules
+    checks:
+      party_size: 4
+      party_level: 6
+      monsters:
+        Mage: 2
+      total_xp: 4600
+      difficulty: high
+      exceeds_high: false
+      budgets:
+        low: 2400
+        moderate: 4000
+        high: 5600
+      avoid_tools:
+      - build_encounter
+    rubric:
+    - Two CR-6 Mages at 2,300 XP give 4,600 XP.
+    - High under budgets 2,400 / 4,000 / 5,600, without a 2014 group multiplier.
+    - Explains arithmetic using retrieved 2024 encounter guidance.
+    evidence:
+    - book_id: XDMG
+      file: xdmg.md
+      relative_path: xdmg.md
+      body_hash: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      body_sha256: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      quote: '***Step 3: Spend Your Budget.*** Every creature has an XP value in its stat block. When
+        you add a creature to your combat encounter, deduct its XP from your XP budget to determine how
+        many XP you have left to spend. Spend as much of your XP budget as you can without going over.
+        It''s OK if you have a few unspent XP left over. Examples are given below:'
+      heading_path:
+      - 'Chapter 4: Creating Adventures'
+      - Plan Encounters
+      - Combat Encounters
+      - Combat Encounter Difficulty
+      start_char: 377391
+      end_char: 377743
+      line_start: 5005
+      line_end: 5005
+- id: single_03_forced_movement
+  metadata:
+    type: single
+    difficulty: medium
+    history_dependent: false
+  turns:
+  - input: My four level-2 heroes face one Ogre and two Wolves. Look up those creatures and evaluate that
+      exact encounter. During it, an explosion pushes a hero out of the Ogre's reach without the hero
+      using movement, an action, Bonus Action or Reaction. Does that push provoke an Opportunity Attack
+      under the 2024 rules? Separate arithmetic from the supported rules ruling; do not simulate combat.
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    - search_rules
+    checks:
+      party_size: 4
+      party_level: 2
+      monsters:
+        Ogre: 1
+        Wolf: 2
+      total_xp: 550
+      difficulty: moderate
+      budgets:
+        low: 400
+        moderate: 600
+        high: 800
+      rules_answer: specified_forced_movement_does_not_provoke
+    rubric:
+    - Ogre 450 XP plus two Wolves at 50 XP = 550 XP, moderate.
+    - The specified forced movement does not provoke; explains the actual rule.
+    - Does not replace the supplied monsters.
+    evidence:
+    - &id001
+      book_id: XPHB
+      file: xphb.md
+      relative_path: xphb.md
+      body_hash: 3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7
+      body_sha256: 3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7
+      quote: '***Avoiding Opportunity Attack.*** You can avoid provoking an Opportunity Attack by taking
+        the Disengage action. You also don''t provoke an Opportunity Attack when you Teleport or when
+        you are moved without using your movement, action, Bonus Action, or Reaction. For example, you
+        don''t provoke an Opportunity Attack if an explosion hurls you out of a foe''s reach or if you
+        fall past an enemy.'
+      heading_path:
+      - 'Chapter 1: Playing the Game'
+      - Combat
+      - Melee Attacks
+      - Opportunity Attacks
+      start_char: 85636
+      end_char: 86027
+      line_start: 1205
+      line_end: 1205
+- id: single_04_patrol_purses
+  metadata:
+    type: single
+    difficulty: easy
+    history_dependent: false
+  turns:
+  - input: Look up Goblin Warrior, then roll individual monetary treasure for a homogeneous patrol of
+      six of them using the 2024 table. Explain the procedure from the book and report exactly what the
+      tool rolled. This is individual treasure, not a hoard. Do not use the average or roll six unrelated
+      purses.
+    expected_tools:
+    - lookup_monsters
+    - generate_loot
+    - search_rules
+    checks:
+      loot:
+        kind: individual
+        cr: 1/4
+        count: 6
+        currency: gp
+        minimum: 18
+        maximum: 108
+        multiple_of: 6
+      answer_matches_tool_loot: true
+    rubric:
+    - Uses CR 1/4 and individual count 6.
+    - One 3d6 GP roll multiplied by six; actual total matches tool and is 18..108 GP divisible by six.
+    - No invented magic items or replacement random total.
+    evidence:
+    - book_id: XDMG
+      file: xdmg.md
+      relative_path: xdmg.md
+      body_hash: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      body_sha256: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      quote: You can use the Random Individual Treasure table to determine how much treasure a single
+        monster has based on its Challenge Rating (CR). The table includes the average total in parentheses,
+        which you can use instead of rolling. To determine the total amount of treasure for a group of
+        similar creatures, you can roll once and multiply the total by the number of creatures in the
+        group.
+      heading_path:
+      - 'Chapter 4: Creating Adventures'
+      - Adventure Rewards
+      - Individual Treasure
+      start_char: 396856
+      end_char: 397241
+      line_start: 5194
+      line_end: 5194
+- id: single_05_dragon_hoard
+  metadata:
+    type: single
+    difficulty: medium
+    history_dependent: false
+  turns:
+  - input: Our four level-8 adventurers defeated a Young Green Dragon, the sole owner of its hoard. Look
+      it up to confirm the CR basis, then generate one ordinary 2024 hoard, Arcana theme, party level
+      8. Do not double the treasure. List actual money and every actual magic item with rarity and source.
+      Explain from the book why combined encounter CR or XP does not choose the hoard's CR row.
+    expected_tools:
+    - lookup_monsters
+    - generate_loot
+    - search_rules
+    checks:
+      loot:
+        kind: hoard
+        cr: '8'
+        party_level: 8
+        treasure_theme: arcana
+        count: 1
+        currency: gp
+        minimum: 800
+        maximum: 8000
+        item_count_min: 1
+        item_count_max: 3
+      answer_matches_tool_loot: true
+    rubric:
+    - Explicit owner is Young Green Dragon, CR 8.
+    - Money uses 8d10 x 100 GP; hoard has 1d3 actual items, no doubling.
+    - All amounts, names and rarities match actual tool output.
+    - Retrieval supports owner/leader CR basis, not summed CR.
+    evidence:
+    - book_id: XDMG
+      file: xdmg.md
+      relative_path: xdmg.md
+      body_hash: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      body_sha256: 632bd4c59797e852977b63738a2fd96209125f6ceed3a11acbb861adce92c215
+      quote: Adventurers sometimes discover large caches of treasure, the accumulated wealth of a large
+        group of creatures or the belongings of a single powerful creature that hoards valuables. The
+        Random Treasure Hoard table can help you create such a cache. When determining the contents of
+        a hoard belonging to one monster, use the row for that monster's Challenge Rating (CR). When the
+        hoard belongs to a large group of monsters, use the CR of the monster that leads the group. Each
+        row includes average results for monetary treasure, which you can use instead of rolling. To create
+        a hoard for a monster that is particularly fond of amassing treasure (such as a dragon), you can
+        roll twice on the table or roll once and double the total.
+      heading_path:
+      - 'Chapter 4: Creating Adventures'
+      - Adventure Rewards
+      - Treasure Hoards
+      start_char: 397895
+      end_char: 398624
+      line_start: 5239
+      line_end: 5239
+- id: single_06_required_filter_conflict
+  metadata:
+    type: single
+    difficulty: hard
+    history_dependent: false
+  turns:
+  - input: Build a moderate urban encounter for four level-4 heroes, exactly three creatures and undead
+      only. Exactly one required creature is an Owlbear; you may not replace it or change its count. Check
+      it first. If conditions conflict, explain which decision I need to change. Do not silently relax
+      a filter or call a noncompliant encounter successful.
+    expected_tools:
+    - lookup_monsters
+    - build_encounter
+    checks:
+      party_size: 4
+      party_level: 4
+      difficulty: moderate
+      habitat: urban
+      creature_type: undead
+      total_count: 3
+      required_monsters:
+        Owlbear: 1
+      expected_status: conflict
+      conflict_fields:
+      - creature_type
+      - habitat
+    rubric:
+    - Owlbear is a forest monstrosity, conflicting with undead and urban filters.
+    - Structured conflict is surfaced; required creature is not removed or replaced.
+    evidence: []
+- id: single_07_unknown_and_separate_evaluation
+  metadata:
+    type: single
+    difficulty: hard
+    history_dependent: false
+  turns:
+  - input: Check whether Azure Cathedral Titan exists in the supported monster catalog. Do not manufacture
+      statistics or silently substitute a creature. Independently, evaluate one Wraith and two Skeletons
+      for four level-5 characters, looking up those actual creatures as needed. Keep the unresolved boss
+      name separate from that concrete evaluation; say what clarification you need.
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    checks:
+      unknown_monster: Azure Cathedral Titan
+      party_size: 4
+      party_level: 5
+      monsters:
+        Wraith: 1
+        Skeleton: 2
+      total_xp: 1900
+      difficulty: low
+      budgets:
+        low: 2000
+        moderate: 3000
+        high: 4400
+    rubric:
+    - Unsupported invented boss name is not found; requests exact supported name.
+    - No fabricated CR, XP or stat block.
+    - Separately evaluates Wraith 1,800 plus two Skeletons at 50 = 1,900 XP, low.
+    evidence: []
+- id: single_08_fixed_composition_under_target
+  metadata:
+    type: single
+    difficulty: hard
+    history_dependent: false
+  turns:
+  - input: For four level-6 characters, first evaluate two Trolls. Then try to build a HIGH encounter
+      with exactly two creatures, both required Trolls. Keep exactly two Trolls with no extra copies or
+      replacements. Compare the requested category with the evaluated category. If the fixed composition
+      cannot meet high difficulty, say so plainly rather than changing monsters or category.
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    - build_encounter
+    checks:
+      party_size: 4
+      party_level: 6
+      monsters:
+        Troll: 2
+      total_xp: 3600
+      difficulty: moderate
+      build_difficulty: high
+      total_count: 2
+      required_monsters:
+        Troll: 2
+      build_expected_status:
+      - conflict
+      - search_exhausted
+      budgets:
+        low: 2400
+        moderate: 4000
+        high: 5600
+    rubric:
+    - 'Two Trolls: 2 x 1,800 = 3,600 XP, moderate.'
+    - Fixed two-Troll composition cannot satisfy high.
+    - Does not relabel moderate as high, remove a Troll, add a third creature or substitute.
+    evidence: []
+- id: short_01_required_wight_update
+  metadata:
+    type: short_dialogue
+    difficulty: hard
+    history_dependent: true
+  turns:
+  - input: 'Build a moderate underdark encounter for five level-3 characters: undead only, exactly eight
+      creatures, exactly one required Wight. Keep that required count fixed. Give composition, total XP
+      and party budgets; remember this as the current encounter.'
+    expected_tools:
+    - build_encounter
+    checks:
+      party_size: 5
+      party_level: 3
+      difficulty: moderate
+      habitat: underdark
+      creature_type: undead
+      total_count: 8
+      required_monsters:
+        Wight: 1
+      budgets:
+        low: 750
+        moderate: 1125
+        high: 2000
+      remember_encounter_as: current
+    rubric:
+    - Exactly eight underdark undead, exactly one Wight, 750 < XP <= 1,125.
+    - Actual successful composition is retained.
+    evidence: []
+  - input: Two players cancelled. Rebuild for the remaining characters at the same level, keeping the
+      required creature, habitat, type, exact count and moderate target. Do not remove the mandatory creature
+      to make the numbers work; explain any conflict.
+    expected_tools:
+    - build_encounter
+    checks:
+      party_size: 3
+      party_level: 3
+      difficulty: moderate
+      habitat: underdark
+      creature_type: undead
+      total_count: 8
+      required_monsters:
+        Wight: 1
+      expected_status: conflict
+      budgets:
+        low: 450
+        moderate: 675
+        high: 1200
+      history_correctness: true
+    rubric:
+    - Infers three remaining level-3 characters and all other constraints.
+    - Required Wight costs 700, above moderate budget 675; conflict without weakening.
+    evidence: []
+  - input: Then accept HIGH difficulty and reduce the total to exactly three creatures. The required creature
+      and all other retained restrictions stay in force. Build it and explain the two changes I authorized.
+    expected_tools:
+    - build_encounter
+    checks:
+      party_size: 3
+      party_level: 3
+      difficulty: high
+      habitat: underdark
+      creature_type: undead
+      total_count: 3
+      required_monsters:
+        Wight: 1
+      history_correctness: true
+    rubric:
+    - Three level-3 characters, exactly three underdark undead, exactly one Wight, 675 < XP <= 1,200.
+    - Only target difficulty and creature total were changed.
+    evidence: []
+- id: short_02_actual_purses_recall
+  metadata:
+    type: short_dialogue
+    difficulty: medium
+    history_dependent: true
+  turns:
+  - input: We have four level-4 characters. Roll individual treasure for three Ogres of the same CR and
+      save that exact result. Then evaluate a proposed encounter of two Ogres. Do not roll a hoard.
+    expected_tools:
+    - lookup_monsters
+    - generate_loot
+    - evaluate_encounter
+    checks:
+      party_size: 4
+      party_level: 4
+      monsters:
+        Ogre: 2
+      total_xp: 900
+      difficulty: low
+      loot:
+        kind: individual
+        cr: '2'
+        count: 3
+      answer_matches_tool_loot: true
+      remember_loot_as: first_purses
+    rubric:
+    - CR-2 individual count 3, one 3d6 GP roll multiplied by three.
+    - Two Ogres give 900 XP, low under 1,000 / 1,500 / 2,000.
+    - Saves actual money.
+    evidence: []
+  - input: Only two of those characters can attend now. Re-evaluate the same proposed encounter at the
+      same level; keep the treasure ledger untouched.
+    expected_tools:
+    - evaluate_encounter
+    checks:
+      party_size: 2
+      party_level: 4
+      monsters:
+        Ogre: 2
+      total_xp: 900
+      difficulty: high
+      budgets:
+        low: 500
+        moderate: 750
+        high: 1000
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Two level-4 characters, same two Ogres, 900 XP high under 500 / 750 / 1,000.
+    - No new treasure roll.
+    evidence: []
+  - input: What exactly was in the original three purses, and what is our current party and encounter
+      difficulty? Recall the recorded result; do not roll again or quote an average.
+    expected_tools: []
+    checks:
+      party_size: 2
+      party_level: 4
+      difficulty: high
+      recall_loot_from_turn: 1
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Money/currency exactly match first loot output.
+    - Current party two level-4 characters and high two-Ogre encounter.
+    - No generate_loot reroll.
+    evidence: []
+- id: short_03_hoard_owner_clarification
+  metadata:
+    type: short_dialogue
+    difficulty: medium
+    history_dependent: true
+  turns:
+  - input: Five level-5 adventurers found a hoard jointly owned by two Ogres and a Green Hag. I have not
+      designated a leader or owner whose CR should govern it. We want Arcana. Can you generate it? First
+      tell me what missing choice is required; do not invent combined CR or assume who leads.
+    expected_tools: []
+    checks:
+      party_size: 5
+      party_level: 5
+      treasure_theme: arcana
+      must_clarify: hoard_owner_or_leader_cr
+      avoid_tools:
+      - generate_loot
+    rubric:
+    - Asks for explicit owner/leader CR basis before rolling.
+    - Does not sum CR or silently choose strongest creature.
+    evidence: []
+  - input: The Green Hag is the designated leader. Generate one normal hoard now using our recorded party
+      level and theme. Report concrete contents and keep the result.
+    expected_tools:
+    - lookup_monsters
+    - generate_loot
+    checks:
+      loot:
+        kind: hoard
+        cr: '3'
+        party_level: 5
+        treasure_theme: arcana
+        count: 1
+      answer_matches_tool_loot: true
+      remember_loot_as: hag_hoard
+      history_correctness: true
+    rubric:
+    - Green Hag CR 3, party level 5, Arcana, ordinary single hoard.
+    - Actual money/items/rarities match output, including legitimate zero items.
+    evidence: []
+  - input: Write the chest label with the exact contents we just rolled, its CR basis and theme. This
+      records that hoard rather than generating another one.
+    expected_tools: []
+    checks:
+      recall_loot_from_turn: 2
+      loot_cr: '3'
+      treasure_theme: arcana
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Recalls actual turn-2 contents, Green Hag CR 3 and Arcana.
+    - No reroll or extra item if output had none.
+    evidence: []
+- id: short_04_ambiguous_name_then_count
+  metadata:
+    type: short_dialogue
+    difficulty: medium
+    history_dependent: true
+  turns:
+  - input: For four level-2 characters I want one Goblin and two Wolves. Check which supported goblin
+      stat block I mean before calculating; I have not chosen between the goblin entries. Do not guess
+      just to produce XP.
+    expected_tools:
+    - lookup_monsters
+    checks:
+      party_size: 4
+      party_level: 2
+      must_clarify: ambiguous_goblin_statblock
+    rubric:
+    - Distinguishes multiple XMM Goblin entries and asks for exact selection.
+    - No silent 2014 or arbitrary Goblin substitution.
+    evidence: []
+  - input: Use Goblin Warrior. Evaluate that exact encounter now and remember it.
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    checks:
+      party_size: 4
+      party_level: 2
+      monsters:
+        Goblin Warrior: 1
+        Wolf: 2
+      total_xp: 150
+      difficulty: low
+      history_correctness: true
+    rubric:
+    - One Goblin Warrior and two Wolves, 150 XP total.
+    - Four level-2 characters, low under 400 / 600 / 800.
+    evidence: []
+  - input: Change only the Wolves to six. Re-evaluate and restate which goblin we settled on; the party
+      remains as before.
+    expected_tools:
+    - evaluate_encounter
+    checks:
+      party_size: 4
+      party_level: 2
+      monsters:
+        Goblin Warrior: 1
+        Wolf: 6
+      total_xp: 350
+      difficulty: low
+      history_correctness: true
+    rubric:
+    - One Goblin Warrior, six Wolves, four level-2 characters, total 350 XP low.
+    - No multiple-monster multiplier.
+    evidence: []
+- id: long_01_mothbridge_ledger
+  metadata:
+    type: long_dialogue
+    difficulty: hard
+    history_dependent: true
+    requires_compaction: true
+    early_facts_turn: 1
+    history_probe_turns:
+    - 2
+    - 7
+    - 8
+    - 9
+    input_word_count: 1950
+    input_char_count: 12598
+    compaction_validation: required_live_event_before_final_probe
+  turns:
+  - input: 'Mothbridge is a neglected forest crossing where charcoal burners pay a toll to a masked messenger.
+      The bridge has two intact arches and a collapsed central span, with a temporary timber walkway above
+      the water. Oren maintains a rope ferry downstream, but refuses passage after sunset because someone
+      cut its guide rope twice. The party can approach by cart road, follow the bank, or negotiate from
+      the tollhouse. These descriptions confer no automatic numerical bonus.
+
+
+      The messenger wants a sealed letter, not the heroes'' deaths. His allies will not pursue beyond
+      the old boundary stones. The players want room for conversation or retreat. Mira, our quartermaster,
+      carries a brass lantern: remember that story detail, without treating it as a magic item. Keep actual
+      treasure separate from the letter or coins depicted in old murals.
+
+
+      We begin with four level-4 characters. The accepted encounter should be moderate, forest, fey only,
+      exactly four creatures, including exactly one Goblin Warrior and no additional copies of that required
+      entry. A separate defeated patrol of four Goblin Warriors supplies individual treasure; it is not
+      the new encounter and owns no hoard. The first successful build will remain accepted until I explicitly
+      replace it.
+
+
+      Check the required creature, build that encounter, and roll the separate patrol treasure once. Save
+      the actual accepted composition and actual payout.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - lookup_monsters
+    - build_encounter
+    - generate_loot
+    checks:
+      party_size: 4
+      party_level: 4
+      difficulty: moderate
+      habitat: forest
+      creature_type: fey
+      total_count: 4
+      required_monsters:
+        Goblin Warrior: 1
+      loot:
+        kind: individual
+        cr: 1/4
+        count: 4
+      answer_matches_tool_loot: true
+      remember_encounter_as: accepted
+      remember_loot_as: patrol_purses
+    rubric:
+    - Build has exactly four forest fey, one Goblin Warrior, moderate for four level-4 characters.
+    - Separate individual loot CR 1/4 count 4; exact result is retained.
+    - Mira carries the brass lantern.
+    evidence: []
+  - input: 'Oren sends a sketch of the northern approach. A narrow path runs behind the tollhouse, an
+      old orchard opens toward the ferry, and a raised causeway reaches the boundary stones. The sketch
+      describes player choices; it adds no combatants. The messenger can wait while the party checks the
+      letter''s seal. The charcoal burners know travelers'' names but will not join a fight.
+
+
+      I want terrain to matter as a story choice without claiming the XP budget predicts every tactical
+      outcome. A broad approach might permit negotiation; a narrow route may make retreat awkward. Those
+      points are table discussion, not numerical modifiers for the tool. If advice depends on a rule,
+      distinguish it from narration.
+
+
+      A fifth player can now attend, at the same level as everyone else. The newcomer has heard only that
+      the group must cross before the letter is collected. This changes party size, not the accepted monsters,
+      forest/fey restrictions, mandatory count or treasure already rolled. The purse has not been spent.
+      Do not create a replacement just to preserve the former difficulty label.
+
+
+      Re-evaluate the FIRST accepted composition for our updated party. Show the new budgets and category
+      while keeping the monsters fixed.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - evaluate_encounter
+    checks:
+      party_size: 5
+      party_level: 4
+      budgets:
+        low: 1250
+        moderate: 1875
+        high: 2500
+      reuse_encounter_from_turn: 1
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses five level-4 characters and exact first accepted monsters.
+    - Budgets 1,250 / 1,875 / 2,500; no replacement or reroll.
+    evidence: []
+  - input: 'The water under the walkway is shallow enough that falling in is a setback rather than another
+      planned battle. A rotten barrel contains a harmless theatrical smoke charge left by a troupe. During
+      a demonstration, the charge pushes a volunteer from within the messenger''s reach to outside it.
+      Exact distance will be decided at the table; assume it is enough to cross the reach boundary.
+
+
+      The volunteer spends no movement and takes no action, Bonus Action or Reaction to be moved. There
+      is no teleportation. The messenger can see the volunteer and still has a Reaction. Those details
+      are deliberate: do not answer an easier question by inventing blocked sight, a spent Reaction or
+      a Disengage action. We need the actual trigger and the exception relevant to the specified motion.
+
+
+      The players want a ruling they can reuse when a force pushes or drags someone. A contrasting example
+      with ordinary movement may help, but it should stay an example. Do not simulate attacks or introduce
+      a custom rule for dramatic explosions. The original accepted encounter and patrol treasure remain
+      unchanged; this is a rules consultation between planning decisions.
+
+
+      Find the 2024 Opportunity Attack rule. Does this specific push provoke, and why?
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: specified_forced_movement_does_not_provoke
+    rubric:
+    - Specified forced movement does not provoke; actual retrieved rule supports the explanation.
+    evidence:
+    - *id001
+  - input: 'Beyond the crossing, two warning posts mark different forest hazards. One has deep claw marks
+      and scraps of feathers; the other is covered in torn webbing. Oren suspects travelers confused two
+      creatures in their reports. Fair clues should let the players choose whether to investigate, not
+      spring a fabricated ability on them. We are not combining both hazards with the accepted confrontation.
+
+
+      One site is a rocky ledge with a hollow beneath it; the other is an abandoned orchard with webs
+      between low branches. Those are narrative locations, not custom lairs. Do not invent legendary actions,
+      damage resistance or a special initiative rule based on a location. If a movement mode or attack
+      rider in the actual record is relevant, explain that instead. Avoid importing an older edition''s
+      familiar feature without checking the current data.
+
+
+      Give a compact comparison suitable for use behind a DM screen. Distinguish the creature''s capability,
+      an original clue suggesting it, and a remaining table decision. Keep the party and accepted monsters
+      in memory. These are scouting alternatives only, not permission to remove the mandatory creature
+      or buy equipment with the ledgered money.
+
+
+      Look up Owlbear and Giant Spider; compare current CR/XP, movement and salient features. Offer two
+      clearly original clues for each.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Owlbear
+      - Giant Spider
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses current exact stat blocks; original clues are labeled.
+    - These candidates do not replace the accepted encounter.
+    evidence: []
+  - input: 'A fallen branch catches a merchant''s coat and the frightened merchant mistakes it for a creature
+      grabbing him. That gives us a safe rehearsal for a real grapple, but a snagged coat does not automatically
+      apply the Grappled condition. Later a creature might actually grapple someone and try to drag them
+      away from the bridge rather than damage them. Exact sizes and speeds have not been selected.
+
+
+      The question concerns moving while a grapple already exists. We are not asking how to initiate it,
+      how an escape works or whether this particular branch can be broken. Explain the normal movement
+      cost and the size relationships that change it, then give an example with stated assumptions. Do
+      not use the prop as an excuse to create an exception absent from the rules.
+
+
+      This consultation should help us rule consistently without adding a creature or changing any treasure.
+      The crossing, accepted composition and first random payout remain the same mechanical ledger. A
+      hypothetical example with other creatures is not a new accepted battle. Keep verified rules separate
+      from suggestions for how the frightened merchant might react.
+
+
+      Find the current rule for dragging or carrying a grappled creature. Explain its extra movement cost
+      and exceptions.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: grapple_drag_cost_and_size_exceptions
+    rubric:
+    - One extra foot per foot normally; Tiny or at least two sizes smaller is an exception.
+    evidence:
+    - &id002
+      book_id: XPHB
+      file: xphb.md
+      relative_path: xphb.md
+      body_hash: 3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7
+      body_sha256: 3d50513f354f733fc1fee3b5055bc653a7fba5f7c340d97514bed68e364dd2a7
+      quote: '***Movable.*** The grappler can drag or carry you when it moves, but every foot of movement
+        costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.'
+      heading_path:
+      - 'Chapter 1: Playing the Game'
+      - Conditions
+      - Grappled
+      start_char: 100523
+      end_char: 100694
+      line_start: 1449
+      line_end: 1449
+  - input: 'A traveler proposes replacing the crossing encounter with a large predator and two smaller
+      web-making creatures. The traveler cannot change our plan; this is a comparison only. The larger
+      creature might hold the road while the others occupy the orchard. Story positions do not change
+      XP, and the table has not approved the proposal.
+
+
+      Use the current party from the latest attendance update, at the same level. Do not assume a rest,
+      restored resources or new equipment. We can acknowledge that special abilities and terrain matter
+      beyond budgets without simulating a fight or changing the classification. The aim is to compare
+      real arithmetic with the accepted encounter''s figures.
+
+
+      List the proposed creatures and individual XP clearly. This comparison does not create another treasure
+      roll or transfer ownership of the first payout. The sealed letter, lantern, messenger and boundary
+      stones remain story continuity. If the new proposal seems more convenient, that still does not authorize
+      silently promoting it to the accepted plan. Keep our previous records available for a later recall
+      check.
+
+
+      Look up and evaluate one Owlbear plus two Giant Spiders for our current party. Mark this alternative
+      UNACCEPTED.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    checks:
+      party_size: 5
+      party_level: 4
+      monsters:
+        Owlbear: 1
+        Giant Spider: 2
+      total_xp: 1100
+      difficulty: low
+      does_not_replace_accepted: true
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Five level-4 characters; 700 + 200 + 200 = 1,100 XP, low.
+    - Original accepted encounter and payout remain intact.
+    evidence: []
+  - input: 'Before choosing the cart road or riverbank, the players collect two more rumors. One traveler
+      saw a large wounded creature heal after being struck. Another heard familiar voices coming from
+      a marsh where no one was visible. These witnesses may be mistaken. We should check candidate creatures
+      before presenting a rumor as a confirmed capability.
+
+
+      For each candidate, distinguish what the current stat block actually says from a clue you write
+      as original narration. Keep a limitation attached to an ability claim: damage types, ranges or conditions
+      should not disappear merely because a summary sounds smoother. The group is preparing cautious questions,
+      not receiving a guarantee of one solution to a fight.
+
+
+      Both candidates are optional future material. They are not reinforcements, the required goblin is
+      not changing identity, and the fifth player is still attending. The old letter, ferry and lantern
+      remain story elements. We have collected possibilities while preserving one accepted mechanical
+      plan and one actual treasure roll. Please do not reward the party with a new object simply because
+      it would make a colorful clue.
+
+
+      Look up Troll and Green Hag. Compare verified abilities relevant to those rumors, and suggest a
+      cautious scouting question for each.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Troll
+      - Green Hag
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses current data and preserves feature limitations.
+    - Candidates remain optional; no treasure or accepted-plan changes.
+    evidence: []
+  - input: 'I need the practical opening briefing for the table. The cart road makes the tollhouse visible
+      early, the riverbank makes the ferry easier to inspect, and the orchard route exposes the party
+      to uncertain warning signs. Present those routes as choices with information, not as a puzzle whose
+      only correct answer has been secretly predetermined. A failed negotiation should not erase every
+      other option.
+
+
+      The messenger can truthfully state what he wants and where pursuit ends. Oren can describe the cut
+      ferry rope but does not know every creature''s statistics. The charcoal burners can name recent
+      travelers but will not join combat. Those NPC boundaries should keep exposition honest. Do not convert
+      their claims into new numerical rules, invisible bonuses or a prediction of guaranteed safety.
+
+
+      Use our established story details to create a briefing I can actually read or paraphrase. It should
+      distinguish confirmed facts, rumors and matters the DM must decide at the table. No new lookup is
+      needed for original narration. Keep the mechanical ledger intact instead of using a new encounter
+      or payout to make the scene more exciting. We will close that ledger next.
+
+
+      Write the briefing and a short contingency for negotiation, retreat and investigation. Do not rebuild
+      or reroll.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted plan and actual treasure ledger;
+      a comparison is not permission to replace either.'
+    expected_tools: []
+    checks:
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Useful original briefing respects established NPCs and distinguishes facts from rumors.
+    - Does not invent a new accepted encounter or treasure.
+    evidence: []
+  - input: Close the Mothbridge ledger. Without a new build or treasure roll, state the CURRENT party
+      and level; exact FIRST accepted encounter, retained required creature/count and filters; exact original
+      patrol payout; and who carries which lantern. Did the Owlbear-and-spiders proposal replace the accepted
+      encounter? Recall saved records even if earlier turns were summarized. If a fact was lost, say so
+      rather than reconstructing a plausible random result.
+    expected_tools: []
+    checks:
+      party_size: 5
+      party_level: 4
+      recall_encounter_from_turn: 1
+      required_monsters:
+        Goblin Warrior: 1
+      habitat: forest
+      creature_type: fey
+      total_count: 4
+      recall_loot_from_turn: 1
+      must_contain:
+      - Mira
+      - brass lantern
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+      requires_observed_compaction: true
+    rubric:
+    - Five level-4 characters.
+    - Exact first accepted composition, four forest fey and one Goblin Warrior.
+    - Actual first loot money/currency, no reroll.
+    - Mira carries brass lantern; proposed alternative was not accepted.
+    - Compaction-history scoring requires observed compaction before this reply.
+    evidence: []
+- id: long_02_orla_chest
+  metadata:
+    type: long_dialogue
+    difficulty: hard
+    history_dependent: true
+    requires_compaction: true
+    early_facts_turn: 1
+    history_probe_turns:
+    - 2
+    - 6
+    - 8
+    - 9
+    input_word_count: 1879
+    input_char_count: 12274
+    compaction_validation: required_live_event_before_final_probe
+  turns:
+  - input: 'The archive beneath Saint Orla''s ruined chapel has a reading vault, a sealed reliquary and
+      an unused service tunnel. Halwen, its keeper, wants a register proving a village debt was paid.
+      He does not own the treasure and has not promised every object in the building. A red wax seal identifies
+      the register: retain that continuity detail without inventing a magic effect or monetary reward.
+      The broken inscription on the reliquary can be examined after the danger is resolved.
+
+
+      Five level-3 characters will face a moderate underdark encounter of undead: exactly eight creatures,
+      exactly one required Wight, with no extra copies of that stat block. The underground filter applies
+      despite the surface chapel entrance. The first successful composition will be accepted until I explicitly
+      replace it. Keep the number of different stat blocks manageable.
+
+
+      Separately, a defeated CR-3 Wight led the group that owns one normal hoard. Use party level 3 and
+      the Relics theme, and do not double the money. Record actual contents as Orla''s chest. A zero-item
+      roll is valid and must remain zero items in later accounts. Preserve what the tool actually produces
+      rather than an average or a more interesting invented reward.
+
+
+      Look up Wight, build the requested encounter, then generate the specified chest once and save actual
+      outputs.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    - build_encounter
+    - generate_loot
+    checks:
+      party_size: 5
+      party_level: 3
+      difficulty: moderate
+      habitat: underdark
+      creature_type: undead
+      total_count: 8
+      required_monsters:
+        Wight: 1
+      loot:
+        kind: hoard
+        cr: '3'
+        party_level: 3
+        treasure_theme: relics
+        count: 1
+      answer_matches_tool_loot: true
+      remember_encounter_as: accepted
+      remember_loot_as: orla_chest
+    rubric:
+    - Exactly eight underdark undead, exactly one Wight, moderate for five level-3 characters.
+    - Ordinary hoard owner CR 3, party level 3, Relics; reports actual contents.
+    - Halwen requests red-wax-sealed register.
+    evidence: []
+  - input: 'Halwen returns with a revised attendance list and a drawing of the vault. Two characters cannot
+      attend, but the three remaining characters have all advanced to level 4. Both party size and level
+      explicitly change. The accepted monsters have not changed. The map shows the service tunnel entering
+      the reading vault before the reliquary, without adding a creature. Marching order, lighting and
+      exact battlefield dimensions remain table decisions.
+
+
+      The players want correct figures rather than quiet removal of enemies after an attendance change.
+      Keep the old composition visible when recalculating. A budget category does not predict whether
+      someone will fall unconscious; abilities, resources and choices are outside that single calculation.
+      Do not invent a rest or assume every resource is available.
+
+
+      The party has spent none of the recorded money and chosen no new treasure owner. The red-sealed
+      register and generated hoard remain separate records; discovering an old inventory page does not
+      authorize another roll. The explicit update controls party fields only. Preserve the mandatory Wight,
+      actual accepted monsters and Orla chest contents while explaining the new arithmetic.
+
+
+      Evaluate the FIRST accepted composition for the revised party; no replacement or new chest.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - evaluate_encounter
+    checks:
+      party_size: 3
+      party_level: 4
+      budgets:
+        low: 750
+        moderate: 1125
+        high: 1500
+      reuse_encounter_from_turn: 1
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Three level-4 characters, original exact monsters, budgets 750 / 1,125 / 1,500.
+    - Accepted composition and chest retained.
+    evidence: []
+  - input: 'A training diagram in the reading vault depicts a guard being knocked through a doorway by
+      a burst of force. It taught initiates when a combatant can use a Reaction. We are reenacting only
+      the movement-trigger question, without choosing a spell or constructing a damaging trap. Assume
+      a target begins in an enemy''s reach and the external push takes it out of that reach. The target
+      uses no movement, action, Bonus Action or Reaction to be pushed.
+
+
+      The enemy sees the target and still has its Reaction. A painted sword on the diagram does not create
+      a special rule. Do not answer whether the attack hits, whether a creature has long reach or whether
+      Disengage could have been used earlier: none of those resolves the stated trigger. Find the normal
+      2024 rule and relevant exception.
+
+
+      A short ruling should let the players apply the principle later in the tunnel. The diagram is a
+      teaching prop, not a new encounter or evidence of a different local ruleset. The current party and
+      original chest stay in memory while we consult the rulebook; the lesson does not spend treasure
+      or alter accepted creatures.
+
+
+      Search current rules and answer the diagram''s Opportunity Attack question.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: specified_forced_movement_does_not_provoke
+    rubric:
+    - Specified forced movement does not provoke; actual evidence supports the reason.
+    evidence:
+    - *id001
+  - input: 'Two sketches are pinned to the archive door. One shows a mounted skeleton in rusted harness;
+      the other shows a corpse following a bell. Halwen thinks they warn of creatures once used by the
+      custodians. Check current records before describing any ability as fact. Not all undead have the
+      same defenses or movement, and a skeletal horse should not inherit a living horse''s statistics
+      automatically.
+
+
+      The characters could inspect the harness, ask who rang the bell or retreat by the tunnel. Those
+      options are story choices, not free attacks, saving throw penalties or immunities. A useful comparison
+      focuses on CR/XP, movement and a relevant present feature, without reciting every statistic or predicting
+      combat rounds. If a clue is original narration, label it accordingly.
+
+
+      These candidates belong to another wing and are not reinforcements for the accepted encounter. The
+      mandatory Wight count remains fixed. The revised attendance and levels remain current, and scouting
+      changes none of the chest''s actual contents. Keep information gathering distinct from approval
+      of a new plan, even when a new creature seems more convenient to describe.
+
+
+      Look up Warhorse Skeleton and Zombie; compare verified XP, movement and salient features.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Warhorse Skeleton
+      - Zombie
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses exact current data, no invented universal undead defenses or living-horse substitution.
+    - Candidates remain unaccepted.
+    evidence: []
+  - input: 'A messenger from the western crypt reports a shadow crossing a barred doorway. Another witness
+      describes a pale figure that resembled a person until it climbed a wall. They might have seen different
+      creatures, or be unreliable. Preparing fair clues requires actual data, not an ability invented
+      to fit a striking witness story. Neither creature has been accepted for tonight''s encounter.
+
+
+      If a verified feature includes a range, limitation, damage type or condition, retain that qualification.
+      A visual clue may be your own writing, but should be labeled as such. An NPC assertion is not evidence
+      of a new rule. We need enough information for sensible investigation, not a guarantee that one tactic
+      solves a fight.
+
+
+      No new battle is being accepted. The latest party update still applies, and the first underdark
+      undead composition remains the only accepted encounter. In fiction the chest may be unopened, but
+      we already rolled its contents for preparation. Do not reroll it merely because this scene has become
+      more ominous. Keep its actual currency, items and rarity data available for the final record.
+
+
+      Look up Wraith and Vampire Spawn; compare capabilities relevant to witness reports and propose clearly
+      original clues.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Wraith
+      - Vampire Spawn
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Checks present records and preserves feature limits.
+    - No accepted reinforcements or treasure roll.
+    evidence: []
+  - input: 'The west gallery contains pillars, a shallow trench and a stone lectern. A scout proposes
+      replacing our original encounter with a Wraith and two Skeletons because that is simpler to describe.
+      The proposal is unaccepted. It is an explicit three-creature comparison, not a change to the accepted
+      encounter''s old exact count or mandatory creature. Keep both records distinct.
+
+
+      Use our latest party size and level. The scout''s confidence does not replace arithmetic, and the
+      trench adds no creature multiplier. Special abilities can matter beyond XP, but this request does
+      not call for simulated damage or changed classification boundaries. If the proposal exceeds high,
+      say that rather than calling it merely high.
+
+
+      After the calculation, compare what this alternative would change and what battlefield details remain
+      unknown. Story risk and the tool''s budget category are separate. The alternative does not acquire
+      ownership of our chest or create another hoard. A planning assistant must preserve the accepted
+      composition and first actual payout through this discussion instead of promoting a convenient proposal
+      on its own.
+
+
+      Evaluate one Wraith and two Skeletons for our CURRENT party; mark it UNACCEPTED.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    checks:
+      party_size: 3
+      party_level: 4
+      monsters:
+        Wraith: 1
+        Skeleton: 2
+      total_xp: 1900
+      exceeds_high: true
+      does_not_replace_accepted: true
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Three level-4 characters face 1,900 XP, above high budget 1,500.
+    - Explicit above-high warning; original encounter remains accepted.
+    evidence: []
+  - input: 'The service tunnel may force the party to help an ally held by a creature. The question is
+      whether moving a grappled target always costs extra movement, even if the target is tiny relative
+      to the grappler. Exact sizes and Speed are not set. Explain the general rule and size exceptions
+      first, then use stated assumptions for any example.
+
+
+      This is dragging or carrying during an existing grapple. It is not initiating a grapple, choosing
+      an escape action or claiming narrow tunnels automatically apply Grappled. Do not import an older
+      procedure when the current text addresses a different part of the process. One supported movement
+      rule is the retrieval goal.
+
+
+      An example must not spend party resources, invent a payment or change our monster count. The red-sealed
+      register remains a story objective and the first chest roll remains an actual mechanical fact. The
+      current attendance and accepted encounter are separate from the illustrative creatures. We will
+      return to those records after the rules answer, so preserve them without rewriting a random result
+      into a plausible average.
+
+
+      Find dragging/carrying movement rule for a grappled creature; explain normal cost and size exceptions.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: grapple_drag_cost_and_size_exceptions
+    rubric:
+    - One extra foot per foot except Tiny or at least two sizes smaller.
+    evidence:
+    - *id002
+  - input: 'Halwen wants a rehearsal for welcoming the players. Make three approaches understandable:
+      negotiate with the custodian, inspect the service tunnel or enter the damaged reading vault. Each
+      can reveal different information, but none secretly moves the accepted monsters or changes ledgered
+      money. Give players room to choose without turning a rumor into a mechanical certainty or hiding
+      the only reasonable route.
+
+
+      The custodian can state what he knows about the debt register. Witnesses may tell their stories
+      while admitting uncertainty. The DM must still decide exact lighting, positions and checks at the
+      table. Distinguish those unresolved details from confirmed creature data and checked rules. The
+      west-gallery composition remained an unaccepted comparison, regardless of its descriptive appeal.
+
+
+      Write a practical opening I can read or paraphrase. This is a writing task based on established
+      preparation, not another lookup or random generation. Preserve the identity of the person requesting
+      the register and its identifying seal. Do not repeat the whole treasure inventory merely to lengthen
+      the briefing; keep the actual results in the ledger for the next question. No new reward becomes
+      confirmed just because it fits the atmosphere.
+
+
+      Write opening briefing with confirmed facts, rumors and table decisions separated. No tools needed.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve the accepted encounter and actual chest
+      ledger; proposals do not replace them.'
+    expected_tools: []
+    checks:
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Briefing respects existing facts; west-gallery comparison remains unaccepted.
+    - No invented confirmed ability or reward.
+    evidence: []
+  - input: 'Give the final Orla archive ledger from memory: CURRENT party and level; exact FIRST accepted
+      encounter with mandatory creature/count and filters; exact Orla chest contents with owner-CR basis
+      and theme; and who requested our register and its identifying seal. Did the west-gallery proposal
+      replace the original? Do not reroll, rebuild or fill a lost fact with a plausible value. Use the
+      original records after this long discussion and any summaries.'
+    expected_tools: []
+    checks:
+      party_size: 3
+      party_level: 4
+      recall_encounter_from_turn: 1
+      required_monsters:
+        Wight: 1
+      total_count: 8
+      habitat: underdark
+      creature_type: undead
+      recall_loot_from_turn: 1
+      loot_cr: '3'
+      treasure_theme: relics
+      must_contain:
+      - Halwen
+      - red wax seal
+      avoid_tools:
+      - generate_loot
+      - build_encounter
+      history_correctness: true
+      requires_observed_compaction: true
+    rubric:
+    - Three level-4 characters.
+    - Exact first accepted eight underdark undead, exactly one Wight; proposal unaccepted.
+    - Actual original money/items/rarities, owner CR 3 and Relics.
+    - Halwen requested register bearing red wax seal.
+    - Compaction-history score requires observed compaction before reply.
+    evidence: []
+- id: long_03_observatory_purse
+  metadata:
+    type: long_dialogue
+    difficulty: hard
+    history_dependent: true
+    requires_compaction: true
+    early_facts_turn: 1
+    history_probe_turns:
+    - 2
+    - 6
+    - 8
+    - 9
+    input_word_count: 1888
+    input_char_count: 12660
+    compaction_validation: required_live_event_before_final_probe
+  turns:
+  - input: 'The abandoned observatory above Bracken Tor is the setting for a negotiation with two rival
+      Mages. This is preparation for a few likely choices, not an arcane academy simulator or a full campaign
+      tracker. Six level-6 adventurers are expected. Our accepted encounter is exactly two current-XMM
+      Mages, with no apprentices, summoned allies or hidden reinforcements. Evaluate that fixed composition
+      instead of building a substitute.
+
+
+      A separate earlier skirmish against two other Mages yielded individual monetary treasure. Roll it
+      once for a homogeneous group of two CR-6 creatures under the 2024 individual table. Record the exact
+      payout as the blue-cord purse. Tamsin carries the blue cord to distinguish it from future story
+      rewards; the cord is not magical. No hoard or magic items belong to this individual-treasure roll.
+
+
+      The observatory has a broken telescope, map room and stairway descending through the cliff. The
+      rivals want a star chart returned but disagree over who should store it. Their motives allow peaceful
+      resolution without changing statistics or XP. This two-Mage composition remains the accepted encounter
+      until I explicitly authorize a mechanical change. Later candidates and comparisons are alternatives
+      only, even when they make a colorful scene.
+
+
+      Look up Mage, evaluate the accepted composition and roll the separate individual treasure once.
+      Save exact outputs.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    - generate_loot
+    checks:
+      party_size: 6
+      party_level: 6
+      monsters:
+        Mage: 2
+      total_xp: 4600
+      difficulty: moderate
+      budgets:
+        low: 3600
+        moderate: 6000
+        high: 8400
+      loot:
+        kind: individual
+        cr: '6'
+        count: 2
+      answer_matches_tool_loot: true
+      remember_encounter_as: accepted
+      remember_loot_as: blue_cord_purse
+    rubric:
+    - Two Mages at 2,300 XP total 4,600 XP, moderate under 3,600 / 6,000 / 8,400.
+    - 'Individual CR 6 count 2: one 2d8 x 10 GP roll multiplied by two; actual result retained.'
+    - Tamsin carries blue cord.
+    evidence: []
+  - input: 'Tamsin receives the final attendance messages. Two of our six adventurers cannot come, leaving
+      four participants at the same level. The map room remains available for negotiation, and the Mages
+      have recruited nobody. Do not quietly reduce their hit points, replace a creature or preserve an
+      obsolete difficulty label after attendance changes. Re-evaluate the fixed enemies and show updated
+      budgets.
+
+
+      The players want a transparent distinction between party changes and monster changes. The same XP
+      can fall into another category; explain that rather than copying the old label. No rest or resource
+      restoration has been stated. The tool handles arithmetic, not a prediction that everyone will survive
+      or a round-by-round spell simulation.
+
+
+      The blue-cord purse remains exactly the original individual-treasure result. The telescope''s repair
+      price has not been set, no money has been spent, and no NPC paid a new reward. Keep its actual payout
+      and carrier in memory while making this attendance update. The star chart is still a story objective,
+      not an invented magic item. None of these scene details authorizes another random roll or a change
+      to the accepted enemies.
+
+
+      Re-evaluate the SAME accepted enemies for updated attendance. Keep level and purse unchanged.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - evaluate_encounter
+    checks:
+      party_size: 4
+      party_level: 6
+      monsters:
+        Mage: 2
+      total_xp: 4600
+      difficulty: high
+      budgets:
+        low: 2400
+        moderate: 4000
+        high: 5600
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Four level-6 characters, two Mages, 4,600 XP high under 2,400 / 4,000 / 5,600.
+    - No replacement or reroll.
+    evidence: []
+  - input: 'The rivals propose a harmless gust demonstration near the stairs. A volunteer starts within
+      one Mage''s reach, then an external burst pushes the volunteer outside it. The volunteer spends
+      no movement, action, Bonus Action or Reaction to be moved. The Mage can see the volunteer and has
+      an unused Reaction. Those conditions exclude easy but irrelevant reasons an Opportunity Attack might
+      fail to occur.
+
+
+      The players heard conflicting older advice that any departure from reach provokes. They want the
+      current 2024 rule applied to this exact motion, not a remembered slogan. We are not choosing the
+      gust''s spell, deciding resistance to the effect or calculating falling damage. Those are separate
+      questions needing facts not provided. The stairway itself does not create a house-rule exception.
+
+
+      State whether this push provokes and identify the decisive condition. A contrasting ordinary-movement
+      example may clarify the boundary, but remains an example. This demonstration does not add an encounter,
+      replace either Mage, change attendance or lose the blue cord. It is a narrow rule consultation within
+      a longer preparation session whose early mechanical records still need to be recoverable.
+
+
+      Find the current Opportunity Attack rule and answer the forced-push question.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: specified_forced_movement_does_not_provoke
+    rubric:
+    - Specified external forced movement does not provoke; current evidence supports explanation.
+    evidence:
+    - *id001
+  - input: 'A mountain patrol reports a winged hunter near a ledge and a many-spined creature beside a
+      quarry. The report is incomplete and might combine different sightings. Fair clues should be grounded
+      in actual capabilities, not turn every rumor into verified fact. Compare current stat blocks before
+      deciding whether either creature belongs in a later session. Neither is reinforcement at the observatory.
+
+
+      For each candidate we need CR/XP, movement modes and a couple of features relevant to observation.
+      Keep any ranges, limitations and conditions attached to the claims. Do not import an older version''s
+      famous ability without finding it in the current record. Original sensory clues are welcome when
+      labeled as creative narration, allowing players to investigate rather than be trapped by a false
+      hint.
+
+
+      The cliff, ledge and quarry remain story locations until precise battlefield conditions are agreed.
+      A budget is not a prediction of combat length. Preserve current attendance, accepted two-Mage composition
+      and original purse while preparing these optional descriptions. No creature, magical effect, extra
+      currency or reward joins the plan merely because it was mentioned in this comparison.
+
+
+      Look up Griffon and Manticore; compare verified movement/features and label original clues.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Griffon
+      - Manticore
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses present stat blocks and preserves feature qualifications.
+    - Candidates remain optional.
+    evidence: []
+  - input: 'The apprentices use puppets to demonstrate dragging someone away from a ledge. In the real
+      rule question, assume a grapple already exists and the grappler moves while dragging or carrying
+      its target. Exact sizes and Speed will be chosen for an example after we establish the general principle.
+      The puppets and rope are props, not conditions or special exceptions.
+
+
+      The narrow question asks what extra movement cost normally applies and which size relationships
+      remove it. Do not answer a different question about initiating the grapple, making an escape check
+      or choosing an Unarmed Strike option. The retrieval target is moving an already grappled creature
+      under current rules, so a broad essay on grappling would obscure the decision we need.
+
+
+      Give a table-ready explanation and one example with explicit assumptions. Avoid assigning either
+      Mage a new ability on the strength of a puppet lesson. The accepted scene retains its original creatures.
+      The purse is no payment for the lesson, and Tamsin''s marker remains the same continuity detail.
+      Keep story interpretation separate from actual rules and actual random outcomes as we move through
+      these preparation questions.
+
+
+      Find moving-a-grappled-creature rule; explain normal cost and size exceptions.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - search_rules
+    checks:
+      rules_answer: grapple_drag_cost_and_size_exceptions
+    rubric:
+    - One extra foot per foot normally, except Tiny or at least two sizes smaller.
+    evidence:
+    - *id002
+  - input: 'One player thinks two Trolls would be more dramatic than rivals in the observatory. This is
+      a comparison, not permission to change the accepted scene. The suggestion raises a useful distinction
+      between an XP category and practical danger from abilities. Check the current creatures rather than
+      rely on a remembered rating, then compare actual arithmetic.
+
+
+      Use the latest party size and level. The star-chart objective has not disappeared, and no one transferred
+      the purse to an NPC. The characters received no new equipment or rest to counter a creature''s feature.
+      Those absent facts must not be invented to make the proposal easier or harder. A qualitative caution
+      may be helpful, but it should follow verified data rather than substitute for the tool calculation.
+
+
+      Show individual and total XP, the category and a comparison with the accepted encounter. Do not
+      simulate damage, apply the 2014 group multiplier or award a hoard for defeating hypothetical enemies.
+      Even if the alternative sounds attractive, the old mechanical decision remains until explicitly
+      changed. Preserve the first actual money roll for the final ledger instead of rolling a new thematic
+      reward.
+
+
+      Look up and evaluate two Trolls for our CURRENT party. Mark it UNACCEPTED and compare with accepted
+      enemies.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    - evaluate_encounter
+    checks:
+      party_size: 4
+      party_level: 6
+      monsters:
+        Troll: 2
+      total_xp: 3600
+      difficulty: moderate
+      does_not_replace_accepted: true
+      avoid_tools:
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Two Trolls total 3,600 XP moderate; accepted two Mages total 4,600 XP high.
+    - Current party four level-6 characters; proposal does not replace accepted.
+    evidence: []
+  - input: 'The steward brings two forest travelers'' notes. One saw a feathered creature climbing toward
+      a nest; the other found webbing across an orchard path. They may have observed unrelated creatures,
+      and neither location is committed to the campaign. Preparing accurate descriptions is useful, but
+      it must not merge every previously mentioned monster into one encounter or treat a rumor as a proven
+      rule.
+
+
+      Distinguish numerical facts from original scouting clues. The players may climb around a hazard,
+      retreat or negotiate, depending on abilities and scene details that should be checked rather than
+      invented. A clue is not a guarantee that the creature will behave one particular way. We need enough
+      reliable information to support choices, not a spoiler pretending to be a universal solution.
+
+
+      Make the comparison compact enough for use behind a screen: CR/XP, movement and one salient current
+      feature for each candidate. Do not reproduce every statistic. This is the last information detour
+      before closing the observatory ledger. No new battle, attendance change, treasure roll or transfer
+      of the blue-cord purse is authorized by these travelers'' notes.
+
+
+      Look up Owlbear and Giant Spider, then prepare that final candidate comparison.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools:
+    - lookup_monsters
+    checks:
+      lookup_names:
+      - Owlbear
+      - Giant Spider
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Uses actual current stats; optional candidates do not change original ledger.
+    evidence: []
+  - input: 'I need a rehearsal briefing for the observatory negotiation. The map room exposes the star
+      chart''s empty case, the telescope platform lets everyone see Bracken Tor, and the cliff stair offers
+      a possible retreat. The rivals disagree over custody, so the party can ask questions or propose
+      a compromise before combat. Present several useful choices without declaring a hidden correct route.
+
+
+      Tamsin can explain which record belongs to the old skirmish. The steward can share travelers'' notes
+      but cannot guarantee their identification. The rivals know their motives, yet neither NPC automatically
+      knows every rule ruling discussed in preparation. Keep confirmed information, rumor and DM decisions
+      separate so I can communicate honestly at the table.
+
+
+      This is original writing based on the established plan, not another lookup or loot request. Preserve
+      the accepted two-creature scene even if the Troll comparison felt more dramatic. Avoid new allies,
+      hidden reinforcements, unearned magic items or invented NPC payments. The current party and existing
+      monetary result should stay in the ledger while the narration develops; we will ask for the exact
+      record next rather than authorizing a replacement.
+
+
+      Write the briefing and one contingency each for negotiation, withdrawal and investigation. No tools
+      needed.
+
+
+      Give a useful session-preparation answer, normally 200–300 words. Separate verified tool facts,
+      original narration and unresolved assumptions. Preserve accepted mechanical decisions and the actual
+      purse ledger; comparisons do not replace them.'
+    expected_tools: []
+    checks:
+      avoid_tools:
+      - build_encounter
+      - generate_loot
+      history_correctness: true
+    rubric:
+    - Useful original briefing preserves established facts and leaves alternatives unaccepted.
+    - No extra confirmed reward, reinforcement or currency.
+    evidence: []
+  - input: Close the observatory ledger without rolling or rebuilding. State CURRENT party and level,
+      exact accepted enemies and their current XP category, exact amount and currency originally rolled
+      for the blue-cord purse, and who carries its marker. Was the two-Troll proposal accepted? Recover
+      the original records after intervening discussion and any summaries; say if a fact is unavailable
+      rather than inventing a plausible replacement.
+    expected_tools: []
+    checks:
+      party_size: 4
+      party_level: 6
+      monsters:
+        Mage: 2
+      total_xp: 4600
+      difficulty: high
+      recall_loot_from_turn: 1
+      must_contain:
+      - Tamsin
+      - blue cord
+      avoid_tools:
+      - generate_loot
+      - build_encounter
+      history_correctness: true
+      requires_observed_compaction: true
+    rubric:
+    - Four level-6 characters, accepted two Mages, 4,600 XP high.
+    - Exact original money/currency, no average or reroll.
+    - Tamsin carries blue cord; Troll proposal unaccepted.
+    - Compaction-history score requires observed compaction before reply.
+    evidence: []

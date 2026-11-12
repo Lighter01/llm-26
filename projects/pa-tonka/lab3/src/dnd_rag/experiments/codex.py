@@ -82,6 +82,22 @@ def validate_trace_observations(rows, *, final_text, expected_tools):
             raise ValueError('Missing tool observation: ' + tool)
 
 
+def wire_usage(rows):
+    requests = [r for r in rows if r.get('kind') == 'request']
+    responses = {
+        r['id']: r.get('response', {}).get('usage', {}) for r in rows if r.get('kind') == 'response'
+    }
+    complete = bool(requests) and all(r['id'] in responses for r in requests)
+    result = {
+        'model_calls': len(requests),
+        'max_context_tokens': max((r['input_tokens'] for r in requests), default=None),
+    }
+    for key in ('input_tokens', 'output_tokens'):
+        values = [responses.get(r['id'], {}).get(key) for r in requests]
+        result[key] = sum(values) if complete and all(type(v) is int for v in values) else None
+    return result
+
+
 def config_args(config, prefix=''):
     result = []
     for key, value in config.items():
@@ -106,7 +122,6 @@ class CodexRunner:
         self.root = Path(project_root)
         self.mode = mode
         self.directory = artifacts_dir or self.root / '.runtime/benchmark'
-        self.directory.mkdir(parents=True, exist_ok=True)
         self.work = Path(tempfile.mkdtemp(prefix='lab3-codex-'))
         self.timeout = timeout_seconds
         self.context_limit = context_limit
@@ -231,9 +246,11 @@ class CodexRunner:
     async def ainvoke(self, session_id, user_text, *, turn_id, on_event=None):
         before = perf_counter()
         directory = self.directory / session_id
-        directory.mkdir(exist_ok=True)
+        directory.mkdir(parents=True, exist_ok=True)
         current = self.sessions.get(session_id)
         number = (current['turns'] if current else 0) + 1
+        wire_path = self.root / '.runtime/codex-wire' / session_id / 'wire.jsonl'
+        wire_offset = wire_path.stat().st_size if wire_path.exists() else 0
         argv = self.command(session_id, user_text)
         (directory / f'{number}.argv.json').write_text(json.dumps(argv, indent=2))
         process = await asyncio.create_subprocess_exec(
@@ -301,17 +318,33 @@ class CodexRunner:
                 if status == 'completed':
                     status = 'incomplete'
                 error = {'code': 'trace_export', 'message': str(exc)}
-        usage = parsed['usage'] or {
-            'input_tokens': None,
-            'output_tokens': None,
-            'cached_input_tokens': None,
+        wire = []
+        if wire_path.exists():
+            with wire_path.open('rb') as stream:
+                stream.seek(wire_offset)
+                for line in stream:
+                    try:
+                        wire.append(json.loads(line))
+                    except ValueError:
+                        pass
+        self.last_records[session_id]['wire'] = wire
+        usage = {
+            **wire_usage(wire),
+            'codex_cli_usage': parsed['usage'],
+            'tool_calls': len(parsed['tools']),
+            'api_cost': 0.0,
+            'latency_ms': (perf_counter() - before) * 1000,
         }
-        usage = {**usage, 'api_cost': 0.0, 'latency_ms': (perf_counter() - before) * 1000}
         # Internal Codex token_count is not identical to the own native counter.
         return AgentReply(
             text=parsed['text'],
             status=status,
-            context=ContextStats(input_tokens=None, agent_limit=self.context_limit),
+            context=ContextStats(
+                input_tokens=next(
+                    (r['input_tokens'] for r in reversed(wire) if r.get('kind') == 'request'), None
+                ),
+                agent_limit=self.context_limit,
+            ),
             trace_id=trace_id,
             usage=usage,
             error=error,
