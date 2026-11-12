@@ -26,6 +26,19 @@ def parser():
         )
         if command == 'build-index':
             sub.add_argument('--rebuild', action='store_true', help='Repeat all build stages')
+    prepare = commands.add_parser('prepare-game-data', help='Compile local pinned game catalogs')
+    prepare.add_argument(
+        '--source',
+        type=Path,
+        default=None,
+        help='Local pinned 5etools root',
+    )
+    prepare.add_argument(
+        '--output',
+        type=Path,
+        default=None,
+        help='Output root; revision directory is appended',
+    )
     reset = commands.add_parser('reset-index', help='Delete one owned collection')
     selector = reset.add_mutually_exclusive_group(required=True)
     selector.add_argument('--config', type=Path)
@@ -47,6 +60,21 @@ def main(argv=None):
             and not re.fullmatch('[a-f0-9]{64}', args.index_id)
         ):
             raise RagError('invalid_index_id', 'Expected a full lowercase SHA256 index_id')
+        if args.command == 'prepare-game-data':
+            from dnd_rag.config import resolve_path
+            from dnd_rag.game.prepare import prepare_game_catalog
+            from dnd_rag.runtime.processes import RuntimeSession
+
+            with RuntimeSession(PROJECT_ROOT):
+                from dnd_rag.config import read_yaml
+
+                game = read_yaml(PROJECT_ROOT / 'configs/game.yaml')
+                path = prepare_game_catalog(
+                    resolve_path(args.source or game['source_root'], PROJECT_ROOT),
+                    resolve_path(args.output or game['output_root'], PROJECT_ROOT),
+                )
+            print(json.dumps({'catalog': str(path)}))
+            return 0
         settings = load_settings(PROJECT_ROOT)
         config = (
             load_rag_config(args.config, project_root=PROJECT_ROOT)

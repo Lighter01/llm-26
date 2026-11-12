@@ -14,3 +14,5 @@
 Потребитель вызывает `runtime.index.prepare_retriever(config, settings, session)` один раз и затем использует тот же CPU encoder. Retrieval не читает эталоны, старые результаты, LLM или интерфейс.
 
 Новые программные клиенты: `agent/` — create_agent, лимиты, наблюдаемость и общие reply/event contracts; `tools/` — общий StreamableHTTP MCP; `experiments/` — Codex exec/resume и проверяемый exporter. Их инициализация переиспользует retrieval и общий локальный LLM. `runtime/codex_proxy.py` адаптирует несовместимые namespace/additional_tools payloads, сохраняя полный журнал.
+
+`game/` компилирует и загружает отдельный проверяемый JSON catalog из тех же закреплённых книг. Общие IDs связывают monster lookup и encounter, item variants разрешаются штатным upstream runtime, а не старым QA.

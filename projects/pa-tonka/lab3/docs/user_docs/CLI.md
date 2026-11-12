@@ -59,3 +59,19 @@ uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml
 Поднимите [Langfuse Compose](../../infra/README.md), создайте локальный проект в http://127.0.0.1:3000 и сохраните SDK keys в `.env`. Можно инициализировать проект через LANGFUSE_INIT_*; все соответствующие credentials должны быть заданы до первого старта. Web/worker4.79.0, Node24.22.2, закреплённый официальный exporter и способ установки описаны в [baseline](../../configs/baseline/README.md). Используйте pnpm frozen lock; npm install без lock обнаружил peer conflict.
 
 MCP diagnostic: `uv run python -m dnd_rag.tools.server`, параметров нет; bind127.0.0.1:8765/mcp, Ctrl+C завершает сервер. Этот отдельный процесс держит lock проекта: не запускайте одновременно вторую управляющую команду.
+
+## prepare-game-data
+
+Компилирует отдельный каталог игровых сущностей из закреплённого upstream, не меняя Markdown/source_map. Генерируемый каталог загружается tools один раз; сам tool ничего не компилирует.
+
+```bash
+uv run python -m dnd_rag prepare-game-data --output data/game/5etools
+```
+
+| Параметр | Смысл и default |
+|---|---|
+| `--source PATH` | Необязательный local 5etools root; иначе source_root из configs/game.yaml, исходно external/5etools-src |
+| `--output PATH` | Необязательный output root; иначе output_root из configs/game.yaml, исходно data/game/5etools; SHA-каталог добавляется автоматически |
+| `-h`, `--help` | Справка |
+
+Пути относительно корня проекта. Требуется Node22+ (проверен24.22.2 из ingestion), pinned submodule и установленные ingestion dependencies. Повторная подготовка детерминирована; несовместимый manifest/неразрешённая ссылка — ошибка. Игровые данные игнорируются Git; воспроизводимая команда остаётся в репозитории.

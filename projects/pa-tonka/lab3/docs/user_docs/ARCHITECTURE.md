@@ -27,3 +27,7 @@ Langfuse SDK5.2.0 отправляет данные в локальный Compos
 CodexRunner вызывает exec и exec resume по точному ID, без личного config и эталонов, из пустого /tmp cwd. Исходный rollout сохраняется независимо от compaction. Явный model catalog выбирает direct tools и16K; stock base instruction и алгоритм local compaction сохраняются. Из-за фактического несовпадения форматов Codex0.167 и llama11046 используется тонкий proxy8081→8080: additional_tools/namespace переводятся в обычные Responses functions и обратно. Оба клиента используют те же weights, MCP game tools и профиль генерации; original/effective payload и count/usage доступны для аудита. Сравнение учитывает внутренний prompt и счётчик Codex как свойство готового агента.
 
 Рабочий общий порог установлен11000 по smoke: при исходных8192 служебный Codex prefix5314 + выдача8252 вызывали повторное сокращение до ответа. Оба агента используют11000 при том же окне16384, reserve2048/safety256. Внутренний Codex счётчик отличается от native wire count; последнее число сохраняется отдельно.
+
+## Подготовленные игровые сущности
+
+Каталог отделён от retrieval: guarded local 5etools → нормализация503 XMM monsters и legendary groups → concrete approved item variants →24 XDMG magic tables, individual/hoard и бюджетная таблица2024. Нет сетевого игрового API. Хэши всех семи фактических JSON inputs и четырёх output files связываются с SHA upstream. Каталоги не изменяются при запросе агента. Item groups и generic entries раскрываются до конкретных предметов; отсутствие варианта не превращается в пустую награду.
