@@ -5,3 +5,5 @@
 `test_observability.py` проверяет реальное OTel родительство и сохранение полного retrieval output через in-memory exporter без сети.
 
 `test_memory.py` проверяет полный prefix, повторное summary, защищённую задачу и явные ошибки. `test_cli.py` проверяет команды/измеренный context; `test_application.py` — порядок стадий и отсутствие downstream при сбое. `integration/test_context_live.py` — явная длинная проверка обоих агентов на работающем общем stack.
+
+`test_citations.py` — повторные hits, независимые диалоги, сохранение registry после summary/restart, неизвестные номера и точная исходная attribution без выдуманной страницы.

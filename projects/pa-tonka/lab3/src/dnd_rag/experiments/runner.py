@@ -32,8 +32,9 @@ class ExperimentTracker:
     linking observation in the actual agent trace; no generation is fabricated.
     """
 
-    def __init__(self, root, dataset, run_id):
+    def __init__(self, root, dataset, run_id, *, agent=None, mode=None):
         self.root = Path(root)
+        self.agent, self.mode = agent, mode
         self.client = ObservationRecorder(
             self.root / '.runtime/sessions', project_root=self.root
         ).client
@@ -72,7 +73,10 @@ class ExperimentTracker:
         trace = record['reply'].get('trace_id')
         sid = record['session_id']
         key = (record['case_id'], record['turn'])
-        with propagate_attributes(session_id=sid, tags=['lab3', 'dataset', self.run_id]):
+        with propagate_attributes(
+            session_id=sid,
+            tags=['lab3', 'dataset', self.run_id, *[v for v in (self.agent, self.mode) if v]],
+        ):
             with self.client.start_as_current_observation(
                 name='dataset-evaluation',
                 trace_context={'trace_id': trace} if trace else None,
@@ -83,6 +87,8 @@ class ExperimentTracker:
                     'case_id': key[0],
                     'turn': key[1],
                     'agent_trace_missing': not bool(trace),
+                    'agent': self.agent,
+                    'mode': self.mode,
                 },
             ) as span:
                 span._otel_span.set_attributes(
@@ -274,6 +280,11 @@ async def run_dataset(
                             {'turn_id': turn_id, 'error': str(exc)}
                         )
                 print(f'{run_id} {item.id} {number}/{len(item.turns)} {reply.status}', flush=True)
+            if hasattr(adapter, 'citations'):
+                save_json(
+                    directory / 'citations' / f'{sid}.json',
+                    [r.model_dump(mode='json') for r in adapter.citations.export(sid)],
+                )
             if hasattr(adapter, 'close_session'):
                 await adapter.close_session(sid)
         write_review(directory / 'review.csv', dataset, records)

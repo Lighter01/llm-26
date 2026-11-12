@@ -160,3 +160,16 @@ def test_history_score_requires_explicit_review_after_compaction():
         },
     )
     assert reviewed.values['history_correctness'] == 0 and reviewed.success is False
+
+
+def test_requested_build_without_success_is_a_formal_failure():
+    from dnd_rag.experiments.scoring import evaluate_turn
+
+    c = case(expected_tools=['build_encounter'], checks={'party_size': 4, 'party_level': 3})
+    t = {
+        'name': 'build_encounter',
+        'arguments': {'party_size': 4, 'party_level': 3},
+        'result': {'status': 'search_exhausted'},
+        'status': 'completed',
+    }
+    assert evaluate_turn(c, record(tools=[t])).success is False

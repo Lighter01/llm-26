@@ -51,3 +51,11 @@ Summary отдельно сохраняет явно запрошенные сю
 application_stack сначала подтверждает readiness Qdrant/Langfuse, готовит pinned game catalog и index/retriever, дожидается завершения GPU-worker и только затем запускает GGUF. После readiness модели поднимаются loopback MCP8765 и Responses compatibility proxy8081; интерфейс получает готовый AgentService. RuntimeSession удерживает lock и владеет model process group. Uvicorn-потоки останавливаются в finally, чужие серверы не подхватываются. Docker/data остаются после выхода.
 
 Rich/prompt_toolkit CLI использует тот же async service, history/completion и реальные AgentEvent. patch_stdout сохраняет ANSI Rich; обычные команды не разбирают терминальный текст для измерений. Runner работает через AgentReply и raw records. /status показывает последнее полное измерение input и отдельное server window; во время генерации счётчик не выдумывается.
+
+## Проверяемые номера источников
+
+MCP берёт session scope из программного X-DND-Session-Id; модель не задаёт его в аргументах. CitationRegistry сохраняет monotonic номера в `.runtime/citations/<session>.json` по паре index_id/chunk_id. Повторный поиск оставляет прежний номер, новый диалог начинает собственную нумерацию, summary не очищает registry. В tool payload добавляется компактная карта number→source_id/chunk_id; исходный текст уже находится в hits и не дублируется.
+
+В конце ответа валидатор разрешает [n] только из фактических search results этого scope. AgentReply возвращает разрешённые sources с точным текстом, spans, hash и исходной attribution; неизвестные номера остаются предупреждением, без придуманной замены. Это проверка допустимости источника, а не доказательство, что он поддерживает каждое утверждение. CLI показывает компактный source block. При отсутствии transport scope поиск остаётся доступен, но source numbers не выдаются.
+
+Полный raw ответ chat API, включая доступный reasoning_content, сохраняется рядом с generation и в Langfuse span raw-model-response с исходным response_id. Usage остаётся на generation, чтобы не считать его дважды. Отсутствующий отдельный reasoning token count не выдумывается.

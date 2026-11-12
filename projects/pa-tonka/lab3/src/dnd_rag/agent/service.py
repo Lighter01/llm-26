@@ -75,6 +75,10 @@ class AgentGuard(AgentMiddleware):
         for msg in response.result if hasattr(response, 'result') else [response]:
             if isinstance(msg, AIMessage):
                 usage = msg.usage_metadata
+                if service.native:
+                    service.recorder.model_response(
+                        getattr(service.native, 'last_chat_response', None)
+                    )
                 turn['generations'].append(usage)
                 service.recorder.write(
                     'generation', {'message': msg.model_dump(mode='json'), 'usage': usage}
@@ -123,6 +127,11 @@ class AgentGuard(AgentMiddleware):
 
 class AgentService:
     def __init__(self, *, native_llm=None, model=None, tools=None, config=None, recorder=None):
+        from dnd_rag.agent.citations import CitationRegistry
+
+        self.citations = CitationRegistry(
+            Path(__file__).resolve().parents[3] / '.runtime/citations'
+        )
         self.native = native_llm
         self.model = model or native_llm.chat_model
         self.config = config or AgentConfig()
@@ -274,6 +283,13 @@ class AgentService:
                     latency_ms=(perf_counter() - before) * 1000,
                     api_cost=0.0,
                 )
+                from dnd_rag.agent.citations import validate_citations
+
+                citation_validation = validate_citations(text, self.citations, session_id)
+                if citation_validation.unknown_numbers:
+                    self.emit(
+                        'citation_warning', {'unknown_numbers': citation_validation.unknown_numbers}
+                    )
                 reply = AgentReply(
                     text=text,
                     status=status,
@@ -281,6 +297,8 @@ class AgentService:
                     trace_id=trace_id,
                     usage=usage,
                     error=error,
+                    sources=citation_validation.sources,
+                    citation_validation=citation_validation.model_dump(mode='json'),
                 )
                 observation.update(
                     output=reply.model_dump(mode='json'),

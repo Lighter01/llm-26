@@ -16,10 +16,16 @@ from dnd_rag.contracts import RagError
 class ToolServices:
     retriever: object
     catalog: object | None = None
+    citations: object | None = None
 
 
 def create_mcp_server(services, descriptions=None, *, host='127.0.0.1', port=8765):
     descriptions = descriptions or read_yaml(Path(__file__).with_name('descriptions.yaml'))
+    from dnd_rag.agent.citations import CitationRegistry
+
+    registry = services.citations or CitationRegistry(
+        Path(__file__).resolve().parents[3] / '.runtime/citations'
+    )
     mcp = FastMCP('D&D DM tools', host=host, port=port, stateless_http=True, json_response=True)
 
     @mcp.tool(
@@ -31,7 +37,28 @@ def create_mcp_server(services, descriptions=None, *, host='127.0.0.1', port=876
         query: Annotated[str, Field(min_length=1)], limit: Annotated[int, Field(ge=1, le=10)] = 5
     ) -> dict[str, Any]:
         try:
-            return services.retriever.retrieve(query, limit=limit).model_dump(mode='json')
+            result = services.retriever.retrieve(query, limit=limit)
+            data = result.model_dump(mode='json')
+            try:
+                request = mcp.get_context().request_context.request
+                scope = request.headers.get('x-dnd-session-id') if request else None
+            except (ValueError, AttributeError):
+                scope = None
+            if scope:
+                refs = registry.register(scope, result.hits)
+                # Source text is already in hits: do not duplicate it in the model payload.
+                data['citations'] = [
+                    {
+                        'number': ref.number,
+                        'source_id': ref.source_id,
+                        'chunk_id': ref.source.provenance['chunk_id'],
+                    }
+                    for ref in refs
+                ]
+            else:
+                data['citations'] = []
+                data['citation_status'] = 'missing_transport_scope'
+            return data
         except RagError as exc:
             return {'error': exc.as_dict()}
 

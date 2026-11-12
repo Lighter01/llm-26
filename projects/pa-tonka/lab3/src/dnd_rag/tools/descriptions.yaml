@@ -1,7 +1,7 @@
 search_rules: >-
   Search the local D&D 2024/2025 core rules (XPHB, XDMG, XMM). Returns ranked original
   excerpts with scores, exact source coordinates and stable chunk/index identifiers.
-  Use this to ground rules answers. Refine the query if evidence is insufficient.
+  Use this to ground rules answers. Cite the returned dialog-scoped numbers as [n]; the citations list maps each number to an actual hit. Refine the query if evidence is insufficient.
   limit defaults to 5 and must be between 1 and 10. It does not generate an answer.
 lookup_monsters: >-
   Look up current XMM (2025) monsters by exact name, stable monster_id or partial name,

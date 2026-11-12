@@ -64,3 +64,36 @@ def test_startup_order_and_failure_prevent_downstream_start(tmp_path, monkeypatc
         ):
             pass
     assert events == ['lock', 'infra', 'catalog', 'cleanup']
+
+
+def test_immediate_restart_ignores_time_wait_but_refuses_foreign_listener():
+    import socket
+
+    import httpx
+    from fastapi import FastAPI
+
+    from dnd_rag.runtime.application import background_server
+
+    app = FastAPI()
+
+    @app.get('/health')
+    def health():
+        return {'ok': True}
+
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind(('127.0.0.1', 0))
+    port = listener.getsockname()[1]
+    listener.listen()
+    with pytest.raises(RagError, match='Cannot bind'):
+        with background_server(app, port=port):
+            pass
+    client = socket.create_connection(('127.0.0.1', port))
+    accepted, _ = listener.accept()
+    accepted.shutdown(socket.SHUT_WR)
+    accepted.close()
+    client.recv(1)
+    client.close()
+    listener.close()
+    with background_server(app, port=port):
+        assert httpx.get(f'http://127.0.0.1:{port}/health').json() == {'ok': True}

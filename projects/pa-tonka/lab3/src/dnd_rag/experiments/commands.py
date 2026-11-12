@@ -98,7 +98,7 @@ def evaluate_command(root, args):
         rebuild=args.rebuild,
         on_stage=lambda s: print('Preparing ' + s, flush=True),
     ) as app:
-        tracker = ExperimentTracker(root, dataset, run_id)
+        tracker = ExperimentTracker(root, dataset, run_id, agent=args.agent, mode=args.mode)
         adapter = (
             AgentService(
                 native_llm=app.native,

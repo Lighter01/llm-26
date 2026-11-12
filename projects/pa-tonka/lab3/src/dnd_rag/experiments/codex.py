@@ -120,6 +120,9 @@ class CodexRunner:
         context_limit=11000,
     ):
         self.root = Path(project_root)
+        from dnd_rag.agent.citations import CitationRegistry
+
+        self.citations = CitationRegistry(self.root / '.runtime/citations')
         self.mode = mode
         self.directory = artifacts_dir or self.root / '.runtime/benchmark'
         self.work = Path(tempfile.mkdtemp(prefix='lab3-codex-'))
@@ -335,6 +338,9 @@ class CodexRunner:
             'api_cost': 0.0,
             'latency_ms': (perf_counter() - before) * 1000,
         }
+        from dnd_rag.agent.citations import validate_citations
+
+        citation_validation = validate_citations(parsed['text'], self.citations, session_id)
         # Internal Codex token_count is not identical to the own native counter.
         return AgentReply(
             text=parsed['text'],
@@ -348,6 +354,8 @@ class CodexRunner:
             trace_id=trace_id,
             usage=usage,
             error=error,
+            sources=citation_validation.sources,
+            citation_validation=citation_validation.model_dump(mode='json'),
         )
 
     async def close_session(self, session_id):

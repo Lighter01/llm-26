@@ -121,6 +121,15 @@ def evaluate_turn(case, record, *, annotation=None):
             bool(builds)
             and all(t['result'].get('status') in checks['build_expected_status'] for t in builds),
         )
+    if (
+        builds
+        and 'build_encounter' in case.expected_tools
+        and 'expected_status' not in checks
+        and 'build_expected_status' not in checks
+    ):
+        check('build_status', builds[-1]['result'].get('status') == 'success')
+    if evaluations and 'evaluate_encounter' in case.expected_tools:
+        check('evaluation_status', evaluations[-1]['result'].get('status') == 'success')
     for t in builds[-1:]:
         data = t['result']
         if data.get('status') != 'success':

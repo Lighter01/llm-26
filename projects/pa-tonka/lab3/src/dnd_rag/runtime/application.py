@@ -87,6 +87,7 @@ def ensure_infrastructure(settings, runtime):
 def background_server(app, *, port, host='127.0.0.1'):
     # Bind first to distinguish an occupied port; never adopt or kill foreign servers.
     with socket.socket() as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind((host, port))
         except OSError as exc:

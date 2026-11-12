@@ -11,3 +11,5 @@
 `prompts/` — общая предметная инструкция; CLI и runner используют один service. `ainvoke(session_id, user_text, turn_id=..., on_event=...)` возвращает AgentReply, `aclose()` flush/close. Веса не загружаются заново на реплику.
 
 `memory.py` — ContextBudget и штатный SummarizationMiddleware с native full-payload counter, целыми interactions и summarizer без скрытого overflow trim. `prompts/summary.txt` задаёт разделы фактов; полный исходный journal сохраняется независимо от summary.
+
+`citations.py` — persistable CitationRegistry/CitationRef и CitationValidation: dialog-scoped номера только фактических search hits, exact text/provenance без выдуманной страницы; summary не владеет registry. `observability.model_response` сохраняет полный доступный native ответ/reasoning отдельным span без повторного начисления usage.

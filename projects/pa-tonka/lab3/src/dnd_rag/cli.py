@@ -63,6 +63,10 @@ async def run_cli(
             )
         elif e.kind in ('tool_started', 'tool_completed', 'tool_error'):
             console.print(f'[dim]{e.kind}: {e.payload.get("name", "")}[/dim]')
+        elif e.kind == 'citation_warning':
+            console.print(
+                f'Unknown source numbers: {e.payload.get("unknown_numbers")}', style='yellow'
+            )
         elif e.kind == 'error':
             console.print(f'[red]{e.payload.get("code")}: {e.payload.get("message")}[/red]')
 
@@ -115,4 +119,15 @@ async def run_cli(
                     border_style='cyan' if reply.status == 'completed' else 'red',
                 )
             )
+            for number, source in zip(
+                (reply.citation_validation or {}).get('valid_numbers', []), reply.sources
+            ):
+                source = source.model_dump(mode='json') if hasattr(source, 'model_dump') else source
+                sections = source['provenance'].get('sections', [])
+                section = ' / '.join(sections[0].get('heading_path', [])) if sections else ''
+                console.print(
+                    f'[{number}] {source["book_id"]} · {source["source_file"]} · {section}',
+                    markup=False,
+                    style='dim',
+                )
             console.print(f'[dim]{context_label(stats)} · {reply.status}[/dim]')

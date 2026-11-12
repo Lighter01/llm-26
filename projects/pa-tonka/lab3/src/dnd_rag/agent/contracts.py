@@ -25,3 +25,4 @@ class AgentReply(Contract):
     trace_id: str | None = None
     usage: dict = Field(default_factory=dict)
     error: dict | None = None
+    citation_validation: dict | None = None

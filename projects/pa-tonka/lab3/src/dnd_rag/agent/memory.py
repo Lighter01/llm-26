@@ -151,6 +151,14 @@ class NativeSummarization(SummarizationMiddleware):
                         'metadata': {'lc_source': 'summarization'},
                     },
                 )
+                self.recorder.model_response(
+                    getattr(self.native, 'last_chat_response', None), phase='summary'
+                )
+                if turn:
+                    turn['max_context'] = max(
+                        turn.get('max_context', 0),
+                        getattr(self.native, 'last_input_tokens', 0) or 0,
+                    )
                 if response.response_metadata.get('finish_reason') in ('length', 'max_tokens'):
                     raise RagError(
                         'summary_truncated',

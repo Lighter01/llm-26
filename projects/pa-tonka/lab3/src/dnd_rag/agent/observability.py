@@ -104,6 +104,22 @@ class ObservationRecorder:
         with manager as span:
             yield span
 
+    def model_response(self, payload, *, phase='agent'):
+        if payload is None:
+            return
+        self.write('model_response', {'phase': phase, 'response': payload})
+        if self.client:
+            with self.client.start_as_current_observation(
+                name='raw-model-response',
+                output=payload,
+                metadata={
+                    'phase': phase,
+                    'model_response_id': payload.get('id'),
+                    'usage_is_recorded_on_generation': True,
+                },
+            ):
+                pass
+
     def retrieval(self, result):
         data = result.model_dump(mode='json') if hasattr(result, 'model_dump') else result
         self.write('retrieval', {'result': data})

@@ -230,7 +230,15 @@ def summarize_records(dataset, records):
         return sum(values) if values and all(type(v) is int for v in values) else None
 
     contexts = [r['reply'].get('usage', {}).get('max_context_tokens') for r in records]
+    citations = [r['reply'].get('citation_validation') or {} for r in records]
+    valid_citations = sum(len(c.get('valid_numbers', [])) for c in citations)
+    unknown_citations = sum(len(c.get('unknown_numbers', [])) for c in citations)
     return {
+        'citation_references': valid_citations + unknown_citations,
+        'unknown_citations': unknown_citations,
+        'citation_validity': valid_citations / (valid_citations + unknown_citations)
+        if valid_citations + unknown_citations
+        else None,
         'model_calls': total_usage('model_calls'),
         'max_native_input_tokens': max((v for v in contexts if type(v) is int), default=None),
         'tool_correctness': mean(tool_correctness) if tool_correctness else None,

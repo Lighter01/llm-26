@@ -52,7 +52,7 @@ uv run python -m dnd_rag reset-index --config configs/rag/r3.yaml
 uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml
 ```
 
-`--llm-profile PATH` обязателен, YAML относительно project root; `-h/--help` — справка. Других параметров нет. `LLAMA_SERVER_BIN` — исполняемый файл (default llama-server), `LLM_MODEL_PATH` — GGUF, `LLM_BASE_URL` — loopback endpoint с `/v1` (default http://127.0.0.1:8080/v1). Запуск держит блокировку проекта и завершается Ctrl+C с cleanup дочерней модели. [Профили и ограничения thinking](../../configs/llm/README.md).
+`--llm-profile PATH` обязателен, YAML относительно project root; `-h/--help` — справка. Других параметров нет. `LLAMA_SERVER_BIN` — исполняемый файл (кодовый default llama-server; проверенный .env.example задаёт ~/.llama-app/llama для профилей с server_subcommand=serve), `LLM_MODEL_PATH` — GGUF, `LLM_BASE_URL` — loopback endpoint с `/v1` (default http://127.0.0.1:8080/v1). Запуск держит блокировку проекта и завершается Ctrl+C с cleanup дочерней модели. [Профили и ограничения thinking](../../configs/llm/README.md).
 
 ## Setup Langfuse и Codex
 
@@ -163,3 +163,5 @@ uv run python -m dnd_rag summarize-agents --runs results/lab3/own-off results/la
 ```
 
 `--runs PATH [PATH ...]` обязателен; `-h/--help` — справка. Других флагов нет. Сравнение не меняет pending на success. Формулы и формат review описаны в [оценивании](EVALUATION.md).
+
+Чат выводит `[n]` source block для фактических retrieval sources текущего диалога. Полные тексты/spans и честная section/page attribution сохраняются в AgentReply и registry; неизвестный номер даёт warning. Нумерация сохраняется при summary, `/new` открывает независимый scope. Registry копируется в `citations/<session>.json` измерительного run. Citation validity измеряет разрешимость номера, не semantic support.

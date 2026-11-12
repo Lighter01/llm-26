@@ -118,5 +118,3 @@ class RetrievalResult(Contract):
     mode: Literal['dense', 'hybrid']
     hits: list[RetrievalHit]
     timings_ms: dict[str, float]
-
-
