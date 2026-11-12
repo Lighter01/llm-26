@@ -150,3 +150,12 @@ def test_summary_failure_and_oversize_full_prefix_are_explicit(tmp_path):
     with pytest.raises(RagError, match='summary|summar|Too large'):
         asyncio.run(memory.abefore_model({'messages': messages}, None))
     assert not model.seen
+
+
+def test_truncated_summary_is_not_accepted_as_memory(tmp_path):
+    memory, native, model, events, turn = setup(tmp_path)
+    model.replies = [
+        AIMessage(content='PARTY four; incomplete', response_metadata={'finish_reason': 'length'})
+    ]
+    with pytest.raises(RagError, match='truncat|limit'):
+        asyncio.run(memory.abefore_model({'messages': history()}, None))

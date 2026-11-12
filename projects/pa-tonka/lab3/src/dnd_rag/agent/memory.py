@@ -151,6 +151,11 @@ class NativeSummarization(SummarizationMiddleware):
                         'metadata': {'lc_source': 'summarization'},
                     },
                 )
+                if response.response_metadata.get('finish_reason') in ('length', 'max_tokens'):
+                    raise RagError(
+                        'summary_truncated',
+                        'Summary reached the output limit; history was not replaced',
+                    )
                 summary = response.text.strip()
                 if not summary:
                     raise ValueError('Empty summary')

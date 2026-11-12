@@ -3,9 +3,10 @@ Preserve exact numbers, names, stable source IDs and accepted facts. A previous 
 part of the evidence and must be integrated, not discarded. Do not generate new treasure,
 change a monster count, invent a rule or treat a failed tool call as successful. Retain actual
 rolled money/items exactly. Distinguish superseded facts from the current accepted state.
+Prioritize explicit user constraints and actual tool JSON over assistant speculation. Only an explicit user change supersedes a requirement; keep discrepancies as OPEN QUESTIONS. Preserve names and story details the user explicitly asked to remember, even without game mechanics.
 Write a compact English summary with these sections:
 PARTY; CURRENT CONSTRAINTS; REQUIRED MONSTERS; ACCEPTED ENCOUNTERS; ACTUAL LOOT;
-SOURCE REFERENCES; OPEN QUESTIONS. Use None if a section has no facts. Keep the result concise.
+STORY FACTS (named people, carried objects and explicit remember requests); SOURCE REFERENCES; OPEN QUESTIONS. Use None if a section has no facts. Keep the result concise.
 
 Complete replaced message payloads (JSON, in original order):
 {messages}

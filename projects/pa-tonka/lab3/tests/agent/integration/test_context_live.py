@@ -40,7 +40,7 @@ def test_long_dialogue_preserves_actual_loot_after_compaction(agent):
                 native_llm=NativeLLM(
                     load_settings(ROOT), load_llm_profile(ROOT / 'configs/llm/off.yaml')
                 ),
-                config=AgentConfig(context_limit=7500),
+                config=AgentConfig(context_limit=11000),
                 recorder=ObservationRecorder(directory / 'own', project_root=ROOT),
             )
             if agent == 'own'
