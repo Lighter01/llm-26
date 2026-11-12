@@ -2,7 +2,7 @@
 model = "dnd-nemotron"
 model_provider = "lab3"
 model_context_window = 16384
-model_auto_compact_token_limit = 8192
+model_auto_compact_token_limit = 11000
 model_reasoning_effort = "none"
 model_reasoning_summary = "none"
 approval_policy = "never"
@@ -27,11 +27,22 @@ shell_tool = false
 unified_exec = false
 multi_agent = false
 js_repl = false
-memory_tool = false
+memories = false
+plugins = false
+tool_search = false
+code_mode = false
+non_prefixed_mcp_tool_names = false
 
 [mcp_servers.dnd]
+default_tools_approval_mode = "approve"
 url = "http://127.0.0.1:8765/mcp"
 required = true
 enabled_tools = ["search_rules", "lookup_monsters", "evaluate_encounter", "build_encounter", "generate_loot"]
 startup_timeout_sec = 60.0
 tool_timeout_sec = 120.0
+
+[skills]
+include_instructions = false
+
+[skills.bundled]
+enabled = false

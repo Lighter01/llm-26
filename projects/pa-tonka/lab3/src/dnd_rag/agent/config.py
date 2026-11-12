@@ -8,7 +8,7 @@ __all__ = ['AgentConfig', 'LLMProfile', 'load_llm_profile']
 
 
 class AgentConfig(ConfigModel):
-    context_limit: int = Field(default=8192, ge=1024)
+    context_limit: int = Field(default=11000, ge=1024)
     recent_tokens: int = Field(default=2048, ge=256)
     summary_tokens: int = Field(default=1024, ge=128)
     max_model_calls: int = Field(default=12, gt=0)
