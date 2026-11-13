@@ -32,7 +32,8 @@ def test_saved_matrix_is_referentially_complete_and_recomputes():
     for directory in directories:
         run = json.loads((directory / 'run.json').read_text())
         dataset = run['dataset']
-        records = read_jsonl(directory / 'turns.jsonl')
+        original = read_jsonl(directory / 'turns.jsonl')
+        records = read_jsonl(directory / 'scored_turns.jsonl')
         assert (
             run['status'] in ('completed', 'incomplete') and run['evaluation_status'] == 'completed'
         )
@@ -76,7 +77,14 @@ def test_saved_matrix_is_referentially_complete_and_recomputes():
             for r in json.loads((directory / 'manifest.json').read_text())['chunks']
         }
         tools = read_jsonl(directory / 'tool_calls.jsonl')
-        assert len(tools) == sum(len(r['tools']) for r in records)
+        # The receipt table predates offline recovery; preserve that original
+        # view, while auditing restored references from the scored view.
+        assert len(tools) == sum(
+            len(r.get('raw_records', {}).get('tools', r['tools'])) for r in original
+        )
+        assert len(read_jsonl(directory / 'scored_tool_calls.jsonl')) == sum(
+            len(r['tools']) for r in records
+        )
         allowed = defaultdict(dict)
         for record in records:
             grouped[record['case_id']].append(record)

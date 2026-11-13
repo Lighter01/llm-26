@@ -1,0 +1,1240 @@
+[
+  {
+    "run_id": "lab3-own-off-20261113-v2",
+    "agent": "own",
+    "mode": "off",
+    "common_fingerprint": "6617ad5236789f2e4e5beb57c42341883dcbf2cce2f4d276bbd67e1c79c05a26",
+    "git_head": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+    "agent_config": {
+      "context_limit": 9500,
+      "recent_tokens": 2048,
+      "summary_tokens": 1024,
+      "max_model_calls": 12,
+      "max_tool_calls": 16,
+      "timeout_seconds": 300.0,
+      "mcp_url": "http://127.0.0.1:8765/mcp"
+    },
+    "effective_profile": {
+      "context_size": 16384,
+      "max_output_tokens": 2048,
+      "safety_margin": 256,
+      "thinking": false,
+      "reasoning_budget_tokens": 0,
+      "reasoning_effort": null,
+      "server_subcommand": "serve",
+      "model_alias": "dnd-nemotron",
+      "gpu_layers": 99,
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "cache_type_k": "q8_0",
+      "cache_type_v": "q8_0",
+      "kv_offload": true,
+      "flash_attention": "on",
+      "threads": 8,
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 40,
+      "min_p": 0.0,
+      "seed": 42,
+      "startup_timeout_seconds": 120.0,
+      "http_timeout_seconds": 180.0
+    },
+    "dataset_sha256": "7346b4739aed8aadc247299c3d5d19480270b92309bb3c4ccb1f2383cda8d022",
+    "model_sha256": "84ff34f5834b929043f5ae74799e8d562d4056998f6a5923ceb44831e8ad84d6",
+    "template_sha256": "a9729e306e331ab2f82789712b4f4ea8382ebf5df88052917c99d4abf79fd1a4",
+    "experiment_id": "ff91df56-5033-5b3f-b04f-950eedb87d76",
+    "dataset_name": "lab3-7346b4739aed8aad",
+    "started_at": "2026-11-12T23:48:09.726930+00:00",
+    "finished_at": "2026-11-13T00:05:47.086426+00:00",
+    "wall_seconds": 1057.359496,
+    "metrics": {
+      "citation_references": 63,
+      "unknown_citations": 21,
+      "citation_validity": 0.6666666666666666,
+      "model_calls": 120,
+      "max_native_input_tokens": 9538,
+      "tool_correctness": 0.9370974179484818,
+      "tool_correctness_turns": 47,
+      "history_correctness": {
+        "before": {
+          "samples": 11,
+          "score": 1.0
+        },
+        "after": {
+          "samples": 15,
+          "score": 0.7333333333333333
+        }
+      },
+      "error_rate": 0,
+      "step_limit_rate": 0,
+      "executions": 15,
+      "turns": 47,
+      "expected_turns": 47,
+      "completed_executions": 15,
+      "completion_rate": 1,
+      "task_success_rate": 0.26666666666666666,
+      "known_failed_executions": 11,
+      "pending_executions": 0,
+      "input_tokens": 547203,
+      "output_tokens": 21462,
+      "api_cost": 0.0,
+      "total_latency_ms": 1017050.2363559972,
+      "mean_latency_ms": 21639.366730978665,
+      "median_latency_ms": 17414.177233000373,
+      "tool_calls": 75,
+      "tool_errors": 8,
+      "compactions": 8,
+      "statuses": {
+        "completed": 47
+      },
+      "missing_retrieval_calls": 3,
+      "annotated_retrieval_turns": 10,
+      "retrieval": {
+        "mrr@10": 0.2833333333333333,
+        "precision@1": 0.0,
+        "precision@5": 0.14,
+        "precision@10": 0.07,
+        "recall@1": 0.0,
+        "recall@5": 0.7,
+        "recall@10": 0.7,
+        "evidence_coverage@1": 0.0,
+        "evidence_coverage@5": 0.7,
+        "evidence_coverage@10": 0.7
+      },
+      "breakdown": {
+        "type:long_dialogue": {
+          "executions": 3,
+          "completed": 3,
+          "success_rate": 0.0
+        },
+        "type:short_dialogue": {
+          "executions": 4,
+          "completed": 4,
+          "success_rate": 0.75
+        },
+        "type:single": {
+          "executions": 8,
+          "completed": 8,
+          "success_rate": 0.125
+        },
+        "difficulty:easy": {
+          "executions": 2,
+          "completed": 2,
+          "success_rate": 0.5
+        },
+        "difficulty:hard": {
+          "executions": 7,
+          "completed": 7,
+          "success_rate": 0.0
+        },
+        "difficulty:medium": {
+          "executions": 6,
+          "completed": 6,
+          "success_rate": 0.5
+        }
+      },
+      "items": [
+        {
+          "id": "single_01_forest_fey",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_02_mages_budget",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_03_forced_movement",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_04_patrol_purses",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_05_dragon_hoard",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_06_required_filter_conflict",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_07_unknown_and_separate_evaluation",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_08_fixed_composition_under_target",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "short_01_required_wight_update",
+          "completed": true,
+          "success": false,
+          "type": "short_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true
+        },
+        {
+          "id": "short_02_actual_purses_recall",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_03_hoard_owner_clarification",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_04_ambiguous_name_then_count",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "long_01_mothbridge_ledger",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            7,
+            8,
+            9
+          ],
+          "input_word_count": 1950,
+          "input_char_count": 12598,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_02_orla_chest",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1879,
+          "input_char_count": 12274,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_03_observatory_purse",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1888,
+          "input_char_count": 12660,
+          "compaction_validation": "required_live_event_before_final_probe"
+        }
+      ]
+    },
+    "observed_usage": {
+      "input_tokens": 547203,
+      "output_tokens": 21462,
+      "unknown_model_calls": 0
+    },
+    "first_trace": "bb25c3f470fd4d9a27ac40b2a8c89227",
+    "last_trace": "3e7669acb33744ba4fa3dfddac19afdc",
+    "evaluation_provenance": {
+      "method": "explicit-criterion-review",
+      "review_sha256": "fc9c96e7b46ff8fd990adb8763c58e3c5d99ca1cc0095c435c748bb19cb033ea",
+      "files": {
+        "src/dnd_rag/evaluation/evidence.py": "ecd276327cb783a5591b2e664a5a710aba61d269c4bdcfe168ccf11d911f4940",
+        "src/dnd_rag/evaluation/metrics.py": "5bfe0f91150673241b42a66ddefb8fee0f61a478dfc9b77d2169851e19ba1e31",
+        "src/dnd_rag/experiments/artifacts.py": "00f29cd0acf7bb65a7b29b9edaffe7a184cd9485c5ad0dfa7bcaf8dd8425b658",
+        "src/dnd_rag/experiments/contracts.py": "06d49fc57e56101b8381e6b006a6b594ba33de54e0cccecd764d4f5c1e27e118",
+        "src/dnd_rag/experiments/scoring.py": "db82786b7c7b9994ebe877d9d2bf8a9588af5d90dbfc01238e7dac2cc32d1f82"
+      }
+    }
+  },
+  {
+    "run_id": "lab3-own-budgeted-20261113-v2",
+    "agent": "own",
+    "mode": "budgeted",
+    "common_fingerprint": "6617ad5236789f2e4e5beb57c42341883dcbf2cce2f4d276bbd67e1c79c05a26",
+    "git_head": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+    "agent_config": {
+      "context_limit": 9500,
+      "recent_tokens": 2048,
+      "summary_tokens": 1024,
+      "max_model_calls": 12,
+      "max_tool_calls": 16,
+      "timeout_seconds": 300.0,
+      "mcp_url": "http://127.0.0.1:8765/mcp"
+    },
+    "effective_profile": {
+      "context_size": 16384,
+      "max_output_tokens": 2048,
+      "safety_margin": 256,
+      "thinking": true,
+      "reasoning_budget_tokens": 512,
+      "reasoning_effort": null,
+      "server_subcommand": "serve",
+      "model_alias": "dnd-nemotron",
+      "gpu_layers": 99,
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "cache_type_k": "q8_0",
+      "cache_type_v": "q8_0",
+      "kv_offload": true,
+      "flash_attention": "on",
+      "threads": 8,
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 40,
+      "min_p": 0.0,
+      "seed": 42,
+      "startup_timeout_seconds": 120.0,
+      "http_timeout_seconds": 180.0
+    },
+    "dataset_sha256": "7346b4739aed8aadc247299c3d5d19480270b92309bb3c4ccb1f2383cda8d022",
+    "model_sha256": "84ff34f5834b929043f5ae74799e8d562d4056998f6a5923ceb44831e8ad84d6",
+    "template_sha256": "a9729e306e331ab2f82789712b4f4ea8382ebf5df88052917c99d4abf79fd1a4",
+    "experiment_id": "a18360e4-6e4a-58e3-ae5c-c619c327be18",
+    "dataset_name": "lab3-7346b4739aed8aad",
+    "started_at": "2026-11-13T00:41:27.762498+00:00",
+    "finished_at": "2026-11-13T01:14:24.385260+00:00",
+    "wall_seconds": 1976.622762,
+    "metrics": {
+      "citation_references": 28,
+      "unknown_citations": 0,
+      "citation_validity": 1.0,
+      "model_calls": 135,
+      "max_native_input_tokens": 9248,
+      "tool_correctness": 0.9822447056489609,
+      "tool_correctness_turns": 47,
+      "history_correctness": {
+        "before": {
+          "samples": 11,
+          "score": 0.9090909090909091
+        },
+        "after": {
+          "samples": 15,
+          "score": 0.9333333333333333
+        }
+      },
+      "error_rate": 0,
+      "step_limit_rate": 0,
+      "executions": 15,
+      "turns": 47,
+      "expected_turns": 47,
+      "completed_executions": 15,
+      "completion_rate": 1,
+      "task_success_rate": 0.5333333333333333,
+      "known_failed_executions": 7,
+      "pending_executions": 0,
+      "input_tokens": 637303,
+      "output_tokens": 63824,
+      "api_cost": 0.0,
+      "total_latency_ms": 1973691.7023810202,
+      "mean_latency_ms": 41993.44047619192,
+      "median_latency_ms": 45147.23212700119,
+      "tool_calls": 81,
+      "tool_errors": 6,
+      "compactions": 9,
+      "statuses": {
+        "completed": 47
+      },
+      "missing_retrieval_calls": 0,
+      "annotated_retrieval_turns": 10,
+      "retrieval": {
+        "mrr@10": 0.5916666666666667,
+        "precision@1": 0.3,
+        "precision@5": 0.2,
+        "precision@10": 0.1,
+        "recall@1": 0.3,
+        "recall@5": 1.0,
+        "recall@10": 1.0,
+        "evidence_coverage@1": 0.3,
+        "evidence_coverage@5": 1.0,
+        "evidence_coverage@10": 1.0
+      },
+      "breakdown": {
+        "type:long_dialogue": {
+          "executions": 3,
+          "completed": 3,
+          "success_rate": 0.0
+        },
+        "type:short_dialogue": {
+          "executions": 4,
+          "completed": 4,
+          "success_rate": 0.75
+        },
+        "type:single": {
+          "executions": 8,
+          "completed": 8,
+          "success_rate": 0.625
+        },
+        "difficulty:easy": {
+          "executions": 2,
+          "completed": 2,
+          "success_rate": 1.0
+        },
+        "difficulty:hard": {
+          "executions": 7,
+          "completed": 7,
+          "success_rate": 0.2857142857142857
+        },
+        "difficulty:medium": {
+          "executions": 6,
+          "completed": 6,
+          "success_rate": 0.6666666666666666
+        }
+      },
+      "items": [
+        {
+          "id": "single_01_forest_fey",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_02_mages_budget",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_03_forced_movement",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_04_patrol_purses",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_05_dragon_hoard",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_06_required_filter_conflict",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_07_unknown_and_separate_evaluation",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_08_fixed_composition_under_target",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "short_01_required_wight_update",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true
+        },
+        {
+          "id": "short_02_actual_purses_recall",
+          "completed": true,
+          "success": false,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_03_hoard_owner_clarification",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_04_ambiguous_name_then_count",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "long_01_mothbridge_ledger",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            7,
+            8,
+            9
+          ],
+          "input_word_count": 1950,
+          "input_char_count": 12598,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_02_orla_chest",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1879,
+          "input_char_count": 12274,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_03_observatory_purse",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1888,
+          "input_char_count": 12660,
+          "compaction_validation": "required_live_event_before_final_probe"
+        }
+      ]
+    },
+    "observed_usage": {
+      "input_tokens": 637303,
+      "output_tokens": 63824,
+      "unknown_model_calls": 0
+    },
+    "first_trace": "a3a43d56be4d63d79bc23c24493db915",
+    "last_trace": "0d0a1a0d5be10f39338b1be3509c5d92",
+    "evaluation_provenance": {
+      "method": "explicit-criterion-review",
+      "review_sha256": "437b03f35a56e99af70cf393959752a291bf87d2f15bec817a3d2dab3c02b103",
+      "files": {
+        "src/dnd_rag/evaluation/evidence.py": "ecd276327cb783a5591b2e664a5a710aba61d269c4bdcfe168ccf11d911f4940",
+        "src/dnd_rag/evaluation/metrics.py": "5bfe0f91150673241b42a66ddefb8fee0f61a478dfc9b77d2169851e19ba1e31",
+        "src/dnd_rag/experiments/artifacts.py": "00f29cd0acf7bb65a7b29b9edaffe7a184cd9485c5ad0dfa7bcaf8dd8425b658",
+        "src/dnd_rag/experiments/contracts.py": "06d49fc57e56101b8381e6b006a6b594ba33de54e0cccecd764d4f5c1e27e118",
+        "src/dnd_rag/experiments/scoring.py": "db82786b7c7b9994ebe877d9d2bf8a9588af5d90dbfc01238e7dac2cc32d1f82"
+      }
+    }
+  },
+  {
+    "run_id": "lab3-codex-off-20261113-v2",
+    "agent": "codex",
+    "mode": "off",
+    "common_fingerprint": "6617ad5236789f2e4e5beb57c42341883dcbf2cce2f4d276bbd67e1c79c05a26",
+    "git_head": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+    "agent_config": {
+      "context_limit": 9500,
+      "recent_tokens": 2048,
+      "summary_tokens": 1024,
+      "max_model_calls": 12,
+      "max_tool_calls": 16,
+      "timeout_seconds": 300.0,
+      "mcp_url": "http://127.0.0.1:8765/mcp"
+    },
+    "effective_profile": {
+      "context_size": 16384,
+      "max_output_tokens": 2048,
+      "safety_margin": 256,
+      "thinking": false,
+      "reasoning_budget_tokens": 0,
+      "reasoning_effort": null,
+      "server_subcommand": "serve",
+      "model_alias": "dnd-nemotron",
+      "gpu_layers": 99,
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "cache_type_k": "q8_0",
+      "cache_type_v": "q8_0",
+      "kv_offload": true,
+      "flash_attention": "on",
+      "threads": 8,
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 40,
+      "min_p": 0.0,
+      "seed": 42,
+      "startup_timeout_seconds": 120.0,
+      "http_timeout_seconds": 180.0
+    },
+    "dataset_sha256": "7346b4739aed8aadc247299c3d5d19480270b92309bb3c4ccb1f2383cda8d022",
+    "model_sha256": "84ff34f5834b929043f5ae74799e8d562d4056998f6a5923ceb44831e8ad84d6",
+    "template_sha256": "a9729e306e331ab2f82789712b4f4ea8382ebf5df88052917c99d4abf79fd1a4",
+    "experiment_id": "0da5a955-a7f8-52ec-b71e-8ea5b52fdc75",
+    "dataset_name": "lab3-7346b4739aed8aad",
+    "started_at": "2026-11-13T00:06:14.875974+00:00",
+    "finished_at": "2026-11-13T00:41:00.091262+00:00",
+    "wall_seconds": 2085.215288,
+    "metrics": {
+      "citation_references": 14,
+      "unknown_citations": 1,
+      "citation_validity": 0.9285714285714286,
+      "model_calls": 192,
+      "max_native_input_tokens": 13341,
+      "tool_correctness": 0.9719267139479906,
+      "tool_correctness_turns": 47,
+      "history_correctness": {
+        "before": {
+          "samples": 8,
+          "score": 1.0
+        },
+        "after": {
+          "samples": 18,
+          "score": 0.7222222222222222
+        }
+      },
+      "error_rate": 0.0425531914893617,
+      "step_limit_rate": 0,
+      "executions": 15,
+      "turns": 47,
+      "expected_turns": 47,
+      "completed_executions": 13,
+      "completion_rate": 0.8666666666666667,
+      "task_success_rate": 0.4,
+      "known_failed_executions": 9,
+      "pending_executions": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "api_cost": 0.0,
+      "total_latency_ms": 2138018.019776009,
+      "mean_latency_ms": 45489.74510161722,
+      "median_latency_ms": 35021.16866700089,
+      "tool_calls": 107,
+      "tool_errors": 12,
+      "compactions": 38,
+      "statuses": {
+        "completed": 45,
+        "timeout": 2
+      },
+      "missing_retrieval_calls": 3,
+      "annotated_retrieval_turns": 10,
+      "retrieval": {
+        "mrr@10": 0.3333333333333333,
+        "precision@1": 0.1,
+        "precision@5": 0.12000000000000001,
+        "precision@10": 0.060000000000000005,
+        "recall@1": 0.1,
+        "recall@5": 0.6,
+        "recall@10": 0.6,
+        "evidence_coverage@1": 0.1,
+        "evidence_coverage@5": 0.6,
+        "evidence_coverage@10": 0.6
+      },
+      "breakdown": {
+        "type:long_dialogue": {
+          "executions": 3,
+          "completed": 1,
+          "success_rate": 0.0
+        },
+        "type:short_dialogue": {
+          "executions": 4,
+          "completed": 4,
+          "success_rate": 0.75
+        },
+        "type:single": {
+          "executions": 8,
+          "completed": 8,
+          "success_rate": 0.375
+        },
+        "difficulty:easy": {
+          "executions": 2,
+          "completed": 2,
+          "success_rate": 0.0
+        },
+        "difficulty:hard": {
+          "executions": 7,
+          "completed": 5,
+          "success_rate": 0.42857142857142855
+        },
+        "difficulty:medium": {
+          "executions": 6,
+          "completed": 6,
+          "success_rate": 0.5
+        }
+      },
+      "items": [
+        {
+          "id": "single_01_forest_fey",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_02_mages_budget",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_03_forced_movement",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_04_patrol_purses",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_05_dragon_hoard",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_06_required_filter_conflict",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_07_unknown_and_separate_evaluation",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_08_fixed_composition_under_target",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "short_01_required_wight_update",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true
+        },
+        {
+          "id": "short_02_actual_purses_recall",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_03_hoard_owner_clarification",
+          "completed": true,
+          "success": false,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_04_ambiguous_name_then_count",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "long_01_mothbridge_ledger",
+          "completed": false,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            7,
+            8,
+            9
+          ],
+          "input_word_count": 1950,
+          "input_char_count": 12598,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_02_orla_chest",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1879,
+          "input_char_count": 12274,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_03_observatory_purse",
+          "completed": false,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1888,
+          "input_char_count": 12660,
+          "compaction_validation": "required_live_event_before_final_probe"
+        }
+      ]
+    },
+    "observed_usage": {
+      "input_tokens": 1640638,
+      "output_tokens": 32552,
+      "unknown_model_calls": 2
+    },
+    "first_trace": "12b8fdcbeed41d55dbabb30acd16e6cb",
+    "last_trace": "59f745012fa35fe195bb14f4f1430743",
+    "evaluation_provenance": {
+      "method": "explicit-criterion-review",
+      "review_sha256": "06706c44b3c7fd8a1f1a67bde2bd0221646d832128392e8db1e8c7304b5e890d",
+      "files": {
+        "src/dnd_rag/evaluation/evidence.py": "ecd276327cb783a5591b2e664a5a710aba61d269c4bdcfe168ccf11d911f4940",
+        "src/dnd_rag/evaluation/metrics.py": "5bfe0f91150673241b42a66ddefb8fee0f61a478dfc9b77d2169851e19ba1e31",
+        "src/dnd_rag/experiments/artifacts.py": "00f29cd0acf7bb65a7b29b9edaffe7a184cd9485c5ad0dfa7bcaf8dd8425b658",
+        "src/dnd_rag/experiments/contracts.py": "06d49fc57e56101b8381e6b006a6b594ba33de54e0cccecd764d4f5c1e27e118",
+        "src/dnd_rag/experiments/scoring.py": "db82786b7c7b9994ebe877d9d2bf8a9588af5d90dbfc01238e7dac2cc32d1f82"
+      }
+    }
+  },
+  {
+    "run_id": "lab3-codex-budgeted-20261113-v2",
+    "agent": "codex",
+    "mode": "budgeted",
+    "common_fingerprint": "6617ad5236789f2e4e5beb57c42341883dcbf2cce2f4d276bbd67e1c79c05a26",
+    "git_head": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+    "agent_config": {
+      "context_limit": 9500,
+      "recent_tokens": 2048,
+      "summary_tokens": 1024,
+      "max_model_calls": 12,
+      "max_tool_calls": 16,
+      "timeout_seconds": 300.0,
+      "mcp_url": "http://127.0.0.1:8765/mcp"
+    },
+    "effective_profile": {
+      "context_size": 16384,
+      "max_output_tokens": 2048,
+      "safety_margin": 256,
+      "thinking": true,
+      "reasoning_budget_tokens": 512,
+      "reasoning_effort": null,
+      "server_subcommand": "serve",
+      "model_alias": "dnd-nemotron",
+      "gpu_layers": 99,
+      "batch_size": 512,
+      "ubatch_size": 128,
+      "cache_type_k": "q8_0",
+      "cache_type_v": "q8_0",
+      "kv_offload": true,
+      "flash_attention": "on",
+      "threads": 8,
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 40,
+      "min_p": 0.0,
+      "seed": 42,
+      "startup_timeout_seconds": 120.0,
+      "http_timeout_seconds": 180.0
+    },
+    "dataset_sha256": "7346b4739aed8aadc247299c3d5d19480270b92309bb3c4ccb1f2383cda8d022",
+    "model_sha256": "84ff34f5834b929043f5ae74799e8d562d4056998f6a5923ceb44831e8ad84d6",
+    "template_sha256": "a9729e306e331ab2f82789712b4f4ea8382ebf5df88052917c99d4abf79fd1a4",
+    "experiment_id": "1f09c491-3da5-57e9-a26a-b7db236e9e7c",
+    "dataset_name": "lab3-7346b4739aed8aad",
+    "started_at": "2026-11-13T01:15:16.118163+00:00",
+    "finished_at": "2026-11-13T02:19:45.832640+00:00",
+    "wall_seconds": 3869.714477,
+    "metrics": {
+      "citation_references": 28,
+      "unknown_citations": 0,
+      "citation_validity": 1.0,
+      "model_calls": 246,
+      "max_native_input_tokens": 13133,
+      "tool_correctness": 0.9787234042553191,
+      "tool_correctness_turns": 47,
+      "history_correctness": {
+        "before": {
+          "samples": 5,
+          "score": 1.0
+        },
+        "after": {
+          "samples": 21,
+          "score": 0.9047619047619048
+        }
+      },
+      "error_rate": 0.0425531914893617,
+      "step_limit_rate": 0,
+      "executions": 15,
+      "turns": 47,
+      "expected_turns": 47,
+      "completed_executions": 13,
+      "completion_rate": 0.8666666666666667,
+      "task_success_rate": 0.6,
+      "known_failed_executions": 6,
+      "pending_executions": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "api_cost": 0.0,
+      "total_latency_ms": 4001285.177925991,
+      "mean_latency_ms": 85133.7271899147,
+      "median_latency_ms": 59751.035152999975,
+      "tool_calls": 143,
+      "tool_errors": 19,
+      "compactions": 56,
+      "statuses": {
+        "completed": 45,
+        "timeout": 2
+      },
+      "missing_retrieval_calls": 0,
+      "annotated_retrieval_turns": 10,
+      "retrieval": {
+        "mrr@10": 0.5654761904761905,
+        "precision@1": 0.26666666666666666,
+        "precision@5": 0.19714285714285715,
+        "precision@10": 0.09857142857142857,
+        "recall@1": 0.26666666666666666,
+        "recall@5": 0.9857142857142858,
+        "recall@10": 0.9857142857142858,
+        "evidence_coverage@1": 0.26666666666666666,
+        "evidence_coverage@5": 0.9857142857142858,
+        "evidence_coverage@10": 0.9857142857142858
+      },
+      "breakdown": {
+        "type:long_dialogue": {
+          "executions": 3,
+          "completed": 1,
+          "success_rate": 0.0
+        },
+        "type:short_dialogue": {
+          "executions": 4,
+          "completed": 4,
+          "success_rate": 0.75
+        },
+        "type:single": {
+          "executions": 8,
+          "completed": 8,
+          "success_rate": 0.75
+        },
+        "difficulty:easy": {
+          "executions": 2,
+          "completed": 2,
+          "success_rate": 0.5
+        },
+        "difficulty:hard": {
+          "executions": 7,
+          "completed": 5,
+          "success_rate": 0.2857142857142857
+        },
+        "difficulty:medium": {
+          "executions": 6,
+          "completed": 6,
+          "success_rate": 1.0
+        }
+      },
+      "items": [
+        {
+          "id": "single_01_forest_fey",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_02_mages_budget",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_03_forced_movement",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_04_patrol_purses",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "easy",
+          "history_dependent": false
+        },
+        {
+          "id": "single_05_dragon_hoard",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "medium",
+          "history_dependent": false
+        },
+        {
+          "id": "single_06_required_filter_conflict",
+          "completed": true,
+          "success": false,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_07_unknown_and_separate_evaluation",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "single_08_fixed_composition_under_target",
+          "completed": true,
+          "success": true,
+          "type": "single",
+          "difficulty": "hard",
+          "history_dependent": false
+        },
+        {
+          "id": "short_01_required_wight_update",
+          "completed": true,
+          "success": false,
+          "type": "short_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true
+        },
+        {
+          "id": "short_02_actual_purses_recall",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_03_hoard_owner_clarification",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "short_04_ambiguous_name_then_count",
+          "completed": true,
+          "success": true,
+          "type": "short_dialogue",
+          "difficulty": "medium",
+          "history_dependent": true
+        },
+        {
+          "id": "long_01_mothbridge_ledger",
+          "completed": false,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            7,
+            8,
+            9
+          ],
+          "input_word_count": 1950,
+          "input_char_count": 12598,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_02_orla_chest",
+          "completed": false,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1879,
+          "input_char_count": 12274,
+          "compaction_validation": "required_live_event_before_final_probe"
+        },
+        {
+          "id": "long_03_observatory_purse",
+          "completed": true,
+          "success": false,
+          "type": "long_dialogue",
+          "difficulty": "hard",
+          "history_dependent": true,
+          "requires_compaction": true,
+          "early_facts_turn": 1,
+          "history_probe_turns": [
+            2,
+            6,
+            8,
+            9
+          ],
+          "input_word_count": 1888,
+          "input_char_count": 12660,
+          "compaction_validation": "required_live_event_before_final_probe"
+        }
+      ]
+    },
+    "observed_usage": {
+      "input_tokens": 2108207,
+      "output_tokens": 97655,
+      "unknown_model_calls": 2
+    },
+    "first_trace": "27a11d31d9ea0a87bea56c583b8d0035",
+    "last_trace": "9aef35698f9f2d764091385e28e86230",
+    "evaluation_provenance": {
+      "method": "explicit-criterion-review",
+      "review_sha256": "4f7f4f7f3d740ba82fa228bc5b42aff000287e7262da992e1a71c7c11fdf2245",
+      "files": {
+        "src/dnd_rag/evaluation/evidence.py": "ecd276327cb783a5591b2e664a5a710aba61d269c4bdcfe168ccf11d911f4940",
+        "src/dnd_rag/evaluation/metrics.py": "5bfe0f91150673241b42a66ddefb8fee0f61a478dfc9b77d2169851e19ba1e31",
+        "src/dnd_rag/experiments/artifacts.py": "00f29cd0acf7bb65a7b29b9edaffe7a184cd9485c5ad0dfa7bcaf8dd8425b658",
+        "src/dnd_rag/experiments/contracts.py": "06d49fc57e56101b8381e6b006a6b594ba33de54e0cccecd764d4f5c1e27e118",
+        "src/dnd_rag/experiments/scoring.py": "db82786b7c7b9994ebe877d9d2bf8a9588af5d90dbfc01238e7dac2cc32d1f82"
+      }
+    }
+  }
+]

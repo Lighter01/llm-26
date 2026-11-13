@@ -28,7 +28,7 @@ uv run python -m dnd_rag evaluate-agents --agent own --mode off --only long_01_m
 
 Это девять содержательных реплик: build/individual loot; новая attendance; два правила и четыре lookup; не принятая альтернатива; финальный recall. Не ожидайте фиксированный random payout: сравнивайте финал с реальным первым generate_loot. Новый run-id обязателен при повторе; полный список остальных флагов — в [CLI](CLI.md).
 
-Уже сохранённый основной own/off Mothbridge демонстрирует4 существа (Blink Dog1, Bugbear Stalker2, Goblin Warrior1),20gp, party4→5 приlevel4, summary11466→2255 и11166→3619, затем точный финальный recall с Mira/brass lantern. Эти числа относятся к этому конкретному запуску. Дополнительные неточности текста отражены в rubric review, поэтому сохранность памяти не означает100% task success.
+Сохранённый основной own/off v2 Mothbridge демонстрирует4 существа (Blink Dog1, Bugbear Stalker2, Goblin Warrior1),44gp, party4→5 приlevel4, три реальные summary и точный финальный recall с Mira/brass lantern. Эти числа относятся к этому запуску; новый payout может отличаться. Промежуточные ошибки правила/полноты ответа отражены в rubric, поэтому сохранность памяти не означает100% task success. [Финальный Langfuse trace](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/74d0d23f76b66826f76059b6d59897b8).
 
 В Langfuse откройте experiment с именем run-id, выберите dataset item/turn. Проверьте agent root, реальные generations с usage, tool→retrieval, compaction/context_summary и raw-model-response. Последний turn должен быть виден отдельно. Raw source registry продолжает разрешать номера, выданные до summary; неизвестные номера остаются warning.
 
@@ -37,8 +37,8 @@ uv run python -m dnd_rag evaluate-agents --agent own --mode off --only long_01_m
 Четыре полных вызова — own/Codex × off/budgeted — описаны в [методике](EVALUATION.md). Заполненная review.csv требует0/1, method и trace evidence. Затем:
 
 ```bash
-uv run python -m dnd_rag score-agents --run results/lab3/lab3-own-off-20261113-v1 --upload-scores
-uv run python -m dnd_rag summarize-agents --runs results/lab3/lab3-own-off-20261113-v1 results/lab3/lab3-own-budgeted-20261113-v1 results/lab3/lab3-codex-off-20261113-v1 results/lab3/lab3-codex-budgeted-20261113-v1
+uv run python -m dnd_rag score-agents --run results/lab3/lab3-own-off-20261113-v2 --upload-scores
+uv run python -m dnd_rag summarize-agents --runs results/lab3/lab3-own-off-20261113-v2 results/lab3/lab3-own-budgeted-20261113-v2 results/lab3/lab3-codex-off-20261113-v2 results/lab3/lab3-codex-budgeted-20261113-v2
 ```
 
 score-agents не вызывает модель; незаполненные критерии остаются pending. API-cost локальной модели0; токены и время измеряются отдельно. После выхода CLI/runner останавливаются собственные model/service процессы; Docker и артефакты сохраняются.

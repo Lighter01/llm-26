@@ -31,6 +31,8 @@ uv run python -m dnd_rag run --interface cli --llm-profile configs/llm/off.yaml
 | `tools/ingestion` | Node runtime подготовки книг |
 | `docs` | [Пользовательское руководство](docs/user_docs/README.md), архитектура и ingestion |
 | `scripts` | Административные вспомогательные команды |
+| `report` | [Отчёт и материалы защиты](report/README.md) |
+| `results/lab3` | [Измерения, CSV/JSON и локальные raw runs](results/lab3/README.md) |
 
 ## Проверки
 
@@ -41,3 +43,5 @@ npm --prefix tools/ingestion run test:unit
 ```
 
 Live-пробы запускаются явно и не подменяются результатами предыдущей лабораторной. Команды и все параметры: [CLI](docs/user_docs/CLI.md).
+
+Основной интерфейс — CLI. Условный поздний Streamlit отложен ради обязательных проверок и ревью. Фактическая матрица и ограничения публикуются в [отчёте](report/LAB3_REPORT.md).

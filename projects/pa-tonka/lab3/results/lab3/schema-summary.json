@@ -1,0 +1,50 @@
+[
+  {
+    "run_id": "lab3-own-off-20261113-v2",
+    "schema_sha256": "62fd9ded6b0e1bee62a41ab7520688fc91959b5e85f2d7caf599d8f841ed0267",
+    "common_api_shape_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "tool_names": [
+      "build_encounter",
+      "evaluate_encounter",
+      "generate_loot",
+      "lookup_monsters",
+      "search_rules"
+    ]
+  },
+  {
+    "run_id": "lab3-own-budgeted-20261113-v2",
+    "schema_sha256": "62fd9ded6b0e1bee62a41ab7520688fc91959b5e85f2d7caf599d8f841ed0267",
+    "common_api_shape_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "tool_names": [
+      "build_encounter",
+      "evaluate_encounter",
+      "generate_loot",
+      "lookup_monsters",
+      "search_rules"
+    ]
+  },
+  {
+    "run_id": "lab3-codex-off-20261113-v2",
+    "schema_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "common_api_shape_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "tool_names": [
+      "build_encounter",
+      "evaluate_encounter",
+      "generate_loot",
+      "lookup_monsters",
+      "search_rules"
+    ]
+  },
+  {
+    "run_id": "lab3-codex-budgeted-20261113-v2",
+    "schema_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "common_api_shape_sha256": "91829d865fac83ea7d227a30cabb9fa6eaaf73f62cdefb49e80594516aaaa097",
+    "tool_names": [
+      "build_encounter",
+      "evaluate_encounter",
+      "generate_loot",
+      "lookup_monsters",
+      "search_rules"
+    ]
+  }
+]

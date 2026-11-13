@@ -1,0 +1,163 @@
+{
+  "measured_commit": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+  "release_code_commit": "b825d4e",
+  "saved_matrix_audit": "passed:60executions/188turns/60sessions; exact profiles/counter parity/citations/recompute/Experiment links",
+  "targeted_boundary_tests": "41passed; six reproduced failures fixed",
+  "ruff": "passed",
+  "node_ingestion": "47passed (unchanged source)",
+  "ingestion_integration": "77passed on existing resolved build",
+  "dataset_integration": "1passed/5deselected",
+  "full_non_live": "pending native task-done",
+  "independent_review": "pending",
+  "postfix_live": "passed: Any-habitat actual MCP and2turns peragent, last trace and exporter dedup; off/11000 diagnostic excluded from matrix",
+  "runs": [
+    {
+      "run_id": "lab3-own-off-20261113-v2",
+      "experiment_id": "ff91df56-5033-5b3f-b04f-950eedb87d76",
+      "item_links": 47,
+      "trace_usage": {
+        "run_id": "lab3-own-off-20261113-v2",
+        "completed_turns": 47,
+        "generations": 120,
+        "langfuse_usage": {
+          "input": 547203,
+          "output": 21462
+        },
+        "mismatches": [],
+        "last_trace": "3e7669acb33744ba4fa3dfddac19afdc"
+      }
+    },
+    {
+      "run_id": "lab3-own-budgeted-20261113-v2",
+      "experiment_id": "a18360e4-6e4a-58e3-ae5c-c619c327be18",
+      "item_links": 47,
+      "trace_usage": {
+        "run_id": "lab3-own-budgeted-20261113-v2",
+        "completed_turns": 47,
+        "generations": 135,
+        "langfuse_usage": {
+          "input": 637303,
+          "output": 63824
+        },
+        "mismatches": [],
+        "last_trace": "0d0a1a0d5be10f39338b1be3509c5d92"
+      }
+    },
+    {
+      "run_id": "lab3-codex-off-20261113-v2",
+      "experiment_id": "0da5a955-a7f8-52ec-b71e-8ea5b52fdc75",
+      "item_links": 47,
+      "trace_usage": {
+        "run_id": "lab3-codex-off-20261113-v2",
+        "completed_turns": 45,
+        "generations": 138,
+        "langfuse_usage": {
+          "input": 1137927,
+          "output": 23167
+        },
+        "mismatches": [],
+        "last_trace": "59f745012fa35fe195bb14f4f1430743"
+      },
+      "partial_trace_audit": [
+        {
+          "case_id": "long_01_mothbridge_ledger",
+          "turn": 7,
+          "status": "timeout",
+          "trace_id": "4658ae303beb05fe5836159b4f136b1f",
+          "generations": 28,
+          "complete_generations": 28,
+          "partial_generations": 0,
+          "native_usage": {
+            "model_calls": 29,
+            "max_context_tokens": 10324,
+            "input_tokens": null,
+            "output_tokens": null,
+            "codex_cli_usage": null,
+            "tool_calls": 19,
+            "api_cost": 0.0,
+            "latency_ms": 335097.2394370001
+          },
+          "observations_path": "raw/codex/lab3-codex-off-20261113-v2-27a9dddcdfa6/7.partial-observations.json"
+        },
+        {
+          "case_id": "long_03_observatory_purse",
+          "turn": 6,
+          "status": "timeout",
+          "trace_id": "a59a4e2aaa3469fdb54c67fbb829341d",
+          "generations": 24,
+          "complete_generations": 24,
+          "partial_generations": 0,
+          "native_usage": {
+            "model_calls": 25,
+            "max_context_tokens": 12046,
+            "input_tokens": null,
+            "output_tokens": null,
+            "codex_cli_usage": null,
+            "tool_calls": 13,
+            "api_cost": 0.0,
+            "latency_ms": 334614.4286910021
+          },
+          "observations_path": "raw/codex/lab3-codex-off-20261113-v2-14c74deae783/6.partial-observations.json"
+        }
+      ]
+    },
+    {
+      "run_id": "lab3-codex-budgeted-20261113-v2",
+      "experiment_id": "1f09c491-3da5-57e9-a26a-b7db236e9e7c",
+      "item_links": 47,
+      "trace_usage": {
+        "run_id": "lab3-codex-budgeted-20261113-v2",
+        "completed_turns": 45,
+        "generations": 213,
+        "langfuse_usage": {
+          "input": 1802529,
+          "output": 82522
+        },
+        "mismatches": [],
+        "last_trace": "9aef35698f9f2d764091385e28e86230"
+      },
+      "partial_trace_audit": [
+        {
+          "case_id": "long_01_mothbridge_ledger",
+          "turn": 3,
+          "status": "timeout",
+          "trace_id": "1557435e08bafc895f1a3493e1cee673",
+          "generations": 16,
+          "complete_generations": 16,
+          "partial_generations": 0,
+          "native_usage": {
+            "model_calls": 17,
+            "max_context_tokens": 12378,
+            "input_tokens": null,
+            "output_tokens": null,
+            "codex_cli_usage": null,
+            "tool_calls": 9,
+            "api_cost": 0.0,
+            "latency_ms": 333766.2445419992
+          },
+          "observations_path": "raw/codex/lab3-codex-budgeted-20261113-v2-9d8b3e5f7d35/3.partial-observations.json"
+        },
+        {
+          "case_id": "long_02_orla_chest",
+          "turn": 7,
+          "status": "timeout",
+          "trace_id": "87dd024e385ae3edfab89153c4465e05",
+          "generations": 15,
+          "complete_generations": 15,
+          "partial_generations": 0,
+          "native_usage": {
+            "model_calls": 16,
+            "max_context_tokens": 12684,
+            "input_tokens": null,
+            "output_tokens": null,
+            "codex_cli_usage": null,
+            "tool_calls": 7,
+            "api_cost": 0.0,
+            "latency_ms": 334028.5745669971
+          },
+          "observations_path": "raw/codex/lab3-codex-budgeted-20261113-v2-9450f5d5f2cd/7.partial-observations.json"
+        }
+      ]
+    }
+  ]
+}

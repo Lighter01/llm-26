@@ -1,0 +1,7 @@
+{
+  "measured_commit": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+  "runtime_files_verified_against_commit": 48,
+  "all_four_common_fingerprint": "6617ad5236789f2e4e5beb57c42341883dcbf2cce2f4d276bbd67e1c79c05a26",
+  "mismatches": [],
+  "offline_evaluator": "separate evaluation_provenance hashes; initial raw scores are diagnostic, scored_turns authoritative"
+}
