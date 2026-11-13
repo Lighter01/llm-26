@@ -1,5 +1,20 @@
 # Демонстрация DM-помощника
 
+## Разбор сохранённых результатов в Langfuse
+
+Этот маршрут предназначен для объяснения уже измеренной лабораторной без нового ожидания генераций. Он не меняет результаты и не запускает модель. Если на защите потребуется живой многоходовой диалог, команды приведены в следующих разделах.
+
+1. Откройте [четыре основных Experiments](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/experiments?filter=name%3Bstring%3B%3Bcontains%3B20261113-v2). У каждой клетки 47 items — реплики 15 задач. Через `Columns → Experiment Scores` включите `task_success_rate` и `completion_rate`. Объясните различие: правильная задача требует всех критериев всех проверяемых ходов; завершённый runtime сам по себе этого не гарантирует.
+2. Откройте [own/off Mothbridge, turn 3](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/aa9c826f4dd52a3f6dc467cfa6b5e3db). В дереве найдите ChatOpenAI, search_rules → retrieval и safe_summary → context_summary. У generation доступны input/output/usage; у tool — реальные аргументы и result.
+3. Выберите [compaction_completed → Metadata](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/aa9c826f4dd52a3f6dc467cfa6b5e3db?observation=3bfe62d635be8c09&traceTab=attributes). Покажите before 10 777, after 6 162 и preserved_current_task. В соседних compaction/context_summary находятся сокращаемая история и новая память; raw-журнал остаётся целиком.
+4. Откройте [финальный own/off Mothbridge turn](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/74d0d23f76b66826f76059b6d59897b8): 44 gp, принятый состав, party 5 × 4 и сюжетные факты сохранены после трёх summary. Для примера потери памяти покажите [own/off Orla turn 9](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/cb0cadfb38a4e346d1aa97c3796339f9): сумма и предметы остались, owner CR 3 / Relics потеряны.
+5. Покажите [неудачный Codex/off Mothbridge turn 7](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/4658ae303beb05fe5836159b4f136b1f). Повторяются LLM и lookup, completed = 0, видимый Output является промежуточным обещанием действий. Известные токены не превращаются в полный расход: у оборванного запроса нет ответа/usage.
+6. Вернитесь к таблицам и пяти ответам в [отчёте](../../report/LAB3_REPORT.md). Покажите success по типу/сложности, history before/after, retrieval и цену reasoning во времени/токенах. Для критериев конкретной реплики используйте вкладку `Scores` её trace; для связи всех ходов — ссылку `session`.
+
+Автоматические Latency/Error Count/Total Cost в Experiments относятся к служебному dataset-evaluation observation, связывающему item и настоящий trace. Для сравнения агентов используйте загруженные Experiment Scores и фактические AgentReply/run wall/generation usage из отчёта. Усреднённые Trace Scores по 47 репликам отличаются от итогов по 15 задачам. Это особенно важно при показе таймаутов Codex.
+
+Снимки этого маршрута включены в отчёт. Данные и ссылки относятся к measured commit7954685; последующие исправления приложения раскрыты отдельно. Langfuse и его volumes должны сохраняться локально; `.env` содержит настройки входа и не входит в Git. Репетицию этого маршрута выполняет автор защиты.
+
 ## Запуск и два связанных решения
 
 После настройки `.env`, локального Langfuse и зависимостей:

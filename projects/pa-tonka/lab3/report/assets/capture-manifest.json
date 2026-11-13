@@ -1,0 +1,90 @@
+{
+  "langfuse_version": "4.79.0",
+  "measured_commit": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
+  "method": "Playwright screenshot of authenticated local Langfuse; original pixels, no image editing",
+  "timezone": "Europe/Moscow",
+  "captures": [
+    {
+      "file": "01-experiments.png",
+      "url": "http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/experiments?filter=name%3Bstring%3B%3Bcontains%3B20261113-v2",
+      "description": "Four final v2 experiments and experiment-level completion/task-success scores",
+      "captured_at": "2026-11-13T03:26:18.010Z",
+      "viewport": {
+        "width": 1600,
+        "height": 650
+      },
+      "capture_options": {},
+      "sha256": "917e92408662c18056106ccc27438fc0347f176acaa189209418049a98a73e5a",
+      "visible_text_sha256": "26d6b8dd770f3d86314731a62ee6cb98a96172520899e4838943ebaa286fc215",
+      "required_text": [
+        "lab3-codex-budgeted-20261113-v2",
+        "lab3-own-budgeted-20261113-v2",
+        "lab3-codex-off-20261113-v2",
+        "lab3-own-off-20261113-v2",
+        "task_success_rate",
+        "completion_rate"
+      ]
+    },
+    {
+      "file": "02-agent-retrieval-tree.png",
+      "url": "http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/aa9c826f4dd52a3f6dc467cfa6b5e3db",
+      "description": "Own/off Mothbridge turn3: native generations, MCP search_rules, nested retrieval and context_summary",
+      "captured_at": "2026-11-13T03:23:04.058Z",
+      "viewport": {
+        "width": 1600,
+        "height": 1100
+      },
+      "sha256": "77d7de10e7d46a6c82f7e5e6639d2ddc725640751d378ca43695e5ffdf5f3a16",
+      "visible_text_sha256": "09120c60a1d5f6227fbf083677ee6f5da37495d8bfff927cc8b84546a4073cdd",
+      "required_text": [
+        "aa9c826f4dd52a3f6dc467cfa6b5e3db",
+        "context_summary",
+        "search_rules",
+        "retrieval",
+        "44 gp"
+      ]
+    },
+    {
+      "file": "03-compaction-budget.png",
+      "url": "http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/aa9c826f4dd52a3f6dc467cfa6b5e3db?observation=3bfe62d635be8c09&traceTab=attributes",
+      "description": "Own/off Mothbridge turn3: measured compaction10777→6162 and protected current task; focused metadata region",
+      "captured_at": "2026-11-13T03:26:19.814Z",
+      "viewport": {
+        "width": 1600,
+        "height": 1100
+      },
+      "capture_options": {
+        "clip": {
+          "x": 200,
+          "y": 40,
+          "width": 1400,
+          "height": 500
+        }
+      },
+      "sha256": "d914442e146605edfa0d2162df4a6b0537093410862345877527ac5dafbc9a60",
+      "visible_text_sha256": "fd32b15d290f6af1cd1fc0c6f28aa1f2ffc1df7f176f8a7d559446843d66a07f",
+      "required_text": [
+        "compaction_completed",
+        "10777",
+        "6162",
+        "preserved_current_task"
+      ]
+    },
+    {
+      "file": "04-codex-timeout.png",
+      "url": "http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/4658ae303beb05fe5836159b4f136b1f",
+      "description": "Codex/off Mothbridge turn7: repeated native requests/tools before retained timeout",
+      "captured_at": "2026-11-13T03:24:11.027Z",
+      "viewport": {
+        "width": 1600,
+        "height": 1100
+      },
+      "sha256": "864ad2ceeaa34e23395e47dc6793246971bcf0099ab0320528f96422a2bcd3c4",
+      "visible_text_sha256": "36d0cbf827c89a4f9fc168a9ebf8d74d77aa394fffcd1c60eda789225b24a3fb",
+      "required_text": [
+        "4658ae303beb05fe5836159b4f136b1f",
+        "Codex Turn"
+      ]
+    }
+  ]
+}
