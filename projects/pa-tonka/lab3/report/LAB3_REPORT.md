@@ -121,6 +121,12 @@ Tool counts здесь обозначают наблюдаемые заверш�
 
 Десять размеченных retrieval turns на клетку; missing required search получает0. Короткие выдачи используют прежние full-manifest denominators. Результат отражает также выбор запроса/инструмента агентом, не только качество embedding index.
 
+## Наблюдаемый результат
+
+На этом наборе budgeted повысил strict task success с4до8из15 у own и с6до9 у Codex. Среднее adapter time выросло21.64→41.99s и45.49→85.13s соответственно. Улучшение различается по группам сложности; все3длинных целиком провалены по строгому all-criteria правилу во всех4клетках, хотя отдельные финальные recall успешны. Два тайм-аута в каждой Codex-клетке — зафиксированный предел штатного поиска/compaction, а не причина подбирать новый успешный ответ.
+
+Эти наблюдения показывают стоимость reasoning и чувствительность агентного цикла к памяти. Они не дают оценки дисперсии или универсального превосходства режима. Арифметика tools и качество объяснения/сохранения состояния оцениваются отдельно.
+
 ## Реальная компактизация и память
 
 | Agent/mode | Scenario | Events | Recorded reductions/data | Final recall failed criteria | Last turn |
@@ -167,7 +173,7 @@ Tool counts здесь обозначают наблюдаемые заверш�
 
 ## Проверки, демонстрация и ограничения
 
-Перед финальной заморозкой:620 non-live Python tests passed,1 saved-artifact skip,84 deselected; Ruff clean; Node ingestion47/47; Python ingestion integration77 passed на существующем resolved build без пересборки книг. Полный saved-artifact audit прошёл60executions/188turns, профили/native counter parity/источники/recompute и47Experimentlinks на клетку. Все606generations завершённых turns сверены с native usage;83полученных generations частичных traces также сохранены,4прерванных ответа не имеют usage. Post-fix shared-stack probe прошёл: Any-habitat MCP, по2turns обоих клиентов, последний trace и exporter dedup (off/11000, вне матрицы). Актуальные финальные test/review gates — в [verification.json](../results/lab3/verification.json).
+Финальная проверка:639 non-live Python tests passed,84 deselected за29.03s; saved-artifact test включён через DM_SAVED_RUNS и прошёл, Ruff clean; Node ingestion47/47; Python ingestion integration77 passed на существующем resolved build без пересборки книг. Полный saved-artifact audit прошёл60executions/188turns, профили/native counter parity/источники/recompute и47Experimentlinks на клетку. Все606generations завершённых turns сверены с native usage;83полученных generations частичных traces также сохранены,4прерванных ответа не имеют usage. Post-fix shared-stack probe прошёл: Any-habitat MCP, по2turns обоих клиентов, последний trace и exporter dedup (off/11000, вне матрицы). Актуальные финальные test/review gates — в [verification.json](../results/lab3/verification.json).
 
 Реальные пробы проверили count↔usage parity Chat/Responses в off/budgeted, StreamableHTTP MCP, обе exec/resume ветки, последний turn и dedup exporter, repeated summary, PTY CLI/new/status/exit и error presentation. Ни результаты второй лабораторной, ни исследовательские заметки не используются как доказательство нового приложения.
 

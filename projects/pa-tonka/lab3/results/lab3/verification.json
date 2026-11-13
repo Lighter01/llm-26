@@ -7,7 +7,7 @@
   "node_ingestion": "47passed (unchanged source)",
   "ingestion_integration": "77passed on existing resolved build",
   "dataset_integration": "1passed/5deselected",
-  "full_non_live": "pending native task-done",
+  "full_non_live": "639passed,84deselected,29.03s; DM_SAVED_RUNS explicit4 directories, artifact test passed (no skip)",
   "independent_review": "pending",
   "postfix_live": "passed: Any-habitat actual MCP and2turns peragent, last trace and exporter dedup; off/11000 diagnostic excluded from matrix",
   "runs": [
