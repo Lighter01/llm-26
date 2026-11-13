@@ -214,6 +214,9 @@ async def run_dataset(
             for number, case in enumerate(item.turns, 1):
                 turn_id = f'{run_id}/{item.id}/{number}'
                 events = []
+                # Session IDs span turns; an exception before the adapter writes
+                # this turn's snapshot must not reuse the preceding observation.
+                getattr(adapter, 'last_records', {}).pop(sid, None)
                 try:
                     reply = await adapter.ainvoke(
                         sid,

@@ -1,6 +1,7 @@
 """Isolated Codex exec/resume adapter and pinned closed-rollout exporter."""
 
 import asyncio
+import fcntl
 import json
 import os
 import shutil
@@ -16,6 +17,7 @@ from dotenv import dotenv_values
 
 from dnd_rag.agent.contracts import AgentReply, ContextStats
 from dnd_rag.agent.service import SYSTEM_PROMPT
+from dnd_rag.runtime.processes import owned_process_groups
 
 
 def parse_events(stdout):
@@ -109,31 +111,81 @@ def config_args(config, prefix=''):
     return result
 
 
-async def _capture_owned(process, *, timeout, data=None):
-    # Cancelling communicate discards bytes already read from its pipes. Keep one
-    # capture alive through timeout/cancellation, and reap only our process group.
-    capture = asyncio.create_task(process.communicate(data))
+async def _spawn_owned(*argv, **kwargs):
+    # A private inherited lease proves group ownership after its leader exits.
+    lease = tempfile.TemporaryFile()
+    fcntl.flock(lease, fcntl.LOCK_EX)
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *argv, **kwargs, start_new_session=True, pass_fds=(lease.fileno(),)
+        )
+    except BaseException:
+        lease.close()
+        raise
+    return process, lease
+
+
+async def _capture_owned(process, lease, *, timeout, data=None):
+    # Keep already read bytes outside cancellable stream tasks, including when a
+    # descendant holds a pipe after the leader has exited.
+    buffers = [bytearray(), bytearray()]
+
+    async def read(stream, buffer):
+        if stream is not None:
+            while chunk := await stream.read(65536):
+                buffer.extend(chunk)
+
+    async def feed():
+        if process.stdin is not None:
+            try:
+                if data is not None:
+                    process.stdin.write(data)
+                    await process.stdin.drain()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            finally:
+                process.stdin.close()
+
+    async def communicate():
+        await asyncio.gather(
+            read(process.stdout, buffers[0]),
+            read(process.stderr, buffers[1]),
+            feed(),
+            process.wait(),
+        )
+
+    def terminate(sig):
+        groups = owned_process_groups({process.pid: process.returncode is None}, lease.fileno())
+        for group in groups:
+            try:
+                os.killpg(group, sig)
+            except ProcessLookupError:
+                pass
+
+    capture = asyncio.create_task(communicate())
     cancelled = timed_out = False
     try:
-        stdout, stderr = await asyncio.wait_for(asyncio.shield(capture), timeout=timeout)
+        await asyncio.wait_for(asyncio.shield(capture), timeout=timeout)
     except (TimeoutError, asyncio.CancelledError) as interrupted:
         cancelled = isinstance(interrupted, asyncio.CancelledError)
         timed_out = True
-        if process.returncode is None:
-            try:
-                os.killpg(process.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
+        terminate(signal.SIGTERM)
         try:
-            stdout, stderr = await asyncio.wait_for(asyncio.shield(capture), timeout=5)
+            await asyncio.wait_for(asyncio.shield(capture), timeout=5)
         except TimeoutError:
-            if process.returncode is None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            stdout, stderr = await capture
-    return stdout, stderr, timed_out, cancelled
+            terminate(signal.SIGKILL)
+            try:
+                await asyncio.wait_for(asyncio.shield(capture), timeout=5)
+            except TimeoutError:
+                buffers[1].extend(b'\nOwned subprocess pipes did not close after shutdown\n')
+                # Bound even a pipe inherited outside the verified original
+                # group; never signal an unverified or reused process group.
+                process._transport.close()
+                capture.cancel()
+                await asyncio.wait({capture}, timeout=1)
+    finally:
+        lease.close()
+    return bytes(buffers[0]), bytes(buffers[1]), timed_out, cancelled
 
 
 class CodexRunner:
@@ -214,7 +266,7 @@ class CodexRunner:
             'LANGFUSE_CODEX_ENVIRONMENT': 'lab3',
             'LANGFUSE_CODEX_TAGS': json.dumps(['lab3', 'codex', self.mode]),
         }
-        process = await asyncio.create_subprocess_exec(
+        process, lease = await _spawn_owned(
             self.node,
             str(self.plugin),
             env=env,
@@ -222,10 +274,10 @@ class CodexRunner:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            start_new_session=True,
         )
         stdout, stderr, timed_out, cancelled = await _capture_owned(
             process,
+            lease,
             timeout=90,
             data=json.dumps(
                 {
@@ -290,7 +342,7 @@ class CodexRunner:
         wire_offset = wire_path.stat().st_size if wire_path.exists() else 0
         argv = self.command(session_id, user_text)
         (directory / f'{number}.argv.json').write_text(json.dumps(argv, indent=2))
-        process = await asyncio.create_subprocess_exec(
+        process, lease = await _spawn_owned(
             *argv,
             cwd=self.work,
             env={
@@ -301,9 +353,10 @@ class CodexRunner:
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            start_new_session=True,
         )
-        stdout, stderr, timed_out, cancelled = await _capture_owned(process, timeout=self.timeout)
+        stdout, stderr, timed_out, cancelled = await _capture_owned(
+            process, lease, timeout=self.timeout
+        )
         out, err = stdout.decode(errors='replace'), stderr.decode(errors='replace')
         (directory / f'{number}.stdout.jsonl').write_text(out)
         (directory / f'{number}.stderr.log').write_text(err)

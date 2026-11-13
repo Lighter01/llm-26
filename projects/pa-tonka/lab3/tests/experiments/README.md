@@ -5,3 +5,5 @@
 `test_dataset_runner.py` —60 fake executions/188 turns, изоляция, отсутствие gold в inputs, exact evidence и offline recompute. `test_scoring.py` — pending semantics, реальные loot results, required constraints, исправление аргументов и полный retrieval manifest. Raw/observability probes запускаются отдельно на живом stack.
 
 `test_provenance.py` проверяет изменение frozen identity при изменении YAML descriptions/MJS exporter и согласованный context9500. `test_saved_artifacts.py` проверяет по DM_SAVED_RUNS60 реальных executions/188turns, isolated sessions, полный manifest/source registry, обязательную compaction и offline identity; без явно выбранных артефактов skipped.
+
+`test_codex.py` также проверяет exited leader с живым держателем stdout, сохранение bytes/native ID при timeout, ограничение последнего wait при утрате ownership lease и выживание чужой группы. `test_dataset_runner.py` воспроизводит успешный первый ход и исключение второго до записи snapshot: старые tools/events/wire не копируются.

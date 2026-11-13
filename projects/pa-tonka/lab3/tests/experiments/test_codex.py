@@ -349,3 +349,105 @@ def test_cancelling_export_stops_its_owned_child_and_keeps_log(tmp_path):
         assert 'before cancel' in (tmp_path / 'results/scope/1.export.log').read_text()
 
     asyncio.run(run())
+
+
+def test_timeout_after_leader_exit_stops_pipe_holder_and_preserves_stdout(tmp_path, monkeypatch):
+    import asyncio
+    import os
+    import signal
+    import subprocess
+    import sys
+
+    from tests.rag.test_runtime import running
+
+    pid_file = tmp_path / 'descendant.pid'
+    runner, _ = _capture_runner(tmp_path, monkeypatch, [], timeout=0.1)
+    code = """
+import os,sys,time
+from pathlib import Path
+print('{"type":"thread.started","thread_id":"native"}',flush=True)
+if os.fork() == 0:
+    Path(sys.argv[1]).write_text(str(os.getpid()))
+    time.sleep(30)
+else:
+    os._exit(0)
+"""
+    monkeypatch.setattr(
+        runner, 'command', lambda *a, **k: [sys.executable, '-c', code, str(pid_file)]
+    )
+    sentinel = subprocess.Popen(
+        [sys.executable, '-c', 'import time;time.sleep(30)'], start_new_session=True
+    )
+
+    async def run():
+        task = asyncio.create_task(runner.ainvoke('scope', 'Question', turn_id='turn'))
+        try:
+            done, _ = await asyncio.wait({task}, timeout=6.5)
+            assert done, 'Capture hung after the leader exited and its timeout elapsed'
+            reply = task.result()
+            assert reply.status == 'timeout'
+            assert runner.sessions['scope']['id'] == 'native'
+            assert 'thread.started' in (tmp_path / 'results/scope/1.stdout.jsonl').read_text()
+            assert not running(int(pid_file.read_text()))
+            assert sentinel.poll() is None
+        finally:
+            if pid_file.exists() and running(int(pid_file.read_text())):
+                os.kill(int(pid_file.read_text()), signal.SIGKILL)
+            if not task.done():
+                await asyncio.wait({task}, timeout=2)
+
+    try:
+        asyncio.run(run())
+    finally:
+        sentinel.terminate()
+        sentinel.wait(timeout=5)
+
+
+def test_capture_final_wait_is_bounded_when_pipe_holder_closes_ownership_lease(tmp_path):
+    import asyncio
+    import os
+    import signal
+    import sys
+
+    from dnd_rag.experiments.codex import _capture_owned, _spawn_owned
+    from tests.rag.test_runtime import running
+
+    pid_file = tmp_path / 'unverifiable.pid'
+    code = """
+import os,sys,time
+from pathlib import Path
+print('already received bytes',flush=True)
+if os.fork() == 0:
+    os.closerange(3, 1024)
+    Path(sys.argv[1]).write_text(str(os.getpid()))
+    time.sleep(30)
+else:
+    os._exit(0)
+"""
+
+    async def run():
+        process, lease = await _spawn_owned(
+            sys.executable,
+            '-c',
+            code,
+            str(pid_file),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        task = asyncio.create_task(_capture_owned(process, lease, timeout=0.1))
+        try:
+            done, _ = await asyncio.wait({task}, timeout=12)
+            assert done, 'Final pipe wait must remain bounded without ownership proof'
+            stdout, stderr, timed_out, cancelled = task.result()
+            assert stdout == b'already received bytes\n'
+            assert b'pipes did not close' in stderr
+            assert timed_out and not cancelled
+            # No valid lease remains; do not signal a possibly reused group ID.
+            assert running(int(pid_file.read_text()))
+        finally:
+            if pid_file.exists() and running(int(pid_file.read_text())):
+                os.kill(int(pid_file.read_text()), signal.SIGKILL)
+            if not task.done():
+                await asyncio.wait({task}, timeout=2)
+
+    asyncio.run(run())

@@ -57,6 +57,44 @@ class FakeAdapter:
         self.closed.append(sid)
 
 
+def test_adapter_failure_does_not_reuse_previous_turn_records(tmp_path):
+    from dnd_rag.experiments.runner import run_dataset
+
+    dataset = fixture_dataset()
+    item = dataset.items[8].model_copy(update={'turns': dataset.items[8].turns[:2]})
+    dataset = dataset.model_copy(update={'items': [item]})
+
+    class FailingSecondTurn(FakeAdapter):
+        async def ainvoke(self, sid, text, **kwargs):
+            if self.calls:
+                raise RuntimeError('Spawn failed before any observation was published')
+            reply = await super().ainvoke(sid, text, **kwargs)
+            self.last_records[sid] = {
+                'tools': [{'tool': 'roll_loot', 'arguments': {}, 'result': {'gp': 19}}],
+                'events': [{'kind': 'first-turn'}],
+                'wire': [{'kind': 'request', 'id': 'first-turn'}],
+            }
+            return reply
+
+    asyncio.run(
+        run_dataset(
+            dataset,
+            FailingSecondTurn(),
+            run_id='failure',
+            mode='off',
+            agent='own',
+            artifacts_dir=tmp_path,
+        )
+    )
+    records = [
+        json.loads(line) for line in (tmp_path / 'failure/turns.jsonl').read_text().splitlines()
+    ]
+    assert len(records[0]['tools']) == 1
+    assert records[1]['reply']['error']['code'] == 'adapter_error'
+    assert records[1]['raw_records'] == {}
+    assert records[1]['tools'] == records[1]['events'] == []
+
+
 def test_recompute_recovers_timeout_tools_without_modifying_original_records():
     from copy import deepcopy
 
