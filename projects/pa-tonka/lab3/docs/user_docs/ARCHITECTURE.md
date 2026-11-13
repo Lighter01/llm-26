@@ -203,4 +203,11 @@ SIGINT (обычно Ctrl+C) и SIGTERM запускают [cleanup](GLOSSARY.md
 | Оценка | [experiments](../../src/dnd_rag/experiments/README.md), [evaluation](../../src/dnd_rag/evaluation/README.md) | Формальные критерии, review и retrieval-метрики. |
 | Процессы | [runtime](../../src/dnd_rag/runtime/README.md) | Блокировка, проверка готовности и завершение. |
 
-Для первого чтения проследите `run → application_stack → run_cli → AgentService.ainvoke`. Затем изучите `memory.py` и один инструмент. Измерительная ветка начинается в `experiments/commands.py` и использует те же сервисы.
+Для первого знакомства с кодом проследите путь запуска интерактивного чата:
+
+1. Команда `uv run python -m dnd_rag run` обрабатывается в [__main__.py](../../src/dnd_rag/__main__.py) и вызывает функцию `run_application`.
+2. В [runtime/application.py](../../src/dnd_rag/runtime/application.py) функция `run_application` готовит сервисы через `application_stack`, затем запускает терминальный интерфейс функцией `run_cli`.
+3. В [cli.py](../../src/dnd_rag/cli.py) функция `run_cli` читает сообщения пользователя, отображает ответы и для каждой реплики вызывает `AgentService.ainvoke`.
+4. В [agent/service.py](../../src/dnd_rag/agent/service.py) метод `AgentService.ainvoke` выполняет агентный цикл обработки этой реплики.
+
+Затем изучите [memory.py](../../src/dnd_rag/agent/memory.py) и один инструмент. Измерительная ветка начинается в [experiments/commands.py](../../src/dnd_rag/experiments/commands.py) и использует те же сервисы.
