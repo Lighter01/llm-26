@@ -1,14 +1,14 @@
 {
   "measured_commit": "79546850fccc313b7a4ddb1b1e3833f5e76513f5",
-  "release_code_commit": "b825d4e",
+  "release_code_commit": "116b00fd2c7e2de7f633781b274b0439047ccd7b",
   "saved_matrix_audit": "passed:60executions/188turns/60sessions; exact profiles/counter parity/citations/recompute/Experiment links",
   "targeted_boundary_tests": "41passed; six reproduced failures fixed",
   "ruff": "passed",
   "node_ingestion": "47passed (unchanged source)",
   "ingestion_integration": "77passed on existing resolved build",
   "dataset_integration": "1passed/5deselected",
-  "full_non_live": "639passed,84deselected,29.03s; DM_SAVED_RUNS explicit4 directories, artifact test passed (no skip)",
-  "independent_review": "pending",
+  "full_non_live": "646passed,84deselected,37.03s; explicit4 DM_SAVED_RUNS, saved-artifact audit passed with no skip",
+  "independent_review": "completed: fresh gpt-6-astra; Critical0/Important3/Minor0; all3 Important fixed in one RED→GREEN pass, full646passed; no re-review",
   "postfix_live": "passed: Any-habitat actual MCP and2turns peragent, last trace and exporter dedup; off/11000 diagnostic excluded from matrix",
   "runs": [
     {
@@ -159,5 +159,17 @@
         }
       ]
     }
-  ]
+  ],
+  "reviewed_range": "af50bd717eab653a819bbb01b0b0a3780bb1d589..929ff97264f383b199f513806769c94089b5179f",
+  "review_fix_commit": "116b00fd2c7e2de7f633781b274b0439047ccd7b",
+  "review_regressions": "5failed/1passed before fixes; runtime/Codex/runner30passed targeted; additional final pipe-wait bound included in full646",
+  "release_process_probe": {
+    "codex": "codex-cli 0.167.0-alpha.4.1",
+    "node": "v24.22.2",
+    "project_lock": "reacquired",
+    "8080": "closed",
+    "8081": "closed",
+    "8765": "closed"
+  },
+  "runtime_cleanup": "project lock reacquired; ports8080/8081/8765 closed; escalated nvidia-smi compute-app list empty"
 }
