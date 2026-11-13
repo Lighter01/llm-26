@@ -171,5 +171,17 @@
     "8081": "closed",
     "8765": "closed"
   },
-  "runtime_cleanup": "project lock reacquired; ports8080/8081/8765 closed; escalated nvidia-smi compute-app list empty"
+  "runtime_cleanup": "project lock reacquired; ports8080/8081/8765 closed; escalated nvidia-smi compute-app list empty",
+  "release_input_formatting": {
+    "commit": "7594da053a08084c266764c3ed2154985739c935",
+    "files": [
+      "src/dnd_rag/agent/prompts/summary.txt",
+      "src/dnd_rag/tools/descriptions.yaml"
+    ],
+    "check": "whitespace-only changes; non-whitespace content and YAML keys unchanged; one messages placeholder",
+    "tests_rerun": false,
+    "model_runs_rerun": false,
+    "reason": "User explicitly requested no test rerun for this formatting change; whitespace may affect tokenization and model behavior.",
+    "measured_commit_unchanged": true
+  }
 }

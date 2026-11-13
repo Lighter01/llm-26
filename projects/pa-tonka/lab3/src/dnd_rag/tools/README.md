@@ -12,11 +12,11 @@
 | `build_encounter` | `party_size > 0`, `party_level` 1–20, `difficulty=low/moderate/high`. | `habitat`, `creature_type`, `total_count` — `None`; `required_monsters=[]`. |
 | `generate_loot` | `kind=individual/hoard`, допустимый `cr` 0–30, включая стандартные дроби. | `count=1`; для hoard обязательны `party_level` 1–20 и `treasure_theme=Arcana/Armaments/Implements/Relics`. |
 
-Количество существ положительно; явный total_count сохраняется точно. Build перебирает не более 256 форм и 3 различных stat blocks; автоматический count — `1..min(12, 2 * party_size)`. `conflict` и `search_exhausted` не выдаются за успех. Hoard имеет одного владельца (`count=1`), CR встречи не суммируется. Алгоритмы и результаты — в [game](../game/README.md).
+Количество существ положительно; явный total_count сохраняется точно. Build перебирает не более 256 форм и 3 различных stat blocks; автоматический count — `1..min(12, 2 * party_size)`. Статус [`conflict`](../../../docs/user_docs/GLOSSARY.md#conflict) означает обнаруженное противоречие обязательных требований, [`search_exhausted`](../../../docs/user_docs/GLOSSARY.md#search_exhausted) — отсутствие найденного состава в пределах перебора. Оба результата не являются успешным подбором. Hoard имеет одного владельца (`count=1`), CR встречи не суммируется. Алгоритмы и результаты — в [game](../game/README.md).
 
 ## Поиск и источники
 
-`search_rules` возвращает полный исходный RetrievalResult: текст, rank/score, chunk/index/build IDs, книгу, разделы, атрибуцию страниц, хэши и Unicode-координаты. Ошибка поиска имеет `error.code/message`; пустой hits — допустимый результат.
+`search_rules` возвращает полный исходный `RetrievalResult`: массив [`hits`](../../../docs/user_docs/GLOSSARY.md#hit) с найденными фрагментами книг. Каждый hit содержит текст, rank/score, chunk/index/build IDs, книгу, разделы, атрибуцию страниц, хэши и Unicode-координаты. Ошибка поиска содержит код и сообщение в `error`; пустой массив `hits` допустим.
 
 HTTP-header `X-DND-Session-Id` задаёт scope нумерации; модель не передаёт его аргументом инструмента. Карта citations компактна, исходный текст не дублируется. При отсутствии scope номера не выдаются из общей глобальной сессии.
 

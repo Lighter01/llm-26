@@ -1,15 +1,42 @@
 # Адаптеры и измерения
 
-`contracts.py` — AgentAdapter с одинаковым AgentReply для двух клиентов. `codex.py` — CodexRunner: exec/resume по конкретному ID, пустой cwd в /tmp, explicit config, timeout/cancellation cleanup, raw stdout/stderr и копия исходного rollout. Existing CODEX_HOME используется только для поиска собственного session; личные настройки не меняются.
+Модуль исполняет один фиксированный датасет на двух агентах, сохраняет исходные ответы и отдельно вычисляет оценки. Команды и параметры — в [CLI](../../../docs/user_docs/CLI.md#измерения-и-оценивание), методика — в [EVALUATION](../../../docs/user_docs/EVALUATION.md), определения — в [глоссарии](../../../docs/user_docs/GLOSSARY.md).
 
-После каждого turn вызывается закреплённый официальный exporter с max_history_chars=0/fail_on_error=true. Trace ID выводится детерминированно из session/turn; v2 readback требует generations/input/output/usage, последнюю реплику и ожидаемые фактические tools. Отсутствие trace — incomplete, отсутствие usage — None. Повторный export использует upstream sidecar dedup на исходном rollout.
+## От задания к оценке
 
-Код адаптера не читает expected_output/evidence и не передаёт их агенту. Доступные Codex встроенные инструменты отфильтрованы на wire-границе до общих MCP game functions; собственные внутренние инструкции и compaction Codex сохранены.
+1. `dataset.py` проверяет задания и эталонные координаты источников независимо от результатов поиска.
+2. `runner.py` передаёт агенту только текущий пользовательский текст, исполняет реплики по порядку и связывает их с Langfuse Experiments. Каждая задача получает отдельную сессию.
+3. `scoring.py` проверяет фактические tools/ответы; смысловые критерии остаются `pending` до заполнения `review.csv`.
+4. `artifacts.py` сохраняет исходные JSONL/CSV, выполняет офлайн-переоценку и сравнивает совместимость прогонов по fingerprint.
 
-`contracts.py` задаёт dataset/case/scores/run contracts. `dataset.py` независимо проверяет exact evidence до запуска. `runner.py` исполняет фиксированные turns с изолированными sessions и связывает их с event-based Langfuse Experiments. `scoring.py` проверяет реальные outputs/ограничения, сохраняет pending rubric и использует прежнюю retrieval математику. `artifacts.py` хранит JSONL/CSV, делает offline recompute и сравнение fingerprint. `commands.py` связывает эти функции с общим launcher; CLI не разбирает ANSI-ответы чата.
+Эталоны `expected_output/evidence` не передаются агенту. Полный исходный ответ сохраняется; нормализация ошибок MCP применяется только к производным scored-артефактам. Переоценка не запускает генерацию заново.
 
-Freeze включает Python, prompts, YAML tool descriptions, MJS exporters, catalog/config/model identities. Ошибки MCP failed/error приводятся к общему error только в производных scored-артефактах; полный исходный payload не изменяется. Offline evaluator и review CSV имеют отдельные хэши.
+## Адаптер Codex
 
-Capture exec/exporter хранит прочитанные bytes независимо от отменяемых stream tasks. Собственная наследуемая FLOCK lease подтверждает владение группой и после выхода лидера. Timeout/cancellation посылают TERM, затем при необходимости KILL с двумя ограниченными ожиданиями по 5 s. Последний pipe wait тоже ограничен: если потомок закрыл lease и владение больше не доказуемо, каналы закрываются с диагностикой в stderr; непроверенная группа не завершается. Exact native session ID, closed original rollout и wire сохраняются до повторного проброса отмены. Rollout и полный export log архивируются до trace readback; ошибка Langfuse не уничтожает исходное доказательство.
+[CodexRunner](codex.py) использует штатные `exec/resume` с точным ID сессии, явной конфигурацией и пустым рабочим каталогом в `/tmp`. Личные настройки не редактируются; используемый `CODEX_HOME` нужен для поиска собственного журнала. На HTTP-границе остаются только пять общих MCP functions. Внутренние инструкции и compaction Codex сохраняются.
 
-Перед каждым вызовом runner очищает прежний last_records для данной session. Исключение до публикации нового snapshot создаёт ошибку текущего хода с пустыми tools/wire, без повторного использования результатов предыдущей реплики.
+После завершения текущего хода адаптер архивирует [rollout](../../../docs/user_docs/GLOSSARY.md#rollout), JSONL-журнал событий Codex, и запускает [экспортер](../../../configs/baseline/README.md#экспортер-что-он-переносит). Этот Node.js-скрипт переносит события в Langfuse без усечения истории по символам. Повторная отправка использует служебное состояние рядом с исходным rollout для дедупликации.
+
+Затем `verify_trace` выполняет [readback](../../../docs/user_docs/GLOSSARY.md#readback): читает observations API Langfuse, проверяя generations, их вход/выход/usage, ожидаемые фактические tools и полный последний ответ ассистента на текущий запрос. Trace ID детерминированно связан с сессией и номером реплики. Отсутствие подтверждённых данных отражается в статусе; неизвестные токеновые итоги остаются `None`.
+
+### Вывод процессов и ошибки
+
+`_capture_owned` сохраняет уже прочитанные stdout/stderr Codex и экспортера при таймауте или отмене. Собственная наследуемая FLOCK-блокировка подтверждает владение группой процессов, в том числе после выхода лидера. TERM/KILL и ожидание закрытия каналов ограничены по времени; непроверенная группа не завершается. Механизм объяснён в [runtime](../runtime/README.md#сбор-вывода-codex-и-экспортера).
+
+Native session ID, исходный rollout и фактические HTTP-данные [wire](../../../docs/user_docs/GLOSSARY.md#wire) сохраняются до повторного проброса отмены. Копия rollout и журнал экспортера записываются до readback: ошибка Langfuse не уничтожает эти материалы.
+
+Перед каждым ходом очищается прежний `last_records` данной сессии. Если новый вызов завершился исключением до публикации результата, tools/wire этого хода остаются пустыми; записи предыдущей реплики не подставляются.
+
+## Версии и воспроизводимость
+
+Заморозка исходников включает Python, TXT-промпты, YAML-описания tools, MJS-скрипты подготовки данных, конфигурации и идентификаторы каталога/модели. Fingerprint позволяет обнаружить различия входных условий; evaluator и `review.csv` имеют отдельные хэши, потому что работают после генерации.
+
+| Файл | Ответственность |
+| --- | --- |
+| [contracts.py](contracts.py) | `AgentAdapter`, контракты датасета, критериев и прогона. |
+| [dataset.py](dataset.py) | Загрузка и независимая проверка эталонных источников. |
+| [runner.py](runner.py) | Реплики, сессии, исходные результаты и связи Langfuse Experiments. |
+| [codex.py](codex.py) | Готовый агент, процессы, rollout, экспорт и readback. |
+| [scoring.py](scoring.py) | Формальные критерии, смысловая worksheet и retrieval-метрики. |
+| [artifacts.py](artifacts.py) | JSONL/CSV, recompute и сводка совместимых прогонов. |
+| [commands.py](commands.py) | Связь команд CLI с общим launcher. |

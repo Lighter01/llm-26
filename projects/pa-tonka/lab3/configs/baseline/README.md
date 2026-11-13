@@ -1,10 +1,45 @@
 # Готовый агент Codex
 
-`codex.toml` задаёт явные overrides для установленного Codex 0.167.0-alpha.4.1. Runner применяет их к `codex exec --ignore-user-config --strict-config --json --skip-git-repo-check` в пустом cwd, затем использует конкретный session ID для `exec resume`. Личный config не редактируется. Сервисы: тот же llama-server Responses endpoint и общий MCP; пять разрешённых MCP names. Shell, unified exec, apps, JS, memory и multi-agent отключены, web disabled. Фактический набор проверяется live, внутренние инструкции Codex остаются свойством готового агента.
+Baseline — установленный Codex CLI **0.167.0-alpha.4.1**, который работает с той же локальной GGUF-моделью и пятью MCP-инструментами, что и собственный агент. [CodexRunner](../../src/dnd_rag/experiments/codex.py) запускает его и переносит результаты в общие контракты; штатные решения о действиях и сокращении истории остаются внутри Codex.
 
-`remote_compaction="unsupported"` в capabilities провайдера выбирает штатную local compaction, серверное окно 16384 и порог compaction 9 500 заданы явно. Сжатие не подменяется middleware собственного агента. Effort none используется только для off; budgeted runner заменяет транспортное effort на medium, реальный бюджет 512 задаёт общий серверный профиль. Native low/minimal этим не обещаются.
+## Конфигурация и изоляция
 
-Официальный [Codex observability plugin](https://github.com/langfuse/codex-observability-plugin/tree/e1d02be28e6bacbfe350a1bc1ccf861e54edee17) закреплён на commit `e1d02be28e6bacbfe350a1bc1ccf861e54edee17`. Установка после clone в `.runtime/codex-plugin`:
+| Файл | Назначение |
+| --- | --- |
+| [codex.toml](codex.toml) | Явные настройки модели, окна, compaction, разрешённых инструментов и локального MCP. |
+| [models.json](models.json) | Каталог локального alias: `tool_mode=direct`, окно 16K и штатная fallback-инструкция установленного Codex. |
+
+Runner передаёт настройки через `codex exec --ignore-user-config --strict-config --json --skip-git-repo-check` в пустом временном каталоге. Следующие реплики запускаются через `exec resume` с точным native session ID. Используемый `CODEX_HOME` нужен для поиска собственного журнала сессии; личный config и Stop hook не редактируются.
+
+Shell, unified exec, apps, JS, memory, multi-agent и web отключены. Разрешены пять общих MCP names; `approval_mode=approve` относится к этим явно разрешённым локальным инструментам. Модельные weights остаются локальными, хотя `models.json` использует fallback-инструкцию [OpenAI Codex](https://github.com/openai/codex), Apache-2.0.
+
+## Контекст и профиль модели
+
+`remote_compaction="unsupported"` выбирает штатную local compaction Codex. Серверное окно — **16 384**, порог сокращения — **9 500**. Middleware собственного агента в этот цикл не подставляется.
+
+В режиме `off` используется effort `none`. Для `budgeted` runner задаёт транспортное effort `medium`, а общий [серверный профиль](../llm/README.md) ограничивает reasoning block 512 токенами. Это не поддержка native `low/minimal` и не отдельный бюджет сверх общего лимита ответа.
+
+## Зачем нужен proxy 8081 → 8080
+
+Codex 0.167 передаёт схемы tools в формате `additional_tools/namespace`, который llama build 11046 не поддерживает. Локальный [HTTP-посредник](../../src/dnd_rag/runtime/codex_proxy.py) принимает Responses-запросы на порту **8081**, переносит схемы в поддерживаемый формат functions и обращается к llama.cpp на порту **8080**. Runner подставляет адрес посредника вместо исходного `base_url` из TOML.
+
+Имена преобразуются обратимо; исходные и преобразованные запросы сохраняются в [wire-журнале](../../docs/user_docs/GLOSSARY.md#wire). Собственного планировщика или compaction у посредника нет. Он использует FastAPI/httpx из `uv.lock`; отдельная установка для proxy не нужна.
+
+## Экспортер: что он переносит
+
+Экспортер — Node.js-скрипт официального [Codex observability plugin](https://github.com/langfuse/codex-observability-plugin/tree/e1d02be28e6bacbfe350a1bc1ccf861e54edee17), закреплённого на commit `e1d02be28e6bacbfe350a1bc1ccf861e54edee17`. Он читает [rollout](../../docs/user_docs/GLOSSARY.md#rollout), собственный JSONL-журнал событий Codex, и создаёт observations в локальном Langfuse.
+
+После каждой реплики адаптер выполняет последовательность:
+
+1. Дожидается завершения текущего `exec/resume` и сохраняет копию журнала вместе со stdout/stderr.
+2. Запускает экспортер на исходном журнале; тот отправляет события в Langfuse и завершает отправку перед выходом.
+3. Сохраняет полный журнал экспортера и выполняет [readback](../../docs/user_docs/GLOSSARY.md#readback): читает API Langfuse, проверяя generations, доступный usage, ожидаемые tools и полный последний ответ ассистента на текущую реплику.
+
+Повторный экспорт использует служебный файл рядом с исходным rollout для защиты от дубликатов. Такая [дедупликация](../../docs/user_docs/GLOSSARY.md#deduplication) проверена отдельной сквозной пробой; она не проверяется заново при каждом обычном readback. Исходные rollout/wire сохраняются и при ошибке чтения Langfuse. После compaction восстановленный экспортером вход генерации может отличаться от реального HTTP-запроса; последний нужно смотреть в wire.
+
+### Установка
+
+Нужен **Node ≥22.22.2**; проверен Node 24.22.2 из ingestion. Из корня lab3 выполните:
 
 ```bash
 git clone https://github.com/langfuse/codex-observability-plugin .runtime/codex-plugin
@@ -13,8 +48,13 @@ npm exec --yes --package=pnpm@9.5.0 -- pnpm --dir .runtime/codex-plugin install 
 npm --prefix .runtime/codex-plugin run build
 ```
 
-Node ≥22.22.2 (проверен Node 24.22.2 из ingestion); npm resolution без upstream lock дало peer conflict, поэтому используется pnpm lock. Собранный entrypoint `.runtime/codex-plugin/plugins/tracing/dist/index.mjs` вызывается адаптером на закрытом rollout после каждого turn с flush, fail_on_error=true и max_history_chars=0. Личный Stop hook и доверие к нему не меняются. Повторный export использует upstream sidecar dedup. Переменные TRACE_TO_LANGFUSE=true, LANGFUSE_CODEX_USER_ID=lab3-local, LANGFUSE_CODEX_MAX_HISTORY_CHARS=0 включаются только в окружении экспортера. Полнота последнего turn и resume подтверждается [сквозными проверками](../../docs/rag/VALIDATION.md).
+Сборка создаёт `.runtime/codex-plugin/plugins/tracing/dist/index.mjs`. Используется upstream pnpm lock: установка через npm без него дала конфликт peer dependencies.
 
-`models.json` — явный каталог локального alias для Codex 0.167, tool_mode=direct, shell disabled и фактический 16K контекст. Он сохраняет штатную fallback base instruction установленного Codex (исходный проект Apache-2.0: https://github.com/openai/codex); weights не заменяются моделью OpenAI. Для benchmark MCP dnd установлен approval_mode=approve в рамках явно разрешённых локальных tools, личный config не меняется.
+| Настройка окружения экспортера | Значение и смысл |
+| --- | --- |
+| `TRACE_TO_LANGFUSE` | `true`: включить отправку. |
+| `LANGFUSE_CODEX_USER_ID` | `lab3-local`: пользователь локального эксперимента. |
+| `LANGFUSE_CODEX_MAX_HISTORY_CHARS` | `0`: не усекать историю по числу символов. |
+| `LANGFUSE_CODEX_FAIL_ON_ERROR` | `true`: ошибка экспорта должна завершать процесс с ошибкой. |
 
-Codex 0.167 сериализует tool schemas как input additional_tools с namespaces. llama build 11046 этот формат не поддерживает. Поэтому Codex использует loopback compatibility endpoint `8081`, который обращается к тому же серверу 8080: переносит схемы, обратимо меняет namespace/name, сохраняет original/effective payload и native count/usage parity. В wire catalog остаются только общие MCP functions. Это транспортный адаптер, без планировщика или замены истории/компактизации. Для setup нужен тот же FastAPI/httpx из lock.
+Runner задаёт эти переменные только дочернему процессу экспортера. Ключи и адрес Langfuse берутся из локального окружения проекта. Параметры установки и реально проверенная полнота resume/последнего ответа описаны в [VALIDATION](../../docs/rag/VALIDATION.md), устройство результатов — в [EVALUATION](../../docs/user_docs/EVALUATION.md).

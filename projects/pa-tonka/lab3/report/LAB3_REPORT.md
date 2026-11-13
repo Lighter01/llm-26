@@ -2,7 +2,7 @@
 
 ## Фактическое приложение
 
-Реализованы самостоятельный RAG, пять общих StreamableHTTP MCP-инструментов, LangChain create_agent с памятью, Codex exec/resume со штатной local compaction, локальный Langfuse, Rich/prompt_toolkit CLI и воспроизводимый runner. Игровые вычисления и случайность находятся в инструментах; модель выбирает вызовы и объясняет их. Успешное выполнение runtime не гарантирует правильный ответ модели.
+Реализованы самостоятельный RAG, пять общих StreamableHTTP MCP-инструментов, LangChain create_agent с памятью, Codex exec/resume со штатной local compaction, локальный Langfuse, Rich/prompt_toolkit CLI и воспроизводимый runner. Игровые вычисления и случайность находятся в инструментах; модель выбирает вызовы и объясняет их. Успешное выполнение runtime не гарантирует правильный ответ модели. Определения терминов и кодов ошибок — в [глоссарии](../docs/user_docs/GLOSSARY.md).
 
 ```mermaid
 flowchart LR
@@ -42,7 +42,7 @@ RAG-конфигурация не зависит от dataset, gold, LLM или 
 
 ## Инструменты
 
-search_rules возвращает исходный текст с точными spans/hash и stable IDs. lookup_monsters отдаёт текущие XMM stat blocks. evaluate_encounter считает суммуXP без множителей 2014 и классифицирует точный заданный состав. build_encounter сохраняет required counts, фильтры и exact total; ограниченный поиск: ≤ 256 форм, ≤ 3 stat blocks не выдаёт search_exhausted за доказательство невозможности. generate_loot возвращает реальные деньги, имена/редкости предметов, rolls и source tables; один individual roll умножается на homogeneous count, hoard требует явных ownerCR/party level/theme.
+search_rules возвращает исходный текст с точными spans/hash и stable IDs. lookup_monsters отдаёт текущие XMM stat blocks. evaluate_encounter считает сумму XP без множителей 2014 и классифицирует точный заданный состав. build_encounter сохраняет required counts, фильтры и exact total; ограниченный поиск: ≤ 256 форм, ≤ 3 stat blocks не выдаёт search_exhausted за доказательство невозможности. generate_loot возвращает реальные деньги, имена/редкости предметов, rolls и source tables; один individual roll умножается на homogeneous count, hoard требует явных ownerCR/party level/theme.
 
 Номера citations выдаются MCP по программному session header, сохраняются в registry и переживают summary. Валидатор допускает только фактически зарегистрированные source IDs этого диалога. Он не доказывает semantic support: модель может сослаться на реальный номер к неподходящему утверждению. Неизвестные номера не исправляются выдуманными ссылками.
 
@@ -50,7 +50,7 @@ search_rules возвращает исходный текст с точными 
 
 Физическое окно обеих конфигураций — 16 384 токена, общий output reserve — 2 048, safety margin — 256. Оба агента настроены на порог 9 500 токенов. Sampling во всех четырёх actual argv: temperature 0.0, top_p 1.0, top_k 40, min_p 0.0, seed 42, prompt cache выключен. Own повторяет параметры в body; Codex наследует их от своего сервера. Off: enable_thinking=false, effort=none, budget 0. Budgeted: thinking=true, 512 токенов на reasoning block, общий output reserve остаётся 2 048. Это не обещание native low/minimal effort. Отдельный reasoning-token breakdown API не всегда предоставляет; отсутствующие значения не превращаются в 0.
 
-Own считает весь фактический serialized body, включая system/tools/calls/results, родным input_tokens endpoint и сверяет результат с usage. Summary использует весь заменяемый prefix, предыдущий summary и защищённый recent/current suffix; резерв summary — 1 024 токена. Текущий Human exchange и полные tool pairs не удаляются. Если protected exchange или полный summary input не помещается, возвращается явная ошибка. Установленный SDK умеет скрыто отрезать середину при overflow retry, поэтому этот путь заменён full-prefix summarizer без trim. Оборванный по output limit summary не принимается.
+Own считает весь фактический serialized body, включая system/tools/calls/results, родным input_tokens endpoint и сверяет результат с usage. Суммаризатор получает весь заменяемый prefix, включая предыдущее summary; recent/current suffix сохраняется в следующем запросе без замены. Резерв summary — 1 024 токена. Текущий Human exchange и полные tool pairs не удаляются. Если protected exchange или полный summary input не помещается, возвращается явная ошибка. Установленный SDK умеет скрыто отрезать середину при overflow retry, поэтому этот путь заменён full-prefix summarizer без trim. Оборванный по output limit summary не принимается.
 
 Summary+recent сохраняет контекст последних решений и сжимает более старые объяснения. Sliding deletion потеряла бы ранний случайный payout; отдельный fact store потребовал бы дополнительного извлечения/синхронизации. Стратегия не гарантирует сохранность каждого факта: потери ownerCR/theme и XP category обнаружены фактически. Полный исходный журнал остаётся независимо от активной памяти.
 
@@ -67,6 +67,8 @@ SDK 5 отправляет данные в events-only Langfuse 4; legacy traces
 Официальный MinIO image endpoint оказался недоступен; локальный Compose использует сборку того же pinned official MinIO release из проверенного исходного архива. Сетевые порты внутренних БД не публикуются. [Воспроизводимое окружение](../infra/README.md).
 
 Итоговая матрица измеряет commit `7954685`. После окончания матрицы в финальном приложении исправлены учёт usage/неполной генерации, захват/очистка процессов при timeout/cancellation/export failure, сохранение completed parallel-tool pending writes и совместимость Any-habitat с конкретной средой. Any может изменить будущие candidate pools; точные performance-числа относятся к 7954685, а не к финальному релизу. Измеренные own summary все завершились finish=stop; их токены не требуют реконструкции. Каждый процесс основной матрицы исполнял зафиксированную версию. Исходные ответы не переписаны; последующие запуски исправленного приложения получают новый fingerprint.
+
+При редактуре документации в `7594da0` также изменены только пробельные символы `summary.txt` и `descriptions.yaml`: убраны переносы внутри предложений, выделены абзацы и исправлены склейки чисел. Статическая проверка подтвердила сохранение всех непробельных символов и шаблона `{messages}`. Такие изменения могут влиять на токенизацию и ответы; по поручению пользователя тесты и модельные прогоны после них не повторялись. Измеренная версия `7954685` и исходные артефакты сохранены.
 
 ## Набор и оценивание
 
@@ -91,10 +93,10 @@ Task success требует всех обязательных критериев
 | codex/off | 13/15 | 6/15 (40.0%) | unknown / unknown | 45.49 | 2085.215 | 38 |
 | codex/budgeted | 13/15 | 9/15 (60.0%) | unknown / unknown | 85.134 | 3869.714 | 56 |
 
-codex/off: наблюдаемая нижняя граница ≥1640638 input / ≥32552 output; usage ещё 2 генераций неизвестен, общая сумма остаётся null.
-codex/budgeted: наблюдаемая нижняя граница ≥2108207 input / ≥97655 output; usage ещё 2 генераций неизвестен, общая сумма остаётся null.
+- codex/off: наблюдаемая нижняя граница ≥1640638 input / ≥32552 output; usage ещё 2 генераций неизвестен, общая сумма остаётся null.
+- codex/budgeted: наблюдаемая нижняя граница ≥2108207 input / ≥97655 output; usage ещё 2 генераций неизвестен, общая сумма остаётся null.
 
-Adapter latency включает расходы адаптера; Codex export/readback выполняются внутри adapter, дополнительный own readback выполняет runner. Для общего сравнения приведён run wall после readiness. API-cost всех локальных запусков — 0; энергия, оборудование и труд оценки не включены. Unknown usage остаётсяnull. Reasoning включён в доступный output usage; отдельный reasoning breakdown не подменяется догадкой.
+Adapter latency включает расходы адаптера; Codex export/readback выполняются внутри adapter, дополнительный own readback выполняет runner. Для общего сравнения приведён run wall после readiness. API-cost всех локальных запусков — 0; энергия, оборудование и труд оценки не включены. Unknown usage остаётся null. Reasoning включён в доступный output usage; отдельный reasoning breakdown не подменяется догадкой.
 
 | Agent/mode | Single | Short dialogue | Long dialogue | Easy | Medium | Hard |
 | --- | --- | --- | --- | --- | --- | --- |

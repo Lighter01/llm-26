@@ -1,6 +1,6 @@
 # Эксперименты и оценивание
 
-Оценивание разделяет три вопроса: выполнился ли агент технически, решил ли задачу правильно и сохранил ли историю. Команды — в [CLI](CLI.md#измерения-и-оценивание), результаты четырёх клеток — в [отчёте](../../report/LAB3_REPORT.md).
+Оценивание разделяет три вопроса: выполнился ли агент технически, решил ли задачу правильно и сохранил ли историю. Команды — в [CLI](CLI.md#измерения-и-оценивание), результаты четырёх клеток — в [отчёте](../../report/LAB3_REPORT.md), определения терминов — в [глоссарии](GLOSSARY.md).
 
 - [Набор и условия сравнения](#набор-и-условия-сравнения)
 - [Порядок оценивания](#порядок-оценивания)
@@ -22,7 +22,7 @@
 
 Всего 47 реплик на клетку, 60 выполнений задач / 188 реплик в матрице own/Codex × off/budgeted. `item` — одна задача, `turn` — реплика, `session` — её диалог. Следующая задача и следующая конфигурация получают новую сессию. Агенту передаётся только текущий пользовательский input; gold, checks и rubric исключены из модельного запроса.
 
-Для 10 retrieval-реплик заранее проверены quote, body/hash, раздел, Unicode-координаты и строки исходника. Некоторые правила повторяются: это не 10 независимых тем. Quote-only resolver допускает ровно одно совпадение в секции, а actual search hits не используются как эталон.
+Для 10 retrieval-реплик заранее проверены quote, body/hash, раздел, Unicode-координаты и строки исходника. Некоторые правила повторяются: это не 10 независимых тем. Quote-only resolver допускает ровно одно совпадение в секции; фактически найденные фрагменты ([hits](GLOSSARY.md#hit)) не используются как эталон.
 
 Общий fingerprint связывает dataset/selection, corpus/index/build, каталог, GGUF/template и рабочие prompts/tools/config/adapter. Все четыре клетки должны иметь одинаковый common fingerprint; профиль и Git HEAD сохраняются отдельно.
 
@@ -45,10 +45,10 @@
 | `turns.jsonl`, `tool_calls.jsonl` | Исходные ответы, usage, события, квитанции tools и первоначальные scores. |
 | `review.csv` | Отдельные смысловые критерии с явным методом и обоснованием. |
 | `scored_turns.jsonl`, `scored_tool_calls.jsonl`, `metrics.json` | Единое производное представление после recompute. |
-| `raw/own`, `raw/codex` | Полный журнал либо stdout/stderr/argv, закрытый rollout и export/readback. |
+| `raw/own`, `raw/codex` | Полный журнал собственного агента; для Codex — stdout/stderr/argv, копия JSONL-журнала сессии, логи экспорта и ответ API Langfuse. |
 | `citations/<session>.json` | Реестр фактических источников, включая номера до summary. |
 
-Wire-журнал хранит original/effective Responses payload и native count/usage, включая compaction. Экспортер Codex восстанавливает transcript по rollout: его input после compaction может отличаться от wire. Неизвестные значения остаются `null`; локальная API-стоимость равна 0.
+[Wire-журнал](GLOSSARY.md#wire) хранит фактические Responses-запросы до и после преобразования proxy, ответы и native count/usage, включая compaction. [Экспортер Codex](../../configs/baseline/README.md#экспортер-что-он-переносит) восстанавливает вход генерации по JSONL-журналу событий (rollout); после compaction он может отличаться от реально отправленного HTTP-запроса. Неизвестные значения остаются `null`; локальная API-стоимость равна 0.
 
 ## Метрики и знаменатели
 
@@ -98,6 +98,6 @@ Tool errors считаются по всем завершённым попытк
 
 ## Как читать Langfuse
 
-SDK 5 / Compose 4 используют event-based Experiments. Служебный observation связывает dataset item с настоящим trace через закреплённые OTel attributes; API readback проверяет связи, generations/usage и последнюю реплику.
+SDK 5 / Compose 4 используют event-based Experiments. Служебная запись Langfuse ([observation](GLOSSARY.md#observation)) связывает задание датасета с настоящим trace через атрибуты OpenTelemetry. Последующее чтение API Langfuse ([readback](GLOSSARY.md#readback)) проверяет связи, записи генераций/usage и полный последний ответ ассистента на соответствующий пользовательский запрос.
 
 **Experiment Scores** completion/task success относятся к задачам прогона; **Trace Scores** — к отдельным репликам. Автоматические Latency/Error Count/Total Cost служебных observations не заменяют время и исходы агента. Для анализа используйте реальные agent traces, AgentReply/run wall и generation usage. Снимки и примеры — в [отчёте](../../report/LAB3_REPORT.md#скриншоты-реального-langfuse), маршрут показа — в [DEMO](DEMO.md).

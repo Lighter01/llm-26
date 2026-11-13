@@ -1,6 +1,6 @@
 # Установка, запуск и команды
 
-Команды выполняются из корня `lab3` через `uv run python -m dnd_rag`. Устройство системы — в [ARCHITECTURE](ARCHITECTURE.md), формулы и файлы измерений — в [EVALUATION](EVALUATION.md).
+Команды выполняются из корня `lab3` через `uv run python -m dnd_rag`. Устройство системы — в [ARCHITECTURE](ARCHITECTURE.md), формулы и файлы измерений — в [EVALUATION](EVALUATION.md), определения терминов — в [глоссарии](GLOSSARY.md).
 
 - [Какой сценарий выбрать](#какой-сценарий-выбрать)
 - [Быстрый запуск](#быстрый-запуск)
@@ -40,7 +40,7 @@ cp -n .env.example .env
 
 ### 2. Проверить локальные зависимости
 
-В `.env` задайте пути `LLAMA_SERVER_BIN` и `LLM_MODEL_PATH`, адреса и ключи Langfuse. Инструкция [infra](../../infra/README.md) описывает Compose и инициализацию проекта. Для Codex дополнительно нужен установленный CLI и [закреплённый exporter](../../configs/baseline/README.md). Запустите Docker engine.
+В `.env` задайте пути `LLAMA_SERVER_BIN` и `LLM_MODEL_PATH`, адреса и ключи Langfuse. Инструкция [infra](../../infra/README.md) описывает Compose и инициализацию проекта. Для Codex дополнительно нужен установленный CLI и [экспортер событий в Langfuse](../../configs/baseline/README.md#экспортер-что-он-переносит) с Node ≥22.22.2. Запустите Docker engine.
 
 Готовый `.env.example` рассчитан на `~/.llama-app/llama` с `server_subcommand: serve`. Для отдельного `llama-server` согласуйте путь и `server_subcommand: null` в [LLM-профиле](../../configs/llm/README.md).
 
@@ -65,7 +65,7 @@ uv run python -m dnd_rag run --llm-profile configs/llm/off.yaml
 | `LANGFUSE_BASE_URL` | `http://127.0.0.1:3000`. |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | SDK-ключи локального проекта, обязательны для агентного стека. |
 
-MCP использует `8765/mcp`, compatibility proxy Codex — `8081/v1`. Секреты и локальные данные исключены из Git. Настройки LLM не требуются для самостоятельного retrieval.
+MCP использует `8765/mcp`. Локальный [proxy Codex](../../src/dnd_rag/runtime/README.md#http-посредник-codex) принимает запросы на `8081/v1` и обращается к llama.cpp на порту `8080`. Секреты и локальные данные исключены из Git. Настройки LLM не требуются для самостоятельного retrieval.
 
 ## Диалог и сквозная проверка
 
@@ -207,10 +207,11 @@ uv run python -m dnd_rag reset-index --config configs/rag/r3.yaml
 
 | Симптом | Действие |
 | --- | --- |
-| `runtime_busy` | Завершите прежний runtime; живой ребёнок может удерживать lock. Не удаляйте lock-файл для обхода. |
+| `runtime_busy` | Завершите прежний запуск; живой дочерний процесс может удерживать системную блокировку. Удаление lock-файла не освобождает её; [механизм остановки](../../src/dnd_rag/runtime/README.md#остановка-и-блокировки). |
 | Занят порт | Остановите владельца сервиса; приложение не завершает чужие процессы. |
 | Ошибка Langfuse | Проверьте Docker, адрес и SDK-ключи проекта. |
-| `context_budget` | Уменьшите запрос/выдачу либо начните новый диалог; история не усекается скрыто. |
+| `context_budget` | Полный вход не помещается в порог агента. Сократите текущий запрос или выдачу tools. Новый диалог помогает только за счёт удаления старой истории. |
+| `context_overflow` | Полный вход с резервом ответа превышает физическое окно. Ограничение относится и к входу суммаризатора; [подробности](ARCHITECTURE.md#как-заменяется-история). |
 | `run_exists` | Выберите новый run-id, сохранив прежние результаты. |
 
 Ошибки основного CLI идут в stderr. Код 2 обозначает неверные аргументы/конфигурацию, 1 — сбой выполнения; специальные значения score/smoke/evaluate описаны выше. Ctrl+C в чате обрабатывается как штатный выход. Проверки и условия live-проб перечислены в [VALIDATION](../rag/VALIDATION.md).
