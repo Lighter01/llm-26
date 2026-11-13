@@ -8,4 +8,4 @@
 
 `game/` проверяет каталоги и чистые игровые правила на маленьких независимых fixtures, без сети и LLM.
 
-`experiments/test_provenance.py` проверяет изменение freeze при изменении tool descriptions/exporter и общий порог9500 после реального overflow. `test_saved_artifacts.py` проверяет выбранные через DM_SAVED_RUNS четыре локальных прогона, полноту ссылок, compaction и идентичность recompute; без переменной явно skipped.
+`experiments/test_provenance.py` проверяет изменение freeze при изменении tool descriptions/exporter и общий порог 9500 после реального overflow. `test_saved_artifacts.py` проверяет выбранные через DM_SAVED_RUNS четыре локальных прогона, полноту ссылок, compaction и идентичность recompute; без переменной явно skipped.

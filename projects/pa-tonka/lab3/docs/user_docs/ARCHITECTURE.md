@@ -1,63 +1,182 @@
-# Архитектура
+# Архитектура DM-помощника
 
-Канонические XPHB/XDMG/XMM Markdown и source_map → точные Unicode half-open spans → EmbeddingGemma 2 GPU-worker → собственный Qdrant. QueryEncoder работает на CPU и сохраняется между запросами. Retriever возвращает исходный текст, scores, index/build IDs, sections, честные page attribution и hashes.
+Агент помогает Dungeon Master готовить сцены: выбирает инструменты, ищет правила D&D 2024/2025 и объясняет расчёты. XP и добычу вычисляет Python. Диалог сохраняет сообщения и результаты инструментов между репликами.
 
-Рабочий RagConfig не зависит от датасета, оценивания, LLM и интерфейса. R3/R9 меняют embedding input и build identity, не точность привязки к исходнику. Index manifest содержит весь набор chunks для независимого Recall/MRR. Отсутствие gold не препятствует поиску.
+Команды — в [CLI](CLI.md), методика измерений — в [EVALUATION](EVALUATION.md), результаты — в [отчёте](../../report/LAB3_REPORT.md). Для изучения реализации начните с [карты кода](#карта-кода).
 
-RuntimeSession владеет lock и дочерними process groups. Смерть parent не освобождает унаследованную блокировку, пока жив child; cleanup не завершает посторонние процессы. Неопределённая ошибка endpoint не означает свободный порт. Qdrant изолирован портами 6343/6344 и data/qdrant; ready collection проверяется по паспорту, payloads, количеству и ownership.
+- [Общая схема](#общая-схема)
+- [От книг к инструментам](#от-книг-к-инструментам)
+- [Путь одной реплики](#путь-одной-реплики)
+- [Контекст и память](#контекст-и-память)
+- [Собственный агент и Codex](#собственный-агент-и-codex)
+- [Трейсы и результаты](#трейсы-и-результаты)
+- [Процессы и хранилища](#процессы-и-хранилища)
+- [Карта кода](#карта-кода)
 
-Обычные SIGINT/SIGTERM проходят через cleanup, включая короткое окно создания/регистрации child; handlers восстанавливаются. SIGKILL оставляет унаследованный lock у живого child. Codex exec/exporter используют отдельную наследуемую ownership lease: вышедший лидер не отменяет право остановить подтверждённую группу. Даже при утрате доказательства владения последнее ожидание stdout ограничено, прочитанные bytes сохраняются, непроверенный PGID не завершается. Runner сбрасывает прежний snapshot перед новым ходом, поэтому ошибка запуска не повторяет предыдущие tool results.
+## Общая схема
 
-Математика retrieval-оценивания сохранена: пересечение ≥50% меньшего span, hash equality, P/R@1/5/10, MRR@10; короткая выдача не меняет знаменатель Precision. Локальные метрики и live-пробы относятся к lab3 только после нового запуска.
+```mermaid
+flowchart LR
+    CLI["Интерактивный CLI"] --> Own["AgentService / LangChain"]
+    Runs["Runner фиксированного набора"] --> Own
+    Runs --> Codex["Codex exec / resume"]
+    Own --> Chat["NativeLLM: Chat API + подсчёт"]
+    Codex --> Proxy["Адаптер Responses"]
+    Chat --> LLM["Одна локальная GGUF-модель"]
+    Proxy --> LLM
+    Own <--> MCP["Общий MCP: 5 инструментов"]
+    Codex <--> MCP
+    MCP --> RAG["CPU retriever + Qdrant"]
+    MCP --> Game["Игровой каталог + расчёты"]
+    Own -.-> Logs["Langfuse и полные журналы"]
+    Codex -.-> Logs
+```
 
-## Модель и подсчёт
+CLI и runner используют общие контракты. Retrieval независим от LLM, эталонов и Langfuse. Streamlit отложен.
 
-NativeLLM переиспользует ChatOpenAI и родной GGUF tokenizer. HTTP-hook видит итоговый wire body после сериализации OpenAI: system, messages, schemas, calls/results, template и reasoning поля. Перед отправкой body без изменения передаётся native input_tokens. Guard проверяет `input + completion reserve + safety <= server window`; после ответа проверяет parity с usage. Messages-only счётчик и tiktoken не используются как замена полной проверки.
+## От книг к инструментам
 
-Предварительный body для middleware строится тем же ChatOpenAI serializer. Счётчик физического окна остаётся последней защитой в самом transport. Отдельный порог приложения 9500 нужен для последующего сокращения; он не равен окну сервера 16384. Off отправляет enable_thinking=false/effort=none/budget0, budgeted — true/budget512 без none; CLI сервера получает тот же профиль.
+### Два независимых представления данных
 
-## Наблюдаемость и общий транспорт
+| Ветка | Подготовка | Для чего используется |
+| --- | --- | --- |
+| RAG | Markdown XPHB/XDMG/XMM и `source_map` → чанки → EmbeddingGemma 2 → Qdrant. | Найти исходный текст правила и подтвердить его происхождение. |
+| Игровой каталог | Закреплённые JSON 5etools → проверенный снимок существ, предметов и таблиц. | Получить stat block, рассчитать встречу или бросить добычу. |
 
-Один StreamableHTTP MCP публикует рабочие инструменты обоим агентам. Retrieval остаётся чистым и не зависит от Langfuse. ObservationRecorder создаёт trace на turn с session/user/tags; tool и вложенный retrieval используют тот же фактический результат. Полный независимый JSONL сохраняется в `.runtime/sessions/<session>/turns.jsonl`; summary впоследствии не удаляет исходный журнал.
+Чанк хранит точный срез канонического текста книги (`body`), Unicode-диапазон `[start_char, end_char)`, строки, разделы и хэши. Атрибуция страниц сохраняет исходную точность. R3/R9 меняют обработку заголовков во входе эмбеддера, сохраняя текст цитаты и координаты; настройки входят в identity индекса.
 
-Langfuse SDK5.2.0 отправляет данные в локальный Compose4.79.0 и вызывает flush перед выходом. Для собственного агента подключается официальный LangChain CallbackHandler. Codex exporter восстанавливает transcript по rollout; его generation input не обещается точной копией wire payload после native compaction. Полнота generation/usage/tools и последней реплики проверяется сквозным smoke; одно открытие web UI этого не доказывает.
+Документные векторы строятся на GPU отдельным worker. После его завершения вопросы кодирует постоянный CPU `QueryEncoder`; найденные chunks возвращаются с rank, score и index/build IDs. Manifest содержит все chunks для независимой оценки retrieval.
 
-## Два агентных адаптера
+Каталог содержит 503 существа, 2 297 предметов и 24 таблицы магических предметов. SHA upstream и хэши проверяются до запросов; внутри tool call компиляции нет.
 
-Собственный AgentService использует LangChain create_agent, native tools, checkpointer/thread_id и middleware лимитов12 model/16 tool calls/300s на реплику. Tool errors доступны модели для исправления; timeout/step_limit/context_budget — явные статусы с trace. Native HTTP guard остаётся физической защитой от переполнения. Память сокращает полный предыдущий prefix через SummarizationMiddleware.
+### Пять общих MCP-инструментов
 
-CodexRunner вызывает exec и exec resume по точному ID, без личного config и эталонов, из пустого /tmp cwd. Исходный rollout сохраняется независимо от compaction. Явный model catalog выбирает direct tools и16K; stock base instruction и алгоритм local compaction сохраняются. Из-за фактического несовпадения форматов Codex0.167 и llama11046 используется тонкий proxy8081→8080: additional_tools/namespace переводятся в обычные Responses functions и обратно. Оба клиента используют те же weights, MCP game tools и профиль генерации; original/effective payload и count/usage доступны для аудита. Сравнение учитывает внутренний prompt и счётчик Codex как свойство готового агента.
+| Инструмент | Ответственность |
+| --- | --- |
+| `search_rules` | Поиск исходных правил с текстом и координатами. |
+| `lookup_monsters` | Ограниченная выдача актуальных XMM stat blocks. |
+| `evaluate_encounter` | XP и сложность точно заданного состава. |
+| `build_encounter` | Подбор состава с сохранением обязательных существ и фильтров. |
+| `generate_loot` | Фактические денежные броски и предметы по XDMG. |
 
-Рабочий общий порог установлен9500 после длинного regression probe: при исходных8192 служебный Codex prefix5314 + выдача8252 вызывали повторное сокращение до ответа. Порог11000 прошёл ранний smoke, но в Orla дал полный input14686 + output2048 > window16384; диагностический прогон сохранён, итоговая матрица повторяется на общем9500. Оба агента используют9500 при том же окне16384, reserve2048/safety256. Внутренний Codex счётчик отличается от native wire count; последнее число сохраняется отдельно.
+Описания инструментов хранятся в [descriptions.yaml](../../src/dnd_rag/tools/descriptions.yaml), вычисления — в [game](../../src/dnd_rag/game/README.md). Ограниченный поиск различает `conflict` и `search_exhausted`; случайная добыча сохраняется как конкретный результат, а воспоминание о ней не требует нового броска.
 
-## Подготовленные игровые сущности
+## Путь одной реплики
 
-Каталог отделён от retrieval: guarded local 5etools → нормализация503 XMM monsters и legendary groups → concrete approved item variants →24 XDMG magic tables, individual/hoard и бюджетная таблица2024. Нет сетевого игрового API. Хэши всех семи фактических JSON inputs и четырёх output files связываются с SHA upstream. Каталоги не изменяются при запросе агента. Item groups и generic entries раскрываются до конкретных предметов; отсутствие варианта не превращается в пустую награду.
+```mermaid
+sequenceDiagram
+    participant User as CLI или runner
+    participant Agent as AgentService
+    participant Model as Локальная LLM
+    participant Tools as Общий MCP
+    User->>Agent: session_id, turn_id, пользовательский текст
+    Agent->>Agent: История и полный подсчёт контекста
+    opt История выше порога
+        Agent->>Model: Полный заменяемый prefix
+        Model-->>Agent: Summary + защищённая текущая операция
+    end
+    loop До ответа или ограничения
+        Agent->>Model: Сообщения, схемы и результаты tools
+        Model-->>Agent: Вызов инструмента или ответ
+        opt Запрошен инструмент
+            Agent->>Tools: Имя и аргументы
+            Tools-->>Agent: Фактический result или ошибка
+        end
+    end
+    Agent-->>User: AgentReply: текст, статус, usage, sources, trace
+```
 
-## Пять инструментов
+`session_id` обозначает диалог, `turn_id` — запрос с полным циклом ответа. `InMemorySaver/thread_id` сохраняет сообщения и tool results. Ошибки tools доступны модели для исправления. Лимиты собственного агента: 12 вызовов LLM, 16 вызовов tools, 300 секунд на реплику.
 
-search_rules возвращает исходные фрагменты; lookup_monsters — актуальные ограниченные XMM stat blocks; evaluate_encounter оценивает точный состав; build_encounter подбирает ограниченный состав, сохраняя все обязательные количества; generate_loot бросает реальные деньги/предметы XDMG. Арифметика и случайность находятся в Python, агент выбирает последовательность вызовов и объясняет их результаты. Для группы добыча individual умножает один бросок; для hoard нужны CR владельца, уровень партии и тема. Полный список параметров и технические границы опубликованы в [game](../../src/dnd_rag/game/README.md).
+CLI отображает `AgentEvent`; runner читает `AgentReply` и исходные записи. Оборванный ответ — `incomplete/generation_truncated`; неизвестный usage — `None`.
 
-## Память и компактизация
+## Контекст и память
 
-Собственный агент применяет LangChain SummarizationMiddleware при полном native input выше9500: порог включает system и пять tool schemas. Summary получает весь заменяемый prefix вместе с предыдущим summary; недавний suffix ориентирован на2048 tokens. Последний пользовательский запрос и все его вызовы/результаты защищены как одна операция. Пары tool call/result не разрываются. После прерванной операции отсутствующий результат закрывается явным ToolMessage error, без утверждения об исполнении.
+### Что считается и ограничивается
 
-Summary reserve1024 находится внутри общего completion reserve2048, safety256 остаётся отдельно. Payload самого summary проверяется по физическому окну16384. В установленном LangChain overflow-retry умеет удалять середину даже при trim_tokens_to_summarize=None; собственный summarizer отключает этот путь. Полный prefix либо отправляется целиком, либо возникает диагностическая ошибка. После summary повторно проверяется полный следующий body. Если текущая защищённая операция не помещается, приложение предлагает уменьшить выдачу или начать новый диалог; последние15 сообщений не подставляются скрыто.
+`NativeLLM` считает полный сериализованный запрос токенайзером GGUF: system, историю, схемы инструментов, вызовы/результаты и шаблон. HTTP-hook проверяет body перед отправкой и сверяет count с серверным usage.
 
-Structured English summary сохраняет party, ограничения, обязательных существ, принятые составы, фактическую добычу, источники и открытые вопросы. Summary+recent позволяет продолжать обсуждение с исходными формулировками последних действий. Простое удаление старых сообщений теряло бы первые результаты бросков; отдельный fact store потребовал бы второй недоказанной модели извлечения и синхронизации. Summary также может потерять факт: гарантия касается полного входа и явных ошибок, а семантическую сохранность проверяет длинный сценарий. Исходный JSONL остаётся целиком; summary usage и Langfuse span относятся к вызвавшему его turn. Codex сохраняет собственную native compaction.
+| Настройка | Значение по умолчанию | Назначение |
+| --- | ---: | --- |
+| Физическое окно сервера | 16 384 | Максимальный полный запрос с резервом ответа. |
+| Порог агента | 9 500 | Когда сокращать накопленную историю. |
+| Общий резерв ответа | 2 048 | Включает доступный reasoning и финальный текст. |
+| Safety margin | 256 | Запас физического окна. |
+| Summary / недавняя история | 1 024 / 2 048 | Резерв генерации summary и ориентир сохраняемого suffix. |
 
-Summary отдельно сохраняет явно запрошенные сюжетные факты; конфликт между пользовательским требованием и предположением assistant остаётся открытым вопросом. Ответ summary с finish_reason=length/max_tokens не принимается как новая память: исходная история остаётся, статус summary_truncated объясняет причину.
+Условие допуска: `input + output reserve + safety <= server window`. Профили [off/budgeted](../../configs/llm/README.md) выключают thinking либо задают 512 токенов на reasoning block при том же общем резерве.
 
-## Общий запуск и терминал
+### Как заменяется история
 
-application_stack сначала подтверждает readiness Qdrant/Langfuse, готовит pinned game catalog и index/retriever, дожидается завершения GPU-worker и только затем запускает GGUF. После readiness модели поднимаются loopback MCP8765 и Responses compatibility proxy8081; интерфейс получает готовый AgentService. RuntimeSession удерживает lock и владеет model process group. Uvicorn-потоки останавливаются в finally, чужие серверы не подхватываются. Docker/data остаются после выхода.
+Старая часть истории заменяется сводкой (`summary`); текущая операция сохраняется целиком.
 
-Rich/prompt_toolkit CLI использует тот же async service, history/completion и реальные AgentEvent. patch_stdout сохраняет ANSI Rich; обычные команды не разбирают терминальный текст для измерений. Runner работает через AgentReply и raw records. /status показывает последнее полное измерение input и отдельное server window; во время генерации счётчик не выдумывается.
+1. До порога передаётся вся история диалога.
+2. `SummarizationMiddleware` выбирает завершённые взаимодействия; сводка получает всю заменяемую часть (`prefix`), включая предыдущее summary.
+3. Последний запрос и его вызовы/результаты защищены как одна операция. Пары call/result не разрываются; уже полученные параллельные результаты сохраняются при восстановлении checkpoint.
+4. После замены повторно проверяется полный следующий запрос. При нехватке места возвращается `context_budget`, без скрытого усечения середины.
 
-## Проверяемые номера источников
+[Промпт summary](../../src/dnd_rag/agent/prompts/summary.txt) задаёт разделы партии, ограничений, принятых составов, actual loot, источников и открытых вопросов. Пустое или оборванное summary не заменяет память; потреблённые токены всё равно учитываются. Отсутствующий результат прерванного tool call закрывается явной ошибкой, без утверждения об исполнении.
 
-MCP берёт session scope из программного X-DND-Session-Id; модель не задаёт его в аргументах. CitationRegistry сохраняет monotonic номера в `.runtime/citations/<session>.json` по паре index_id/chunk_id. Повторный поиск оставляет прежний номер, новый диалог начинает собственную нумерацию, summary не очищает registry. В tool payload добавляется компактная карта number→source_id/chunk_id; исходный текст уже находится в hits и не дублируется.
+Защита полного входа не гарантирует смысловую полноту summary: потери фактов измерены в длинных диалогах. Исходный журнал сохраняется целиком.
 
-В конце ответа валидатор разрешает [n] только из фактических search results этого scope. AgentReply возвращает разрешённые sources с точным текстом, spans, hash и исходной attribution; неизвестные номера остаются предупреждением, без придуманной замены. Это проверка допустимости источника, а не доказательство, что он поддерживает каждое утверждение. CLI показывает компактный source block. При отсутствии transport scope поиск остаётся доступен, но source numbers не выдаются.
+## Собственный агент и Codex
 
-Полный raw ответ chat API, включая доступный reasoning_content, сохраняется рядом с generation и в Langfuse span raw-model-response с исходным response_id. Usage остаётся на generation, чтобы не считать его дважды. Отсутствующий отдельный reasoning token count не выдумывается.
+| Свойство | Собственный агент | Готовый агент |
+| --- | --- | --- |
+| Цикл | LangChain `create_agent`. | Штатные `codex exec` и `exec resume`. |
+| Память | Checkpointer и контролируемый summary. | Собственная native compaction Codex. |
+| Контекст | Полный native count и HTTP-guard. | Внутренний счётчик Codex; отдельно сохраняется native wire count. |
+| Общие условия | Одна GGUF, MCP, каталог, датасет и профиль генерации. | Те же общие условия. |
+
+Codex запускается из пустого временного каталога с явной конфигурацией; resume использует точный native ID. Личные настройки не меняются. Адаптер `8081 → 8080` переводит `additional_tools/namespace` в Responses functions и обратно, сохраняя payloads и штатный агентный цикл.
+
+Инструкции, schemas, compaction и счётчики различаются: сравниваются агентные системы. Настройки и установка экспортера — в [baseline](../../configs/baseline/README.md).
+
+## Трейсы и результаты
+
+| Уровень | Что записывается в Langfuse |
+| --- | --- |
+| Диалог / реплика | Session и trace с user, тегами, input/output и итоговым статусом. |
+| Генерация | Полный доступный вход, ответ, параметры, usage и время. |
+| Инструмент / retrieval | Аргументы, result, ошибка; вложенный поиск с chunks и scores. |
+| Контекст | Измерения и отдельные события сокращения: размеры до/после и заменённая история. |
+
+`ObservationRecorder` ведёт полный JSONL в `.runtime/sessions/<session>/turns.jsonl`. Raw response/reasoning сохраняется без повторного начисления usage. Codex экспортирует закрытый rollout; последняя реплика и дедупликация проверяются через API. Rollout/wire сохраняются до readback. Восстановленный exporter input может отличаться от wire после compaction.
+
+Номера `[n]` выдаются только фактическим search hits текущей сессии. `CitationRegistry` сохраняет связь с `index_id/chunk_id` в `.runtime/citations/`; summary её не очищает, `/new` начинает независимую нумерацию. Неизвестные номера дают предупреждение. Проверка регистрации ссылки не доказывает поддержку утверждения источником.
+
+Структура run-артефактов, критерии успеха и различие Trace/Experiment Scores описаны в [EVALUATION](EVALUATION.md). SDK 5 работает с events-only Langfuse 4 через observations/Experiments API.
+
+## Процессы и хранилища
+
+`application_stack`: инфраструктура → каталог → индекс/retriever → завершение GPU-worker → GGUF → MCP/proxy → интерфейс. Перед reuse проверяются владение коллекцией, identity, payloads и количество точек.
+
+| Компонент | Локальный адрес / хранение |
+| --- | --- |
+| Qdrant | `6343/6344`, постоянные данные `data/qdrant/`. |
+| LLM | `8080/v1`, GGUF вне репозитория. |
+| MCP / Responses proxy | `8765/mcp` / `8081/v1`, принадлежат текущему запуску. |
+| Langfuse | `3000`, постоянные Compose volumes. |
+
+`RuntimeSession` удерживает проектный lock и завершает только свои process groups. SIGINT/SIGTERM проходят через cleanup, включая окно регистрации ребёнка. После SIGKILL живой ребёнок сохраняет унаследованный lock. Открытый FLOCK подтверждает владение группой даже после выхода лидера; совпадение PGID или имени lock-файла недостаточно.
+
+Capture Codex/exporter ограничен по времени и сохраняет прочитанный вывод. Непроверенная группа не завершается. MCP/proxy останавливаются при выходе, Docker и данные остаются; детали — в [runtime](../../src/dnd_rag/runtime/README.md).
+
+## Карта кода
+
+| Зона | Точка входа | Ответственность |
+| --- | --- | --- |
+| Команды | [\_\_main\_\_.py](../../src/dnd_rag/__main__.py), [cli.py](../../src/dnd_rag/cli.py) | Аргументы запуска и интерактивный терминал. |
+| Композиция | [runtime/application.py](../../src/dnd_rag/runtime/application.py): `application_stack` | Порядок запуска общих сервисов. |
+| Агент | [agent/service.py](../../src/dnd_rag/agent/service.py): `AgentService.ainvoke` | История, цикл и ограничения. |
+| Память | [agent/memory.py](../../src/dnd_rag/agent/memory.py), [prompts](../../src/dnd_rag/agent/prompts/README.md) | Подсчёт, summary и защищённые взаимодействия. |
+| LLM | [runtime/llm.py](../../src/dnd_rag/runtime/llm.py): `NativeLLM`; [codex_proxy.py](../../src/dnd_rag/runtime/codex_proxy.py) | Native count, guard, Chat/Responses. |
+| MCP и расчёты | [tools/server.py](../../src/dnd_rag/tools/server.py): `create_mcp_server`; [game](../../src/dnd_rag/game/README.md) | Общий API и игровая арифметика. |
+| RAG | [runtime/index.py](../../src/dnd_rag/runtime/index.py): `prepare_retriever`; [retrieval.py](../../src/dnd_rag/retrieval.py) | Подготовка/reuse и поиск. |
+| Корпус и индекс | [indexing](../../src/dnd_rag/indexing/README.md) | Чанки, эмбеддинги, identity и Qdrant. |
+| Наблюдаемость | [observability.py](../../src/dnd_rag/agent/observability.py), [citations.py](../../src/dnd_rag/agent/citations.py) | Трейсы, журнал и реестр источников. |
+| Сравнение | [runner.py](../../src/dnd_rag/experiments/runner.py), [codex.py](../../src/dnd_rag/experiments/codex.py) | Датасет, адаптер Codex, связи Experiments. |
+| Оценка | [experiments](../../src/dnd_rag/experiments/README.md), [evaluation](../../src/dnd_rag/evaluation/README.md) | Формальные критерии, review и retrieval-метрики. |
+| Процессы | [runtime](../../src/dnd_rag/runtime/README.md) | Блокировка, проверка готовности и завершение. |
+
+Для первого чтения проследите `run → application_stack → run_cli → AgentService.ainvoke`. Затем изучите `memory.py` и один инструмент. Измерительная ветка начинается в `experiments/commands.py` и использует те же сервисы.

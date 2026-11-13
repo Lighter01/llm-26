@@ -3,7 +3,7 @@
 Оригинальные снимки настоящего локального Langfuse 4.79.0, сделанные 13 ноября 2026 года. Они иллюстрируют сохранённую матрицу commit `7954685`; новых модельных ответов при подготовке отчёта не создавалось. Снимки получены браузером после входа в локальный проект, без генерации или реконструкции интерфейса.
 
 | Файл | Что показывает |
-|---|---|
+| --- | --- |
 | [01-experiments.png](01-experiments.png) | Четыре основных прогона `20261113-v2`, 47 items на клетку и Experiment Scores completion/task success |
 | [02-agent-retrieval-tree.png](02-agent-retrieval-tree.png) | Own/off Mothbridge turn 3: генерации, общий MCP, вложенный retrieval и summary |
 | [03-compaction-budget.png](03-compaction-budget.png) | Область метаданных compaction_completed: 10 777 → 6 162 токена, защита текущего запроса |

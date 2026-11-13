@@ -1,13 +1,35 @@
-# Локальная наблюдаемость
+# Локальный Langfuse
 
-`langfuse.compose.yaml` основан на [официальном Compose v4.79.0](https://github.com/langfuse/langfuse/blob/v4.79.0/docker-compose.yml), лицензия MIT. Web/worker закреплены на 4.79.0; AI Gateway не включён. PostgreSQL, Redis и ClickHouse доступны только во внутренней сети. Web слушает loopback3000, S3 MinIO — loopback9090/9091. Данные находятся в именованных volumes проекта `dnd-rag-lab3`; Qdrant остаётся отдельным сервисом root Compose с bind `data/qdrant`.
+[langfuse.compose.yaml](langfuse.compose.yaml) основан на [официальном Compose v4.79.0](https://github.com/langfuse/langfuse/blob/v4.79.0/docker-compose.yml), лицензия MIT. Web и worker закреплены на 4.79.0; AI Gateway отключён.
+
+## Компоненты и данные
+
+| Компонент | Доступ / хранение |
+| --- | --- |
+| Langfuse Web | `http://127.0.0.1:3000`. |
+| MinIO S3 / консоль | Loopback-порты `9090` / `9091`. |
+| PostgreSQL, Redis, ClickHouse | Только внутренняя сеть Compose. |
+| Данные Langfuse | Именованные volumes проекта `dnd-rag-lab3`. |
+| Qdrant | Отдельный сервис корневого Compose, bind mount `data/qdrant/`. |
+
+## Настройка и запуск
+
+В `.env` задайте `NEXTAUTH_SECRET`, `ENCRYPTION_KEY` (64 шестнадцатеричных символа), `SALT` и ключи локального проекта. Автоматическая инициализация поддерживается через `LANGFUSE_INIT_*`; секреты не включаются в Git.
 
 ```bash
 docker compose --project-name dnd-rag-lab3 --env-file .env -f compose.yaml -f infra/langfuse.compose.yaml up -d --build langfuse-web langfuse-worker
 ```
 
-`minio.Dockerfile` собирает официальный [MinIO RELEASE.2025-09-07T16-13-09Z](https://github.com/minio/minio/tree/RELEASE.2025-09-07T16-13-09Z) из исходного архива с SHA256. Лицензия AGPL-3.0 включается в образ; исходники общедоступны по ссылке. Причина локальной сборки: registry из upstream Compose вернул403, прежние официальные образы не найдены, binary download вернул410. Первый build требует сети и Go build stage; это не платный доступ. Роль и S3 API сохранены. Не заменяйте образ непроверенным сторонним mirror.
+Для остановки инфраструктуры замените `up -d --build langfuse-web langfuse-worker` на `stop`. Выход из приложения сохраняет контейнеры и volumes. `down -v` удаляет данные и не относится к обычной остановке.
 
-Для setup задайте NEXTAUTH_SECRET, ENCRYPTION_KEY (64hex), SALT и создайте локальный проект/SDK keys. Поддержана автоматическая инициализация через LANGFUSE_INIT_* в `.env`; секреты в Git не включаются. Остановка приложения сохраняет контейнеры/volumes. Явная остановка инфраструктуры: та же Compose-команда с `stop`; `down -v` удаляет данные и не входит в обычный запуск.
+## Почему MinIO собирается локально
 
-Langfuse4 работает в events_only: старые `/api/public/traces` read endpoints отвечают404. Чтение проверяется через SDK5 `api.observations.get_many` (v2) с bounded from/to timestamps; rows группируются по traceId. Dataset/run связи используют актуальный Experiments API. Реальная SDK-проверка отправки и чтения вложенных observations прошла; web health сообщает4.79.0.
+[minio.Dockerfile](minio.Dockerfile) собирает официальный [MinIO RELEASE.2025-09-07T16-13-09Z](https://github.com/minio/minio/tree/RELEASE.2025-09-07T16-13-09Z) из архива с проверкой SHA256. Лицензия AGPL-3.0 включается в образ; исходники доступны по ссылке.
+
+При подготовке окружения registry из upstream Compose вернул HTTP 403, прежние официальные образы оказались недоступны, загрузка бинарника вернула HTTP 410. Поэтому используется закреплённый исходный код с тем же S3 API. Первая сборка требует сети и Go build stage; платного доступа нет.
+
+## Совместимость API
+
+Langfuse 4 работает в `events_only`: прежние `/api/public/traces` read endpoints возвращают HTTP 404. Чтение выполняется через SDK 5 `api.observations.get_many` (v2) с ограниченным временным диапазоном; записи группируются по `traceId`. Связи dataset/run используют Experiments API.
+
+Фактические отправка, вложенность и API-readback проверены; результаты — в [VALIDATION](../docs/rag/VALIDATION.md). Отличия служебных полей Experiments от метрик агента объяснены в [EVALUATION](../docs/user_docs/EVALUATION.md#как-читать-langfuse).

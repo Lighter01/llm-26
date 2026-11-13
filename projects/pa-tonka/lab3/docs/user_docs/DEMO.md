@@ -13,7 +13,7 @@
 
 Автоматические Latency/Error Count/Total Cost в Experiments относятся к служебному dataset-evaluation observation, связывающему item и настоящий trace. Для сравнения агентов используйте загруженные Experiment Scores и фактические AgentReply/run wall/generation usage из отчёта. Усреднённые Trace Scores по 47 репликам отличаются от итогов по 15 задачам. Это особенно важно при показе таймаутов Codex.
 
-Снимки этого маршрута включены в отчёт. Данные и ссылки относятся к measured commit7954685; последующие исправления приложения раскрыты отдельно. Langfuse и его volumes должны сохраняться локально; `.env` содержит настройки входа и не входит в Git. Репетицию этого маршрута выполняет автор защиты.
+Снимки этого маршрута включены в отчёт. Данные и ссылки относятся к measured commit `7954685`; последующие исправления приложения раскрыты отдельно. Langfuse и его volumes должны сохраняться локально; `.env` содержит настройки входа и не входит в Git. Репетицию этого маршрута выполняет автор защиты.
 
 ## Запуск и два связанных решения
 
@@ -31,7 +31,7 @@ CLI показывает реальные этапы инфраструктур�
 3. `For a diagnostic, evaluate one Azure Cathedral Titan without substituting a creature. Explain the actual error.`
 4. `/status`, затем `/new` и `/exit`.
 
-Два Mages дают4600XP; для4×6 это high, для3×6 — above_high. Неизвестное имя должно дать честную ошибку. /status содержит последнее native input/agent limit/% и отдельное server window, session UUID и Langfuse trace link. Новый UUID изолирует следующий диалог; журналы остаются.
+Два Mage дают 4 600 XP: для четырёх персонажей 6-го уровня это high, для трёх — above_high. Неизвестное имя должно дать честную ошибку. /status содержит последнее native input/agent limit/% и отдельное server window, session UUID и Langfuse trace link. Новый UUID изолирует следующий диалог; журналы остаются.
 
 ## Много инструментов, история и реальные summary
 
@@ -43,17 +43,17 @@ uv run python -m dnd_rag evaluate-agents --agent own --mode off --only long_01_m
 
 Это девять содержательных реплик: build/individual loot; новая attendance; два правила и четыре lookup; не принятая альтернатива; финальный recall. Не ожидайте фиксированный random payout: сравнивайте финал с реальным первым generate_loot. Новый run-id обязателен при повторе; полный список остальных флагов — в [CLI](CLI.md).
 
-Сохранённый основной own/off v2 Mothbridge демонстрирует4 существа (Blink Dog1, Bugbear Stalker2, Goblin Warrior1),44gp, party4→5 приlevel4, три реальные summary и точный финальный recall с Mira/brass lantern. Эти числа относятся к этому запуску; новый payout может отличаться. Промежуточные ошибки правила/полноты ответа отражены в rubric, поэтому сохранность памяти не означает100% task success. [Финальный Langfuse trace](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/74d0d23f76b66826f76059b6d59897b8).
+Сохранённый основной own/off v2 Mothbridge демонстрирует 4 существа (Blink Dog × 1, Bugbear Stalker × 2, Goblin Warrior × 1),44 gp, партия 4 → 5 на 4-м уровне, три реальные summary и точный финальный recall с Mira/brass lantern. Эти числа относятся к этому запуску; новый payout может отличаться. Промежуточные ошибки правила/полноты ответа отражены в rubric, поэтому сохранность памяти не означает 100% task success. [Финальный Langfuse trace](http://127.0.0.1:3000/project/7d8d3807-b938-4896-9289-8a28375b69b5/traces/74d0d23f76b66826f76059b6d59897b8).
 
 В Langfuse откройте experiment с именем run-id, выберите dataset item/turn. Проверьте agent root, реальные generations с usage, tool→retrieval, compaction/context_summary и raw-model-response. Последний turn должен быть виден отдельно. Raw source registry продолжает разрешать номера, выданные до summary; неизвестные номера остаются warning.
 
 ## Измерения и офлайн проверка
 
-Четыре полных вызова — own/Codex × off/budgeted — описаны в [методике](EVALUATION.md). Заполненная review.csv требует0/1, method и trace evidence. Затем:
+Четыре полных вызова — own/Codex × off/budgeted — описаны в [методике](EVALUATION.md). Заполненная review.csv требует 0/1, method и trace evidence. Затем:
 
 ```bash
 uv run python -m dnd_rag score-agents --run results/lab3/lab3-own-off-20261113-v2 --upload-scores
 uv run python -m dnd_rag summarize-agents --runs results/lab3/lab3-own-off-20261113-v2 results/lab3/lab3-own-budgeted-20261113-v2 results/lab3/lab3-codex-off-20261113-v2 results/lab3/lab3-codex-budgeted-20261113-v2
 ```
 
-score-agents не вызывает модель; незаполненные критерии остаются pending. API-cost локальной модели0; токены и время измеряются отдельно. После выхода CLI/runner останавливаются собственные model/service процессы; Docker и артефакты сохраняются.
+score-agents не вызывает модель; незаполненные критерии остаются pending. API-cost локальной модели равен 0; токены и время измеряются отдельно. После выхода CLI/runner останавливаются собственные model/service процессы; Docker и артефакты сохраняются.

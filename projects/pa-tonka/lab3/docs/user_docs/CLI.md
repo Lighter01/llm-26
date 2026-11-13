@@ -1,167 +1,216 @@
-# Установка и команды
+# Установка, запуск и команды
 
-Python ≥3.13, uv 0.11.6, Docker Compose. Для ingestion нужен Node ≥22/npm. Установите `uv sync --group test --group lint`, затем `npm --prefix tools/ingestion ci`. При клонировании подготовьте корпус по [ingestion](../ingestion/README.md). Веса EmbeddingGemma 2 должны быть доступны в HF cache; GPU нужен только для построения. Настройки копируются из `.env.example`; секреты в Git не добавляются.
+Команды выполняются из корня `lab3` через `uv run python -m dnd_rag`. Устройство системы — в [ARCHITECTURE](ARCHITECTURE.md), формулы и файлы измерений — в [EVALUATION](EVALUATION.md).
 
-## Выбор retrieval
+- [Какой сценарий выбрать](#какой-сценарий-выбрать)
+- [Быстрый запуск](#быстрый-запуск)
+- [Настройки и адреса](#настройки-и-адреса)
+- [Диалог и сквозная проверка](#диалог-и-сквозная-проверка)
+- [Измерения и оценивание](#измерения-и-оценивание)
+- [Подготовка данных и индекса](#подготовка-данных-и-индекса)
+- [Журналы и диагностика](#журналы-и-диагностика)
 
-Приоритет: явный `--config` > переменная процесса `RAG_CONFIG_PATH` > `.env` > `configs/rag/r3.yaml`. Относительные пути всегда от project root. Неверный путь — ошибка. `QDRANT_URL` по умолчанию http://127.0.0.1:6343; `EMBEDDING_CACHE_DIR` — необязательный каталог HF cache. Настройки `LLM_*` не являются условием работы retrieval.
+## Какой сценарий выбрать
 
-## build-index
+| Нужно | Команда | Что запускается |
+| --- | --- | --- |
+| Поговорить с собственным агентом | `run` | Полный стек и CLI. |
+| Проверить tools, историю и traces обоих агентов | `smoke-stack` | Тот же стек и две связанные реплики на адаптер. |
+| Измерить выбранного агента | `evaluate-agents` | Стек и фиксированный датасет. |
+| Оценить сохранённые ответы | `score-agents` | Офлайн; Langfuse нужен только для upload. |
+| Сравнить готовые прогоны | `summarize-agents` | Только сохранённые файлы. |
+| Подготовить / проверить / удалить индекс | `build-index` / `inspect-index` / `reset-index` | Qdrant; GPU только для построения. |
+| Скомпилировать игровые сущности | `prepare-game-data` | Локальные JSON и Node.js. |
 
-Подготавливает или переиспользует совместимую коллекцию. GPU-worker не работает одновременно с LLM; при занятом endpoint нужно завершить его владельцем.
+`run`, `smoke-stack` и `evaluate-agents` — отдельные запуски. Каждый сам готовит каталог/индекс и поднимает LLM с MCP; перед следующим остановите предыдущий. Для изучения уже выполненной лабораторной начните с [маршрута по Langfuse](DEMO.md#разбор-сохранённых-результатов-в-langfuse).
 
-```bash
-uv run python -m dnd_rag build-index --config configs/rag/r9.yaml
-```
+## Быстрый запуск
 
-| Параметр | Смысл |
-|---|---|
-| `--config PATH` | Необязательный YAML, иначе приоритет выше |
-| `--rebuild` | Необязательный флаг полной пересборки, default false |
-| `-h`, `--help` | Справка |
+### 1. Подготовить окружение
 
-## inspect-index
-
-Проверяет совместимость выбранной коллекции без загрузки моделей. Может запустить локальный Qdrant, если подтверждено отсутствие сервера.
-
-```bash
-uv run python -m dnd_rag inspect-index
-```
-
-`--config PATH` необязателен, выбор как выше; `-h/--help` показывает справку. Других параметров нет.
-
-## reset-index
-
-Удаляет только одну принадлежащую приложению коллекцию. Отсутствующая коллекция — no-op; чужая ownership не принимается.
+Нужны Linux/WSL, Python ≥ 3.13, uv, Docker Compose и Node ≥ 22/npm. Версии Python-пакетов закреплены в `uv.lock`.
 
 ```bash
-uv run python -m dnd_rag reset-index --config configs/rag/r3.yaml
+uv sync --group test --group lint
+npm --prefix tools/ingestion ci
+cp -n .env.example .env
 ```
 
-Ровно один обязательный селектор: `--config PATH` либо `--index-id SHA256` (полные 64 lowercase hex). `-h/--help` — справка. Данные корпуса не удаляются.
+`cp -n` сохраняет существующие настройки. После нового клонирования подготовьте [корпус](../ingestion/README.md) и закреплённый 5etools. Для нового индекса нужны веса EmbeddingGemma 2 и CUDA GPU; готовая коллекция используется повторно.
 
-## Диагностика
+### 2. Проверить локальные зависимости
 
-Стадии build идут в stderr, JSON результата — stdout. Локальные worker/llama журналы — `.runtime/`. Прерывание завершает собственные дочерние процессы. Qdrant/data сохраняются. Старые QA/study команды не поддерживаются.
+В `.env` задайте пути `LLAMA_SERVER_BIN` и `LLM_MODEL_PATH`, адреса и ключи Langfuse. Инструкция [infra](../../infra/README.md) описывает Compose и инициализацию проекта. Для Codex дополнительно нужен установленный CLI и [закреплённый exporter](../../configs/baseline/README.md). Запустите Docker engine.
 
-## Административный запуск LLM
+Готовый `.env.example` рассчитан на `~/.llama-app/llama` с `server_subcommand: serve`. Для отдельного `llama-server` согласуйте путь и `server_subcommand: null` в [LLM-профиле](../../configs/llm/README.md).
 
-После завершения GPU-worker можно проверить сервер отдельно:
+### 3. Запустить чат
 
 ```bash
-uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml
+uv run python -m dnd_rag run --llm-profile configs/llm/off.yaml
 ```
 
-`--llm-profile PATH` обязателен, YAML относительно project root; `-h/--help` — справка. Других параметров нет. `LLAMA_SERVER_BIN` — исполняемый файл (кодовый default llama-server; проверенный .env.example задаёт ~/.llama-app/llama для профилей с server_subcommand=serve), `LLM_MODEL_PATH` — GGUF, `LLM_BASE_URL` — loopback endpoint с `/v1` (default http://127.0.0.1:8080/v1). Запуск держит блокировку проекта и завершается Ctrl+C с cleanup дочерней модели. [Профили и ограничения thinking](../../configs/llm/README.md).
+Дождитесь готовности инфраструктуры, каталога, индекса, LLM и MCP. При новой индексации GPU-worker завершается до старта GGUF. `/exit`, EOF или Ctrl+C закрывают чат и его процессы; Docker и данные сохраняются.
 
-## Setup Langfuse и Codex
+## Настройки и адреса
 
-Поднимите [Langfuse Compose](../../infra/README.md), создайте локальный проект в http://127.0.0.1:3000 и сохраните SDK keys в `.env`. Можно инициализировать проект через LANGFUSE_INIT_*; все соответствующие credentials должны быть заданы до первого старта. Web/worker4.79.0, Node24.22.2, закреплённый официальный exporter и способ установки описаны в [baseline](../../configs/baseline/README.md). Используйте pnpm frozen lock; npm install без lock обнаружил peer conflict.
+Относительные пути разрешаются от корня проекта, поддерживается `~`. Приоритет RAG-конфигурации: `--config` → переменная процесса `RAG_CONFIG_PATH` → `.env` → `configs/rag/r3.yaml`. Ошибочный путь не заменяется молча другим профилем.
 
-MCP diagnostic: `uv run python -m dnd_rag.tools.server`, параметров нет; bind127.0.0.1:8765/mcp, Ctrl+C завершает сервер. Этот отдельный процесс держит lock проекта: не запускайте одновременно вторую управляющую команду.
+| Настройка | По умолчанию / назначение |
+| --- | --- |
+| `QDRANT_URL` | `http://127.0.0.1:6343`; отдельное хранилище `data/qdrant/`. |
+| `LLM_BASE_URL` | `http://127.0.0.1:8080/v1`; локальный llama.cpp. |
+| `LLAMA_SERVER_BIN`, `LLM_MODEL_PATH` | Бинарник и GGUF; пути из `.env.example` согласуйте с машиной. |
+| `EMBEDDING_CACHE_DIR` | Пусто: стандартный HF cache. |
+| `LANGFUSE_BASE_URL` | `http://127.0.0.1:3000`. |
+| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | SDK-ключи локального проекта, обязательны для агентного стека. |
 
-## prepare-game-data
+MCP использует `8765/mcp`, compatibility proxy Codex — `8081/v1`. Секреты и локальные данные исключены из Git. Настройки LLM не требуются для самостоятельного retrieval.
 
-Компилирует отдельный каталог игровых сущностей из закреплённого upstream, не меняя Markdown/source_map. Генерируемый каталог загружается tools один раз; сам tool ничего не компилирует.
+## Диалог и сквозная проверка
 
-```bash
-uv run python -m dnd_rag prepare-game-data --output data/game/5etools
-```
+### Общие флаги `run` и `smoke-stack`
 
-| Параметр | Смысл и default |
-|---|---|
-| `--source PATH` | Необязательный local 5etools root; иначе source_root из configs/game.yaml, исходно external/5etools-src |
-| `--output PATH` | Необязательный output root; иначе output_root из configs/game.yaml, исходно data/game/5etools; SHA-каталог добавляется автоматически |
-| `-h`, `--help` | Справка |
+| Флаг | Обязательность / default | Назначение |
+| --- | --- | --- |
+| `--config PATH` | Нет; приоритет выше. | RAG YAML, штатные R3/R9. |
+| `--llm-profile PATH` | Нет; `configs/llm/off.yaml`. | Альтернатива — `configs/llm/budgeted.yaml`. |
+| `--context-limit INT` | Нет; `9500`, минимум `1024`. | Порог сокращения полного входа, отдельный от окна модели. |
+| `--rebuild` | Флаг, `false`. | Полная пересборка индекса до запуска модели. |
 
-Пути относительно корня проекта. Требуется Node22+ (проверен24.22.2 из ingestion), pinned submodule и установленные ingestion dependencies. Повторная подготовка детерминирована; несовместимый manifest/неразрешённая ссылка — ошибка. Игровые данные игнорируются Git; воспроизводимая команда остаётся в репозитории.
+Порог вместе с резервом ответа и safety должен помещаться в физическое окно профиля. Все основные команды поддерживают `-h` / `--help`.
 
-## Параметры MCP tools
+### Чат: `run`
 
-Это инструменты агента, не отдельные CLI-команды. Все обязательные поля перечислены ниже; неизвестное/неоднозначное имя требует уточнения.
+Использует общие флаги и `--interface cli` — необязательный, единственное значение и default `cli`. Streamlit отложен. Выводятся Markdown, события tools/summary/error и зарегистрированные источники `[n]`.
 
-| Tool | Обязательные поля | Необязательные поля/default |
-|---|---|---|
-| search_rules | query (непустая строка) | limit=5,1..10 |
-| lookup_monsters | Нет: query/filters задают поисковый запрос | query=None, habitat=None, creature_type=None, limit=5,1..10 |
-| evaluate_encounter | party_size>0, party_level1..20, monsters (непустой список monster_id/count>0) | Нет |
-| build_encounter | party_size>0, party_level1..20, difficulty=low/moderate/high | habitat=None, creature_type=None, total_count=None (>0 если задан), required_monsters=[] (monster_id/count) |
-| generate_loot | kind=individual/hoard, cr (стандартное число или дробь0..30) | count=1; hoard требует party_level1..20 и treasure_theme=Arcana/Armaments/Implements/Relics, count=1 |
+| Команда чата | Действие |
+| --- | --- |
+| `/help` | Подсказка по управлению. |
+| `/new` | Новый UUID диалога; прежние журналы сохраняются. |
+| `/status` | Модель, session, trace и последнее измерение контекста. |
+| `/exit` | Завершение с очисткой собственных процессов. |
 
-Encounter build: ≤256 форм, ≤3 различных stat blocks, auto count1..min(12,2×party_size); явный total_count точный. Conflict/search_exhausted не выдаются за успешный подбор. Hoard CR относится к владельцу, individual count — к одинаковым существам. Полные фактические rolls и sources входят в result.
+Индикатор показывает `input / agent limit / %` и отдельно server window. Он обновляется по измерениям. История ввода хранится в `.runtime/cli.history`; нумерация источников переживает summary, новый диалог получает отдельный реестр. Допустимость номера не доказывает смысловую поддержку утверждения.
 
-## run
-
-Запускает полный локальный stack и оформленный чат. Сначала инфраструктура и каталог, затем reuse/build индекса; GPU-worker заканчивается до старта модели. Порты MCP8765/proxy8081 должны быть свободны. На неопределённый health check launcher отвечает ошибкой, не захватывает чужой процесс. После EOF/Ctrl+C/`/exit` модель и локальные серверы останавливаются, Docker и данные остаются.
-
-```bash
-uv run python -m dnd_rag run --interface cli --llm-profile configs/llm/off.yaml
-```
-
-| Флаг | Значение, обязательность и default |
-|---|---|
-| `--interface cli` | Необязательный, default cli; Streamlit пока не реализован |
-| `--llm-profile PATH` | Необязательный YAML относительно project root; default configs/llm/off.yaml, другой штатный configs/llm/budgeted.yaml |
-| `--config PATH` | Необязательный RAG YAML, иначе обычный приоритет RAG_CONFIG_PATH/.env/R3 |
-| `--context-limit INT` | Необязательный native full-input порог, default9500, минимум1024; порог+output reserve+safety должны помещаться в server window |
-| `--rebuild` | Необязательный, default false; принудительно пересобрать индекс до модели |
-| `-h/--help` | Справка |
-
-`/help` объясняет команды, `/new` создаёт UUID нового диалога и сохраняет предыдущие журналы, `/status` показывает model/session/trace URL и последнее измеренное число, `/exit` выходит. История ввода — `.runtime/cli.history`. Индикатор показывает input/agent limit/%; server16384 указан отдельно. Между измерениями счётчик не анимируется вымышленными токенами. Tool error и summary before→after выводятся отдельными событиями.
-
-## smoke-stack
-
-Стартует тот же stack, выполняет два настоящих turn с историей и оценкой двух Mages каждым выбранным агентом, сохраняет полный JSON со статусом/usage/trace/tools. Требует настроенных Langfuse и, для Codex, pinned exporter. Default проверяет обоих.
+### Проверка стека: `smoke-stack`
 
 ```bash
 uv run python -m dnd_rag smoke-stack --agents both --output results/smoke.json
 ```
 
-Поддерживает те же `--config`, `--llm-profile`, `--context-limit`, `--rebuild`, `-h/--help`, что run. Дополнительно `--agents own|codex|both` (необязательный, default both), `--output PATH` (необязательный JSON-файл; иначе только stdout). Флага `--interface` нет. Exit0 означает completed turns с traces, иначе1; JSON сохраняет причины ошибок. Смысловое качество ответа оценивается по содержимому, а не по exit code.
+К общим флагам добавляются:
 
-## evaluate-agents
+| Флаг | Обязательность / default | Назначение |
+| --- | --- | --- |
+| `--agents own\|codex\|both` | Нет; `both`. | Адаптеры для двух связанных запросов об оценке Mages. |
+| `--output PATH` | Нет; только stdout. | Сохранить JSON статусов, usage, tools и traces. |
 
-Выполняет фиксированный набор последовательно через выбранный адаптер и общий launcher. Каждый запуск получает отдельный run-id; существующие результаты не перезаписываются. Pending rubric означает незавершённое оценивание даже при успешном выполнении модели.
+`--interface` здесь отсутствует. Код 0 означает завершённые проверочные реплики с traces, 1 — неполную проверку. Правильность объяснения оценивается отдельно от exit code.
 
-```bash
-uv run python -m dnd_rag evaluate-agents --dataset data/tasks/lab3.yaml --agent own --mode off --run-id own-off
-```
+## Измерения и оценивание
 
-| Флаг | Назначение, допустимость и default |
-|---|---|
-| `--agent own|codex` | Обязательный адаптер |
-| `--mode off|budgeted` | Обязательный режим; budgeted использует512 reasoning tokens на блок |
-| `--dataset PATH` | Необязательный YAML; default data/tasks/lab3.yaml, проверяется до старта модели |
-| `--run-id ID` | Необязательный уникальный1..71 символ из letters/digits/._-; default agent-mode-UTC timestamp |
-| `--results-dir PATH` | Необязательный корень; default results/lab3 |
-| `--config PATH` | Необязательный RAG YAML, обычный приоритет env/.env/R3 |
-| `--llm-profile PATH` | Необязательный; default configs/llm/<mode>.yaml; thinking обязан совпадать с mode |
-| `--context-limit INT` | Необязательный общий input threshold; default9500, минимум1024 |
-| `--timeout SECONDS` | Необязательный положительный per-turn timeout, default300 |
-| `--only ID [ID ...]` | Необязательный явный smoke subset; только существующие IDs, selection сохраняется в manifest |
-| `--rebuild` | Необязательный, default false; перестроить индекс перед моделью |
-| `-h/--help` | Справка |
-
-Все пути относительно project root. Exit0 означает complete execution/observability,1 — incomplete execution; semantic review первоначально pending. Режимы own/off, own/budgeted, codex/off, codex/budgeted запускаются отдельно с одним frozen dataset/model/tool fingerprint.
-
-## score-agents
-
-Офлайн пересчитывает формальные и явно заполненные смысловые критерии. Не вызывает LLM и не изменяет исходные turn records.
+### Новый прогон: `evaluate-agents`
 
 ```bash
-uv run python -m dnd_rag score-agents --run results/lab3/own-off --review results/lab3/own-off/review.csv --upload-scores
+uv run python -m dnd_rag evaluate-agents \
+  --agent own --mode off --run-id own-off
 ```
 
-`--run PATH` обязателен; `--review PATH` необязателен, default <run>/review.csv; `--upload-scores` необязательный флаг, default false, отправляет scores в локальный Langfuse; `-h/--help` — справка. Без upload сервисы не нужны. Exit0 означает все rubric заполнены,1 — есть pending; failed tasks остаются failed независимо от заполненности.
+`--config`, `--context-limit`, `--rebuild` действуют как [общие флаги](#общие-флаги-run-и-smoke-stack). Остальные параметры:
 
-## summarize-agents
+| Флаг | Обязательность / default | Назначение |
+| --- | --- | --- |
+| `--agent own\|codex` | Да. | Выбранный адаптер. |
+| `--mode off\|budgeted` | Да. | Thinking выключен либо бюджет 512 на блок. |
+| `--dataset PATH` | Нет; `data/tasks/lab3.yaml`. | Проверяется до запуска модели. |
+| `--run-id ID` | Нет; agent-mode-UTC timestamp. | Новое имя: 1–71 символ, первый — ASCII-буква/цифра, далее ASCII letters/digits/`._-`. |
+| `--results-dir PATH` | Нет; `results/lab3`. | Корень результатов. |
+| `--llm-profile PATH` | Нет; `configs/llm/<mode>.yaml`. | Thinking должен соответствовать `--mode`. |
+| `--timeout SECONDS` | Нет; `300`, положительное число. | Таймаут одной реплики. |
+| `--only ID [ID ...]` | Нет; весь набор. | Известные item IDs для явно помеченной диагностической подвыборки. |
 
-Сводит сохранённые совместимые прогоны в comparison.csv/json рядом с run directories. Различающиеся common fingerprints — ошибка.
+Все реплики одного item идут в одной сессии; следующий item получает новую. Существующий каталог не перезаписывается. Код 0 означает полное выполнение и наблюдаемость, 1 — incomplete; смысловые критерии первоначально `pending`. Четыре клетки сравнения используют один common fingerprint.
+
+### Пересчёт: `score-agents`
 
 ```bash
-uv run python -m dnd_rag summarize-agents --runs results/lab3/own-off results/lab3/own-budgeted results/lab3/codex-off results/lab3/codex-budgeted
+uv run python -m dnd_rag score-agents --run results/lab3/own-off --upload-scores
 ```
 
-`--runs PATH [PATH ...]` обязателен; `-h/--help` — справка. Других флагов нет. Сравнение не меняет pending на success. Формулы и формат review описаны в [оценивании](EVALUATION.md).
+| Флаг | Обязательность / default | Назначение |
+| --- | --- | --- |
+| `--run PATH` | Да. | Сохранённый каталог прогона. |
+| `--review PATH` | Нет; `<run>/review.csv`. | Явные оценки смысловых критериев. |
+| `--upload-scores` | Флаг, `false`. | Отправить scores в локальный Langfuse. |
 
-Чат выводит `[n]` source block для фактических retrieval sources текущего диалога. Полные тексты/spans и честная section/page attribution сохраняются в AgentReply и registry; неизвестный номер даёт warning. Нумерация сохраняется при summary, `/new` открывает независимый scope. Registry копируется в `citations/<session>.json` измерительного run. Citation validity измеряет разрешимость номера, не semantic support.
+LLM не вызывается, исходные записи не меняются. Код 0 означает заполненные критерии, 1 — оставшиеся pending. Неудачная задача остаётся неудачной после оценивания.
+
+### Сравнение: `summarize-agents`
+
+```bash
+uv run python -m dnd_rag summarize-agents --runs \
+  results/lab3/own-off results/lab3/own-budgeted \
+  results/lab3/codex-off results/lab3/codex-budgeted
+```
+
+Единственный параметр `--runs PATH [PATH ...]` обязателен. Команда пишет `comparison.csv/json` рядом с каталогами; разные common fingerprints вызывают ошибку. Формулы и порядок заполнения review — в [EVALUATION](EVALUATION.md).
+
+## Подготовка данных и индекса
+
+### Игровой каталог: `prepare-game-data`
+
+```bash
+uv run python -m dnd_rag prepare-game-data
+```
+
+| Флаг | Обязательность / default | Назначение |
+| --- | --- | --- |
+| `--source PATH` | Нет; `source_root` из `configs/game.yaml`. | Закреплённый upstream, штатно `external/5etools-src`. |
+| `--output PATH` | Нет; `output_root` из того же YAML. | Штатно `data/game/5etools`; SHA-каталог добавляется автоматически. |
+
+Нужны Node и ingestion-зависимости. Сборка детерминирована, Markdown/source_map не меняются. Параметры пяти агентных инструментов — в [MCP-справочнике](../../src/dnd_rag/tools/README.md).
+
+### Коллекция: `build-index`, `inspect-index`, `reset-index`
+
+```bash
+uv run python -m dnd_rag build-index --config configs/rag/r3.yaml
+uv run python -m dnd_rag inspect-index --config configs/rag/r3.yaml
+```
+
+Обе команды принимают необязательный `--config PATH` с общим приоритетом. `build-index` дополнительно принимает `--rebuild` (флаг, default `false`) и подготавливает либо использует совместимую коллекцию. `inspect-index` проверяет паспорт без загрузки моделей; при подтверждённом отсутствии может запустить Qdrant.
+
+Для удаления одной принадлежащей проекту коллекции:
+
+```bash
+uv run python -m dnd_rag reset-index --config configs/rag/r3.yaml
+```
+
+Обязателен ровно один селектор: `--config PATH` или `--index-id SHA256` — полный lowercase hex из 64 символов. Отсутствующая коллекция — no-op; чужая не удаляется. Корпус и результаты сохраняются.
+
+### Отдельные диагностические серверы
+
+| Запуск | Параметры и поведение |
+| --- | --- |
+| `uv run python scripts/start_llama_server.py --llm-profile configs/llm/off.yaml` | `--llm-profile PATH` обязателен; `-h/--help`. Только LLM и проектный lock. |
+| `uv run python -m dnd_rag.tools.server` | Без параметров. MCP на `127.0.0.1:8765/mcp`, подготовка каталога/индекса и lock до выхода. |
+
+Остановите диагностический сервер перед общим launcher. Профиль и бинарник должны соответствовать друг другу.
+
+## Журналы и диагностика
+
+| Где смотреть | Содержание |
+| --- | --- |
+| `.runtime/llama/` | Actual argv, model/template hashes и `server.log`. |
+| `.runtime/sessions/`, `.runtime/codex-wire/` | Полные turns, исходные/effective запросы Codex. |
+| `results/lab3/<run-id>/` | Ответы, review, metrics, manifest и raw; [справочник артефактов](EVALUATION.md#файлы-одного-запуска). |
+
+| Симптом | Действие |
+| --- | --- |
+| `runtime_busy` | Завершите прежний runtime; живой ребёнок может удерживать lock. Не удаляйте lock-файл для обхода. |
+| Занят порт | Остановите владельца сервиса; приложение не завершает чужие процессы. |
+| Ошибка Langfuse | Проверьте Docker, адрес и SDK-ключи проекта. |
+| `context_budget` | Уменьшите запрос/выдачу либо начните новый диалог; история не усекается скрыто. |
+| `run_exists` | Выберите новый run-id, сохранив прежние результаты. |
+
+Ошибки основного CLI идут в stderr. Код 2 обозначает неверные аргументы/конфигурацию, 1 — сбой выполнения; специальные значения score/smoke/evaluate описаны выше. Ctrl+C в чате обрабатывается как штатный выход. Проверки и условия live-проб перечислены в [VALIDATION](../rag/VALIDATION.md).

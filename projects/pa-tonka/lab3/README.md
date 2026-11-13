@@ -21,7 +21,7 @@ uv run python -m dnd_rag run --interface cli --llm-profile configs/llm/off.yaml
 ## Карта проекта
 
 | Каталог | Ответственность |
-|---|---|
+| --- | --- |
 | `src/dnd_rag` | Retrieval, индексация, управление процессами и ingestion |
 | `configs/rag` | Самостоятельные R3/R9 |
 | `configs/llm` | Профили локальной модели |

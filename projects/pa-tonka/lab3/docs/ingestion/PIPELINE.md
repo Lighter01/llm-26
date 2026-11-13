@@ -24,7 +24,7 @@ Entry grammar проверяется и внутри исходных карто
 
 ## 3. Главы и native resolution
 
-Для каждой исходной главы `assembleChapter` вызывает `Renderer.utils.preload.pGetPreloaded`. Оригинал не мутируется. Native preload может вернуть unresolved statblock без исключения, поэтому каждый ожидаемый ref сверяется по исходному occurrence. При silent miss выполняется `DataLoader.pCacheAndGet(..., {isCopy: true, isRequired: true})` и повторный preload.
+Для каждой исходной главы `assembleChapter` вызывает `Renderer.utils.preload.pGetPreloaded`. Исходная глава не изменяется. Native preload может вернуть unresolved statblock без исключения, поэтому каждый ожидаемый ref сверяется по исходному occurrence. При silent miss выполняется `DataLoader.pCacheAndGet(..., {isCopy: true, isRequired: true})` и повторный preload.
 
 Упаковка wrapper сохраняет полный исходный reference, lookup, processed data, placement и entity origin. Физический record проверяется по raw hash, набору полей, source и native identity. Для виртуального item требуется реальный base и template; физический путь не придумывается. Несколько физических кандидатов помечаются явно.
 
@@ -80,7 +80,7 @@ Omissions записываются в detailed report. `_fullEntries`, исхо�
 
 ## 7. Публикация, force и ошибки
 
-Writer получает lock `.<signature>.lock` только для своего build-id. Все файлы сначала полностью пишутся и fsync-ятся в sibling `.<signature>.staging-*`, затем проверяются как готовая сборка и выполняется повторный preflight. Первая публикация — rename. `--force` использует Linux `renameat2(RENAME_EXCHANGE)` через stdlib Python helper: читатель видит прежний или новый полный каталог без окна отсутствия build-id.
+Writer получает lock `.<signature>.lock` только для своего build-id. Все файлы сначала полностью записываются и синхронизируются через `fsync` в sibling `.<signature>.staging-*`, затем проверяются как готовая сборка и выполняется повторный preflight. Первая публикация — rename. `--force` использует Linux `renameat2(RENAME_EXCHANGE)` через stdlib Python helper: читатель видит прежний или новый полный каталог без окна отсутствия build-id.
 
 Force заново готовит/проверяет необходимые промежуточные стадии и финализирует книги. Явные проверенные developer inputs можно переиспользовать. Подменяются только текущий вычисленный build-id и управляемые им файлы. Чужая identity, нечитаемый manifest, symlinks и посторонние файлы не удаляются автоматически. Повреждённый известный book/hash при читаемом manifest исправляется force.
 

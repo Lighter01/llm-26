@@ -1,13 +1,33 @@
 # Проверки lab3
 
-Финальный non-live gate: **646 passed,84 deselected** за37.03s с явно заданными четырьмя DM_SAVED_RUNS; saved-matrix audit выполнен, не skipped. Ruff clean. Node ingestion47/47, Python ingestion integration77 passed на существующем resolved build без пересборки книг; отдельная проверка фактического dataset/evidence1passed/5deselected.
+Здесь собраны результаты проверок приложения и сохранённой матрицы. Подробные данные — в [verification.json](../../results/lab3/verification.json), методика и ошибки — в [отчёте](../../report/LAB3_REPORT.md).
 
-Все60executions/188turns/60isolatedsessions сохранены;536 semantic worksheet criteria заполнены как agent-assisted. Проверены common fingerprints, фактические profiles/sampling/nativecount↔usage, source registry/manifest и offline recompute. В каждой клетке все3long имели реальные compaction events.
+## Автоматические проверки
 
-Langfuse:606generations завершённых turns имеют точное совпадение usage с native. В4тайм-аутах сохранены83полученных generations; usage4незавершённых ответов неизвестен. Для каждой клетки API подтвердил47distinct Experiment item→trace links, run scores и scores последней реплики. Частичные traces не объявлены полными.
+| Набор | Фактический результат |
+| --- | --- |
+| Non-live Python | **646 passed, 84 deselected**, 37,03 с. Четыре `DM_SAVED_RUNS` заданы явно; аудит сохранённых результатов выполнен без skip. |
+| Ruff | Проверка `src` и `tests` прошла. |
+| Node ingestion | 47/47. |
+| Python ingestion integration | 77 passed на существующем resolved build, без пересборки книг. |
+| Фактический dataset/evidence | 1 passed, 5 deselected. |
 
-Post-fix live probe: реальный MCP lookup/build Mage с Any-habitat,2300XP/high для2×6; по2связанных turn собственного агента и Codex, точный resume, последний trace/readback и повторный export без дублей. Диагностика off/11000 исключена из основной матрицы9500. Ранее фактически проверены Chat/Responses off/budgeted512 parity, общий MCP, повторные summary, CLI PTY/new/status/exit и диагностические ошибки.
+Независимое ревью всей ветки выявило 0 Critical / 3 Important / 0 Minor. Все три существенных дефекта исправлены с RED→GREEN и последующим полным зелёным набором: SIGINT/SIGTERM при регистрации ребёнка, захват stdout после выхода лидера, старые записи предыдущего хода при исключении адаптера. Дополнительно проверены ограниченный pipe wait, восстановление handlers, наследуемый lock и сохранность чужих процессов.
 
-Измерения относятся к7954685; финальный код содержит последующие исправления границ/учёта, описанные в отчёте. Результаты lab2 и исследовательские заметки доказательствами не служат. [Отчёт](../../report/LAB3_REPORT.md), [машинные проверки](../../results/lab3/verification.json), [демонстрация](../user_docs/DEMO.md). Условный Streamlit отложен; основной CLI работает.
+## Матрица и наблюдаемость
 
-Независимое ревью всей ветки: Critical0/Important3/Minor0. Все три Important исправлены одним проходом с воспроизведением RED→GREEN: реальные SIGINT/SIGTERM при регистрации child; вышедший лидер с живым держателем stdout; ошибка следующего хода без повторения прежних записей. Дополнительно проверено ограничение последнего pipe wait при утрате ownership lease. После исправлений полный набор646passed/Ruffclean; реальные Codex0.167.0-alpha.4.1 и Node24.22.2 проходят новый spawn/capture. Блокировка освобождена, model/MCP/proxy порты закрыты, GPU compute-app list пуст. Контейнеры и данные сохранены.
+Сохранены 60 выполнений задач, 188 реплик и 60 изолированных сессий. Заполнены 536 смысловых критериев методом `agent-assisted`. Аудит подтвердил common fingerprints, профили/sampling, native count ↔ usage, источники и offline recompute. Каждый из трёх длинных сценариев каждой клетки имеет реальные compaction events.
+
+- Usage всех **606 generations завершённых turns** точно совпал с native данными.
+- В четырёх таймаутах сохранены **83 полученные generations**; usage четырёх незавершённых ответов неизвестен.
+- Для каждой клетки API подтвердил **47 отдельных Experiment item → trace links**, run scores и scores последней реплики. Частичные traces не объявлены полными.
+
+## Фактические сквозные пробы
+
+Проверены Chat/Responses off/budgeted с бюджетом 512, общий MCP, повторные summary, CLI PTY/new/status/exit и отображение ошибок. После исправлений проверены реальный Mage с habitat Any, lookup/build на 2 персонажей 6-го уровня: 2 300 XP / high; по две связанные реплики обоих агентов, точный resume, последний trace и повторный export без дублей.
+
+Диагностический профиль off/11 000 исключён из основной матрицы с порогом 9 500. После исправлений lifecycle реальные Codex 0.167.0-alpha.4.1 и Node 24.22.2 прошли spawn/capture; lock освобождён, порты модели/MCP/proxy закрыты, список GPU compute-apps пуст. Docker и данные сохранены.
+
+## Границы подтверждения
+
+Измерения относятся к `7954685`; финальное приложение содержит последующие исправления, раскрытые в отчёте. Результаты lab2 не подменяют проверки lab3. Streamlit отложен; проверенный интерфейс — CLI. Команды демонстрации и маршрут по сохранённым трейсам — в [DEMO](../user_docs/DEMO.md).

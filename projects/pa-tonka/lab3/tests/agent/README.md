@@ -8,4 +8,4 @@
 
 `test_citations.py` — повторные hits, независимые диалоги, сохранение registry после summary/restart, неизвестные номера и точная исходная attribution без выдуманной страницы.
 
-`test_service.py` дополнительно проверяет реальные LangGraph parallel-task pending writes при timeout, сохранение уже полученных19gp, incomplete для final finishlength и unknown totals после прерванной второй генерации.
+`test_service.py` дополнительно проверяет реальные LangGraph parallel-task pending writes при timeout, сохранение уже полученных 19 gp, incomplete для final finishlength и unknown totals после прерванной второй генерации.
