@@ -91,10 +91,16 @@ def test_cancel_stops_owned_codex_process_and_propagates(tmp_path, monkeypatch):
     runner = CodexRunner(Path(__file__).resolve().parents[2], artifacts_dir=tmp_path / 'artifacts')
     pid_file = tmp_path / 'pid'
     code = (
-        'import os,time;from pathlib import Path;Path('
+        'import os,time;from pathlib import Path;'
+        + 'print('
+        + repr(json.dumps({'type': 'thread.started', 'thread_id': 'cancel-native'}))
+        + ',flush=True);Path('
         + repr(str(pid_file))
         + ').write_text(str(os.getpid()));time.sleep(30)'
     )
+    original = tmp_path / 'closed-rollout.jsonl'
+    original.write_text('{"native": "original transcript"}\n')
+    monkeypatch.setattr(runner, '_rollout', lambda sid: original)
     monkeypatch.setattr(runner, 'command', lambda *a, **k: [sys.executable, '-c', code])
 
     async def run():
@@ -109,6 +115,8 @@ def test_cancel_stops_owned_codex_process_and_propagates(tmp_path, monkeypatch):
             await task
         with pytest.raises(ProcessLookupError):
             os.kill(int(pid_file.read_text()), 0)
+        assert runner.sessions['cancel']['id'] == 'cancel-native'
+        assert (tmp_path / 'artifacts/cancel/rollout.jsonl').read_bytes() == original.read_bytes()
 
     asyncio.run(run())
 
@@ -201,3 +209,143 @@ def test_native_wire_usage_includes_compaction_and_missing_response_is_unknown()
     ]
     assert wire_usage(rows)['input_tokens'] == 300 and wire_usage(rows)['output_tokens'] == 42
     assert wire_usage(rows[:-1])['output_tokens'] is None
+
+
+def _capture_runner(tmp_path, monkeypatch, rows, *, timeout=2):
+    import sys
+
+    from dnd_rag.experiments.codex import CodexRunner
+
+    runner = CodexRunner(tmp_path, artifacts_dir=tmp_path / 'results', timeout_seconds=timeout)
+    code = 'import time;' + ''.join(
+        'print(' + repr(json.dumps(row)) + ',flush=True);' for row in rows
+    )
+    if timeout < 1:
+        code += 'time.sleep(3)'
+    monkeypatch.setattr(runner, 'command', lambda *a, **kw: [sys.executable, '-c', code])
+    source = tmp_path / 'original-rollout.jsonl'
+    source.write_text('{"original":"closed native rollout"}\n')
+    monkeypatch.setattr(runner, '_rollout', lambda sid: source)
+
+    async def export(*args):
+        return 'f' * 32, 'real export stdout', ''
+
+    async def verify(*args):
+        return []
+
+    monkeypatch.setattr(runner, 'export', export)
+    monkeypatch.setattr(runner, 'verify_trace', verify)
+    return runner, source
+
+
+def test_timeout_keeps_flushed_tools_and_exact_native_session(tmp_path, monkeypatch):
+    import asyncio
+
+    rows = [
+        {'type': 'thread.started', 'thread_id': 'native'},
+        {
+            'type': 'item.completed',
+            'item': {
+                'type': 'mcp_tool_call',
+                'tool': 'lookup_monsters',
+                'arguments': {'query': 'Troll'},
+                'result': {'status': 'matched', 'monsters': []},
+                'status': 'completed',
+            },
+        },
+    ]
+    runner, source = _capture_runner(tmp_path, monkeypatch, rows, timeout=0.2)
+    reply = asyncio.run(runner.ainvoke('scope', 'Question', turn_id='turn'))
+    assert reply.status == 'timeout'
+    assert len(runner.last_records['scope']['tools']) == 1
+    assert runner.sessions['scope']['id'] == 'native'
+
+
+def test_original_rollout_is_archived_even_when_trace_readback_fails(tmp_path, monkeypatch):
+    import asyncio
+
+    runner, source = _capture_runner(
+        tmp_path,
+        monkeypatch,
+        [
+            {'type': 'thread.started', 'thread_id': 'native'},
+            {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'answer'}},
+        ],
+    )
+
+    async def fail(*args):
+        raise RuntimeError('readback unavailable')
+
+    monkeypatch.setattr(runner, 'verify_trace', fail)
+    reply = asyncio.run(runner.ainvoke('scope', 'Question', turn_id='turn'))
+    assert reply.status == 'incomplete'
+    archived = tmp_path / 'results/scope/rollout.jsonl'
+    assert archived.read_bytes() == source.read_bytes()
+    assert runner.last_records['scope']['rollout'] == str(archived)
+
+
+def _export_runner(tmp_path, source):
+    import sys
+
+    from dnd_rag.experiments.codex import CodexRunner
+
+    runner = CodexRunner(tmp_path, artifacts_dir=tmp_path / 'results')
+    runner.node = sys.executable
+    runner.plugin = tmp_path / 'exporter.py'
+    runner.plugin.write_text(source)
+    runner.sessions['scope'] = {'id': 'native', 'turns': 1}
+    return runner
+
+
+def test_failed_export_keeps_complete_stdout_and_stderr(tmp_path):
+    import asyncio
+
+    import pytest
+
+    runner = _export_runner(
+        tmp_path,
+        "import sys;sys.stdin.read();print('export stdout');print('x'*5000,file=sys.stderr);sys.exit(1)",
+    )
+    with pytest.raises(RuntimeError, match='export failed'):
+        asyncio.run(runner.export('scope', tmp_path / 'rollout.jsonl', 1))
+    log = (tmp_path / 'results/scope/1.export.log').read_text()
+    assert 'export stdout' in log and 'x' * 5000 in log
+
+
+def test_cancelling_export_stops_its_owned_child_and_keeps_log(tmp_path):
+    import asyncio
+    import os
+    import signal
+
+    import pytest
+
+    pid_file = tmp_path / 'export-pid'
+    runner = _export_runner(
+        tmp_path,
+        'import os,time;from pathlib import Path;Path('
+        + repr(str(pid_file))
+        + ").write_text(str(os.getpid()));print('before cancel',flush=True);time.sleep(30)",
+    )
+
+    async def run():
+        task = asyncio.create_task(runner.export('scope', tmp_path / 'rollout.jsonl', 1))
+        for _ in range(200):
+            if pid_file.exists():
+                break
+            await asyncio.sleep(0.01)
+        assert pid_file.exists()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        pid = int(pid_file.read_text())
+        try:
+            with pytest.raises(ProcessLookupError):
+                os.kill(pid, 0)
+        finally:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        assert 'before cancel' in (tmp_path / 'results/scope/1.export.log').read_text()
+
+    asyncio.run(run())

@@ -109,6 +109,33 @@ def config_args(config, prefix=''):
     return result
 
 
+async def _capture_owned(process, *, timeout, data=None):
+    # Cancelling communicate discards bytes already read from its pipes. Keep one
+    # capture alive through timeout/cancellation, and reap only our process group.
+    capture = asyncio.create_task(process.communicate(data))
+    cancelled = timed_out = False
+    try:
+        stdout, stderr = await asyncio.wait_for(asyncio.shield(capture), timeout=timeout)
+    except (TimeoutError, asyncio.CancelledError) as interrupted:
+        cancelled = isinstance(interrupted, asyncio.CancelledError)
+        timed_out = True
+        if process.returncode is None:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        try:
+            stdout, stderr = await asyncio.wait_for(asyncio.shield(capture), timeout=5)
+        except TimeoutError:
+            if process.returncode is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            stdout, stderr = await capture
+    return stdout, stderr, timed_out, cancelled
+
+
 class CodexRunner:
     def __init__(
         self,
@@ -195,19 +222,26 @@ class CodexRunner:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
         )
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(
-                json.dumps(
-                    {
-                        'transcript_path': str(rollout),
-                        'session_id': self.sessions[session_id]['id'],
-                        'hook_event_name': 'Stop',
-                    }
-                ).encode()
-            ),
+        stdout, stderr, timed_out, cancelled = await _capture_owned(
+            process,
             timeout=90,
+            data=json.dumps(
+                {
+                    'transcript_path': str(rollout),
+                    'session_id': self.sessions[session_id]['id'],
+                    'hook_event_name': 'Stop',
+                }
+            ).encode(),
         )
+        directory = self.directory / session_id
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f'{turn_number}.export.log').write_bytes(stdout + stderr)
+        if cancelled:
+            raise asyncio.CancelledError
+        if timed_out:
+            raise RuntimeError('Codex export timed out; original rollout and export log retained')
         if process.returncode:
             raise RuntimeError('Codex export failed: ' + stderr.decode(errors='replace')[-2000:])
         trace_id = sha256(f'{session_id}:{turn_number}'.encode()).hexdigest()[:32]
@@ -269,26 +303,10 @@ class CodexRunner:
             stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
         )
-        timed_out = False
-        cancelled = False
-        try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=self.timeout)
-        except (TimeoutError, asyncio.CancelledError) as interrupted:
-            cancelled = isinstance(interrupted, asyncio.CancelledError)
-            if process.returncode is None:
-                os.killpg(process.pid, signal.SIGTERM)
-            try:
-                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=5)
-            except TimeoutError:
-                if process.returncode is None:
-                    os.killpg(process.pid, signal.SIGKILL)
-                stdout, stderr = await process.communicate()
-            timed_out = True
+        stdout, stderr, timed_out, cancelled = await _capture_owned(process, timeout=self.timeout)
         out, err = stdout.decode(errors='replace'), stderr.decode(errors='replace')
         (directory / f'{number}.stdout.jsonl').write_text(out)
         (directory / f'{number}.stderr.log').write_text(err)
-        if cancelled:
-            raise asyncio.CancelledError
         parsed = parse_events(out)
         sid = parsed['session_id'] or (current['id'] if current else None)
         self.last_records[session_id] = {'tools': parsed['tools'], 'events': parsed['events']}
@@ -307,16 +325,19 @@ class CodexRunner:
             self.sessions[session_id] = {'id': sid, 'turns': number}
             try:
                 rollout = self._rollout(sid)
-                trace_id, export_out, export_err = await self.export(session_id, rollout, number)
-                observations = await self.verify_trace(
-                    trace_id, parsed['text'], [t.get('tool', '') for t in parsed['tools']]
-                )
-                (directory / f'{number}.observations.json').write_text(
-                    json.dumps(observations, indent=2)
-                )
                 shutil.copyfile(rollout, directory / 'rollout.jsonl')
-                (directory / f'{number}.export.log').write_text(export_out + export_err)
                 self.last_records[session_id]['rollout'] = str(directory / 'rollout.jsonl')
+                if not cancelled:
+                    trace_id, export_out, export_err = await self.export(
+                        session_id, rollout, number
+                    )
+                    (directory / f'{number}.export.log').write_text(export_out + export_err)
+                    observations = await self.verify_trace(
+                        trace_id, parsed['text'], [t.get('tool', '') for t in parsed['tools']]
+                    )
+                    (directory / f'{number}.observations.json').write_text(
+                        json.dumps(observations, indent=2)
+                    )
             except Exception as exc:
                 if status == 'completed':
                     status = 'incomplete'
@@ -331,6 +352,8 @@ class CodexRunner:
                     except ValueError:
                         pass
         self.last_records[session_id]['wire'] = wire
+        if cancelled:
+            raise asyncio.CancelledError
         usage = {
             **wire_usage(wire),
             'codex_cli_usage': parsed['usage'],

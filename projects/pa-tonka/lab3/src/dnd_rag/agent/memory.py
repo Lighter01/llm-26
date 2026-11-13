@@ -159,15 +159,6 @@ class NativeSummarization(SummarizationMiddleware):
                         turn.get('max_context', 0),
                         getattr(self.native, 'last_input_tokens', 0) or 0,
                     )
-                if response.response_metadata.get('finish_reason') in ('length', 'max_tokens'):
-                    raise RagError(
-                        'summary_truncated',
-                        'Summary reached the output limit; history was not replaced',
-                    )
-                summary = response.text.strip()
-                if not summary:
-                    raise ValueError('Empty summary')
-                if turn:
                     turn['generations'].append(response.usage_metadata)
                 self.recorder.write(
                     'generation',
@@ -177,6 +168,14 @@ class NativeSummarization(SummarizationMiddleware):
                         'usage': response.usage_metadata,
                     },
                 )
+                if response.response_metadata.get('finish_reason') in ('length', 'max_tokens'):
+                    raise RagError(
+                        'summary_truncated',
+                        'Summary reached the output limit; history was not replaced',
+                    )
+                summary = response.text.strip()
+                if not summary:
+                    raise ValueError('Empty summary')
                 span.update(output=summary)
                 return summary
         except RagError:

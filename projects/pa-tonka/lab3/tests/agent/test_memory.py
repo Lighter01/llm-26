@@ -159,3 +159,21 @@ def test_truncated_summary_is_not_accepted_as_memory(tmp_path):
     ]
     with pytest.raises(RagError, match='truncat|limit'):
         asyncio.run(memory.abefore_model({'messages': history()}, None))
+
+
+def test_rejected_summary_still_accounts_consumed_native_usage(tmp_path):
+    memory, native, model, events, turn = setup(tmp_path)
+    usage = {'input_tokens': 123, 'output_tokens': 256, 'total_tokens': 379}
+    model.replies = [
+        AIMessage(
+            content='PARTY: partial',
+            response_metadata={'finish_reason': 'length'},
+            usage_metadata=usage,
+        )
+    ]
+    messages = history()
+    with pytest.raises(RagError, match='truncat|limit'):
+        asyncio.run(memory.abefore_model({'messages': messages}, None))
+    assert messages[-1].content.startswith('CURRENT TASK:')
+    assert not any(k == 'compaction_completed' for k, p in events)
+    assert turn['generations'] == [usage]
