@@ -17,6 +17,154 @@ def record(text='27 gp', tools=None):
     }
 
 
+def test_currency_first_markdown_amount_is_not_a_false_negative():
+    from dnd_rag.experiments.scoring import reported_loot
+
+    actual = {'coins': {'gp': 300}, 'items': []}
+    # Observed own/off short03: correct output with the label before the amount.
+    assert reported_loot('* **Gold Pieces (gp):** 300\n* **Magic Items:** None', actual)
+    assert reported_loot('**gp:** `300`', actual)
+    assert not reported_loot('**gp:** 3000', actual)
+    assert not reported_loot('**gp:** 1300', actual)
+
+
+def test_actual_item_name_plural_is_not_a_false_loot_recall_failure():
+    from dnd_rag.experiments.scoring import reported_loot
+
+    actual = {
+        'coins': {'gp': 600},
+        'items': [
+            {'name': 'Potion of Greater Healing'},
+            {'name': 'Pearl of Power'},
+            {'name': 'Potion of Greater Healing'},
+        ],
+    }
+    assert reported_loot('600 gp, 2 Potions of Greater Healing, 1 Pearl of Power.', actual)
+    assert not reported_loot('600 gp, 2 Potions of Healing, 1 Pearl of Power.', actual)
+    assert reported_loot(
+        '200 gp, 2 Spell Scrolls (Cantrip)',
+        {
+            'coins': {'gp': 200},
+            'items': [{'name': 'Spell Scroll (Cantrip)'}],
+        },
+    )
+
+
+def test_timeout_tools_are_recovered_from_completed_wire_outputs_only():
+    from dnd_rag.experiments.scoring import recover_wire_tools
+
+    def call(identity, query):
+        return {
+            'type': 'function_call',
+            'call_id': identity,
+            'name': 'mcp__dnd__lookup_monsters',
+            'arguments': '{"query":"' + query + '"}',
+        }
+
+    old = call('old', 'Wolf')
+    troll, hag, unfinished = call('a', 'Troll'), call('b', 'Green Hag'), call('c', 'Owlbear')
+    first = {
+        'type': 'function_call_output',
+        'call_id': 'a',
+        'output': 'Wall time: 0.021 seconds\nOutput:\n{"status":"matched","monsters":[]}',
+    }
+    second = {
+        'type': 'function_call_output',
+        'call_id': 'b',
+        'output': 'Error calling tool: invalid query',
+    }
+    wire = [
+        {'kind': 'request', 'effective': {'input': [old]}},
+        {'kind': 'request', 'effective': {'input': [old, troll, first]}},
+        {'kind': 'request', 'effective': {'input': [troll, first, hag, second]}},
+        {'kind': 'request', 'effective': {'input': [troll, first, hag, second, unfinished]}},
+    ]
+    result = recover_wire_tools(wire)
+    assert [r['call_id'] for r in result] == ['a', 'b']
+    assert result[0]['arguments'] == {'query': 'Troll'}
+    assert result[0]['result']['status'] == 'matched'
+    assert result[1]['status'] == 'error'
+    assert 'invalid query' in result[1]['result']['text']
+
+
+def test_prior_successful_build_supplies_known_monster_for_later_calculation():
+    from dnd_rag.experiments.scoring import evaluate_turn
+
+    c = case(
+        expected_tools=['lookup_monsters', 'evaluate_encounter'],
+        checks={'monsters': {'Wraith': 1, 'Skeleton': 2}},
+    )
+    r = record(
+        tools=[
+            {
+                'name': 'evaluate_encounter',
+                'arguments': {},
+                'result': {
+                    'status': 'success',
+                    'monsters': [{'name': 'Wraith', 'count': 1}, {'name': 'Skeleton', 'count': 2}],
+                },
+            }
+        ]
+    )
+    r['history'] = [
+        {
+            'tools': [
+                {'name': 'lookup_monsters', 'result': {'monsters': [{'name': 'Wraith'}]}},
+                {
+                    'name': 'build_encounter',
+                    'result': {
+                        'status': 'success',
+                        'monsters': [
+                            {
+                                'name': 'Skeleton',
+                                'monster_id': 'catalog-skeleton',
+                                'cr': 0.25,
+                                'xp': 300,
+                                'count': 6,
+                            },
+                        ],
+                    },
+                },
+            ]
+        }
+    ]
+    assert evaluate_turn(c, r).values['tool_lookup_monsters'] == 1
+    r['history'][0]['tools'][1]['result']['status'] = 'conflict'
+    assert evaluate_turn(c, r).values['tool_lookup_monsters'] == 0
+
+
+def test_explicit_loot_owner_already_looked_up_needs_no_redundant_lookup():
+    from dnd_rag.experiments.scoring import evaluate_turn
+
+    c = case(
+        expected_tools=['lookup_monsters', 'generate_loot'], checks={'loot': {'cr': '3'}}
+    ).model_copy(
+        update={'input': 'The Green Hag is the designated leader. Generate one normal hoard.'}
+    )
+    r = record(
+        tools=[
+            {
+                'name': 'generate_loot',
+                'arguments': {'cr': '3'},
+                'result': {'coins': {'gp': 27}, 'items': []},
+            }
+        ]
+    )
+    r['history'] = [
+        {
+            'tools': [
+                {
+                    'name': 'lookup_monsters',
+                    'result': {'monsters': [{'name': 'Green Hag', 'cr': 3.0}]},
+                }
+            ]
+        }
+    ]
+    assert evaluate_turn(c, r).values['tool_lookup_monsters'] == 1
+    r['history'][0]['tools'][0]['result']['monsters'][0]['name'] = 'Wight'
+    assert evaluate_turn(c, r).values['tool_lookup_monsters'] == 0
+
+
 def test_pending_review_is_not_success_and_actual_loot_drives_score():
     from dnd_rag.experiments.scoring import evaluate_turn
 
@@ -313,3 +461,25 @@ def test_saved_v1_tool_records_recover_full_errors_from_raw_adapter_snapshot():
     scored = score_records(fixture_dataset(), [r], [])[0]
     assert scored['tools'][0]['result']['text'] == 'Actual schema error'
     assert r['tools'][0]['result'] == {}  # original artifact remains untouched
+
+
+def test_loot_name_with_comma_matches_its_literal_report_without_losing_identity():
+    from dnd_rag.experiments.scoring import reported_loot
+
+    actual = {
+        'coins': {'gp': 4900},
+        'items': [{'name': 'Elemental Gem, Yellow Diamond'}],
+    }
+    assert reported_loot('4,900 gp; Elemental Gem, Yellow Diamond (uncommon, XDMG)', actual)
+    assert not reported_loot('4,900 gp; Elemental Gem, Blue Sapphire (uncommon, XDMG)', actual)
+
+
+def test_formal_habitat_check_accepts_any_tag_and_retains_negative_filter():
+    from dnd_rag.experiments.scoring import evaluate_turn
+
+    data = {'status': 'success', 'monsters': [{'name': 'Mage', 'count': 1, 'habitats': ['any']}]}
+    r = record(tools=[{'name': 'build_encounter', 'arguments': {}, 'result': data}])
+    assert evaluate_turn(case(checks={'habitat': 'urban'}), r).values['habitat'] == 1
+    data['monsters'][0]['habitats'] = ['forest']
+    assert evaluate_turn(case(checks={'habitat': 'urban'}), r).values['habitat'] == 0
+    assert evaluate_turn(case(checks={'habitat': 'any'}), r).values['habitat'] == 1

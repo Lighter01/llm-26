@@ -1,5 +1,6 @@
 """Formal tool checks, independent retrieval math, explicit semantic review."""
 
+import json
 import re
 from fractions import Fraction
 
@@ -38,6 +39,68 @@ def normalized_tools(records):
     return result
 
 
+def recover_wire_tools(rows):
+    """Recover proven completed MCP outputs if interrupted stdout lost its buffer.
+
+    The first request contains earlier turns. Never count those calls again, nor
+    infer tool execution solely from a model's requested function call.
+    """
+    requests = [r for r in rows if r.get('kind') == 'request']
+    if not requests:
+        return []
+    previous = {
+        i.get('call_id')
+        for i in requests[0].get('effective', {}).get('input', [])
+        if i.get('type') == 'function_call'
+    }
+    calls, outputs = {}, {}
+    for request in requests[1:]:
+        for item in request.get('effective', {}).get('input', []):
+            identity = item.get('call_id')
+            if identity in previous:
+                continue
+            if item.get('type') == 'function_call' and item.get('name', '').startswith(
+                'mcp__dnd__'
+            ):
+                calls.setdefault(identity, item)
+            elif item.get('type') == 'function_call_output':
+                outputs[identity] = item.get('output')
+    result = []
+    for identity, call in calls.items():
+        if identity not in outputs:
+            continue
+        raw_output = outputs[identity]
+        output = raw_output
+        if isinstance(output, str) and output.startswith('Wall time:') and '\nOutput:\n' in output:
+            output = output.split('\nOutput:\n', 1)[1]
+        try:
+            data = json.loads(output) if isinstance(output, str) else output
+        except (ValueError, TypeError):
+            data = {'text': output}
+        if not isinstance(data, dict):
+            data = {'text': data}
+        args = call.get('arguments', {})
+        try:
+            args = json.loads(args) if isinstance(args, str) else args
+        except (ValueError, TypeError):
+            args = {'raw': args}
+        failed = bool(data.get('error')) or str(output).casefold().startswith(
+            ('error calling tool', 'error executing tool')
+        )
+        result.append(
+            {
+                'name': call['name'].removeprefix('mcp__dnd__'),
+                'call_id': identity,
+                'arguments': args,
+                'result': data,
+                'status': 'error' if failed else 'completed',
+                'recovery': 'native_wire_function_call_output',
+                'raw_output': raw_output,
+            }
+        )
+    return normalized_tools(result)
+
+
 def composition(data):
     return {m['name'].casefold(): m['count'] for m in data.get('monsters', []) if 'name' in m}
 
@@ -64,12 +127,21 @@ def actual_from_turn(record, number, kind):
 def reported_loot(text, actual):
     if actual is None:
         return False
-    compact = text.replace(',', '').lower()
+
+    def normalize_names(value):
+        return re.sub(r'\b(potion|scroll)s\b', r'\1', value.casefold().replace(',', ''))
+
+    compact = normalize_names(text)
     # Necessary numeric/name checks; the rubric still reviews semantics and inventions.
+    formatting = r'[\s`*_:()\[\]=\-]*'
     return all(
-        re.search(rf'(?<![\d.]){amount:g}\s*(?:`|\*|\s)*{currency}\b', compact)
+        re.search(
+            rf'(?<![\d.]){re.escape(f"{amount:g}")}{formatting}{re.escape(currency)}\b'
+            rf'|\b{re.escape(currency)}\b{formatting}{re.escape(f"{amount:g}")}(?![\d.])',
+            compact,
+        )
         for currency, amount in actual.get('coins', {}).items()
-    ) and all(item['name'].casefold() in compact for item in actual.get('items', []))
+    ) and all(normalize_names(item['name']) in compact for item in actual.get('items', []))
 
 
 def evaluate_turn(case, record, *, annotation=None):
@@ -83,19 +155,35 @@ def evaluate_turn(case, record, *, annotation=None):
         values[key] = float(bool(condition))
 
     names = [t['name'] for t in tools]
-    prior_lookup_names = {
-        m['name'].casefold()
+    prior_monsters = [
+        m
         for previous in record.get('history', [])
         for t in normalized_tools(previous.get('tools', []))
+        if t.get('status') != 'error' and not t['result'].get('error')
         if t['name'] == 'lookup_monsters'
+        or (
+            t['name'] in ('build_encounter', 'evaluate_encounter')
+            and t['result'].get('status') == 'success'
+        )
         for m in t['result'].get('monsters', [])
-    }
+        if t['name'] == 'lookup_monsters' or {'monster_id', 'cr', 'xp'} <= m.keys()
+    ]
+    prior_monster_names = {m['name'].casefold() for m in prior_monsters}
     required_names = {n.casefold() for n in checks.get('monsters', {})}
+    known_explicit_owner = False
+    if checks.get('loot') and 'cr' in checks['loot']:
+        for monster in prior_monsters:
+            try:
+                same_cr = Fraction(str(monster.get('cr'))) == Fraction(str(checks['loot']['cr']))
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+            if same_cr and re.search(
+                r'(?<!\w)' + re.escape(monster['name']) + r'(?!\w)', case.input, re.IGNORECASE
+            ):
+                known_explicit_owner = True
     for name in case.expected_tools:
-        reusable = (
-            name == 'lookup_monsters'
-            and bool(required_names)
-            and required_names <= prior_lookup_names
+        reusable = name == 'lookup_monsters' and (
+            (bool(required_names) and required_names <= prior_monster_names) or known_explicit_owner
         )
         check('tool_' + name, name in names or reusable)
     for name in checks.get('avoid_tools', []):
@@ -173,7 +261,9 @@ def evaluate_turn(case, record, *, annotation=None):
             check(
                 'habitat',
                 all(
-                    checks['habitat'].casefold() in [h.casefold() for h in m.get('habitats', [])]
+                    checks['habitat'].casefold() == 'any'
+                    or 'any' in [h.casefold() for h in m.get('habitats', [])]
+                    or checks['habitat'].casefold() in [h.casefold() for h in m.get('habitats', [])]
                     for m in data.get('monsters', [])
                 ),
             )

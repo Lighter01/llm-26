@@ -260,6 +260,14 @@ class AgentService:
                         )
                         final = result['messages'][-1]
                         text = final.text if isinstance(final, AIMessage) else str(final.content)
+                        if isinstance(final, AIMessage) and final.response_metadata.get(
+                            'finish_reason'
+                        ) in ('length', 'max_tokens'):
+                            status = 'incomplete'
+                            error = {
+                                'code': 'generation_truncated',
+                                'message': 'Model reached the output limit; partial answer retained',
+                            }
                 except TimeoutError:
                     status = 'timeout'
                     error = {'code': 'timeout', 'message': 'Turn time limit reached'}
@@ -271,10 +279,13 @@ class AgentService:
                     await self._close_interrupted_tools(session_id)
                     self.emit('error', error)
                 usage = {}
+                complete_generations = len(turn['generations']) == turn['model_calls']
                 for key in ['input_tokens', 'output_tokens', 'total_tokens']:
                     values = [u.get(key) if u else None for u in turn['generations']]
                     usage[key] = (
-                        sum(values) if values and all(type(v) is int for v in values) else None
+                        sum(values)
+                        if complete_generations and values and all(type(v) is int for v in values)
+                        else None
                     )
                 usage.update(
                     model_calls=turn['model_calls'],
@@ -348,7 +359,9 @@ class AgentService:
                 )
                 for call in pending
             ]
-            await graph.aupdate_state(config, {'messages': closures}, as_node='tools')
+            # aget_state includes completed parallel-task pending writes. Updating
+            # only the missing closures would discard those already received results.
+            await graph.aupdate_state(config, {'messages': [*messages, *closures]}, as_node='tools')
             self.recorder.write(
                 'interrupted_tool_closures', {'call_ids': [c['id'] for c in pending]}
             )

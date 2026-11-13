@@ -57,6 +57,58 @@ class FakeAdapter:
         self.closed.append(sid)
 
 
+def test_recompute_recovers_timeout_tools_without_modifying_original_records():
+    from copy import deepcopy
+
+    from dnd_rag.experiments.artifacts import score_records
+    from dnd_rag.experiments.contracts import TurnCase
+
+    dataset = fixture_dataset()
+    first = dataset.items[0].model_copy(
+        update={
+            'turns': [
+                TurnCase(
+                    input='Check Troll',
+                    rubric=['Answer the query'],
+                    expected_tools=['lookup_monsters'],
+                )
+            ]
+        }
+    )
+    dataset = dataset.model_copy(update={'items': [first, *dataset.items[1:]]})
+    call = {
+        'type': 'function_call',
+        'call_id': 'actual-call',
+        'name': 'mcp__dnd__lookup_monsters',
+        'arguments': '{"query":"Troll"}',
+    }
+    output = {
+        'type': 'function_call_output',
+        'call_id': 'actual-call',
+        'output': '{"status":"matched","monsters":[]}',
+    }
+    raw = {
+        'case_id': 'item0',
+        'turn': 1,
+        'tools': [],
+        'events': [],
+        'reply': AgentReply(text='', status='timeout', usage={'tool_calls': 0}).model_dump(),
+        'raw_records': {
+            'tools': [],
+            'wire': [
+                {'kind': 'request', 'effective': {'input': []}},
+                {'kind': 'request', 'effective': {'input': [call, output]}},
+            ],
+        },
+    }
+    before = deepcopy(raw)
+    scored = score_records(dataset, [raw], [])[0]
+    assert raw == before
+    assert len(scored['tools']) == scored['reply']['usage']['tool_calls'] == 1
+    assert scored['scores']['values']['tool_lookup_monsters'] == 1
+    assert scored['scores']['values']['completed'] == 0
+
+
 def test_sequential_turns_sessions_four_modes_60_executions_and_recompute(tmp_path):
     from dnd_rag.experiments.artifacts import recompute
     from dnd_rag.experiments.runner import run_dataset

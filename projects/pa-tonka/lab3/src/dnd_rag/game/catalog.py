@@ -29,6 +29,13 @@ def load_catalog(snapshot_dir: Path):
         raise RagError('invalid_catalog', f'{snapshot_dir}: {exc}') from exc
 
 
+def matches_habitat(habitats, requested):
+    if not requested or requested.casefold() == 'any':
+        return True
+    normalized = {h.casefold() for h in habitats}
+    return 'any' in normalized or requested.casefold() in normalized
+
+
 def lookup_monsters(catalog, query=None, *, habitat=None, creature_type=None, limit=5):
     if type(limit) is not int or not 1 <= limit <= 10:
         raise RagError('invalid_limit', 'Monster limit must be1..10')
@@ -39,7 +46,7 @@ def lookup_monsters(catalog, query=None, *, habitat=None, creature_type=None, li
         ]
         values = exact or [m for m in values if query.casefold() in m.name.casefold()]
     if habitat:
-        values = [m for m in values if habitat.casefold() in m.habitats]
+        values = [m for m in values if matches_habitat(m.habitats, habitat)]
     if creature_type:
         values = [m for m in values if creature_type.casefold() in m.creature_types]
     return sorted(values, key=lambda m: m.name)[:limit]

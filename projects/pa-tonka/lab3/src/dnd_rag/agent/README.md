@@ -13,3 +13,5 @@
 `memory.py` — ContextBudget и штатный SummarizationMiddleware с native full-payload counter, целыми interactions и summarizer без скрытого overflow trim. `prompts/summary.txt` задаёт разделы фактов; полный исходный journal сохраняется независимо от summary. Уже потреблённый usage записывается и для пустого/оборванного summary, хотя такое summary не заменяет память.
 
 `citations.py` — persistable CitationRegistry/CitationRef и CitationValidation: dialog-scoped номера только фактических search hits, exact text/provenance без выдуманной страницы; summary не владеет registry. `observability.model_response` сохраняет полный доступный native ответ/reasoning отдельным span без повторного начисления usage.
+
+Обрезанный финальный ответ возвращается как incomplete/generation_truncated с частичным текстом и потреблённым usage. При прерывании более поздней генерации полные totals остаютсяNone, известные ответы сохраняются в journal. Закрытие pending tools закрепляет также уже полученные параллельные результаты, чтобы checkpoint update не потерял фактический payout.

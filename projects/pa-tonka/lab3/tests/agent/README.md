@@ -7,3 +7,5 @@
 `test_memory.py` проверяет полный prefix, повторное summary, защищённую задачу, явные ошибки и учёт потреблённого usage отклонённого summary. `test_cli.py` проверяет команды/измеренный context; `test_application.py` — порядок стадий и отсутствие downstream при сбое. `integration/test_context_live.py` — явная длинная проверка обоих агентов на работающем общем stack.
 
 `test_citations.py` — повторные hits, независимые диалоги, сохранение registry после summary/restart, неизвестные номера и точная исходная attribution без выдуманной страницы.
+
+`test_service.py` дополнительно проверяет реальные LangGraph parallel-task pending writes при timeout, сохранение уже полученных19gp, incomplete для final finishlength и unknown totals после прерванной второй генерации.

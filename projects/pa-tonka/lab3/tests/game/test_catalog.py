@@ -150,3 +150,15 @@ def test_item_group_can_reference_generic_variants_without_emitting_placeholder(
     catalog = load_catalog(compile_catalog(raw, tmp_path, revision='a' * 40))
     choices = catalog.loot_tables['magic_items']['armaments.uncommon']['table'][0]['item_ids']
     assert [catalog.items[i]['name'] for i in choices] == ['+1 Longsword']
+
+
+def test_any_habitat_entities_match_concrete_habitats_without_relaxing_other_entities():
+    from tests.game.fixtures import catalog
+
+    c = catalog()
+    c.monsters['mage'] = c.monsters['mage'].model_copy(update={'habitats': ['any']})
+    assert [m.name for m in c.lookup_monsters('Mage', habitat='urban')] == ['Mage']
+    assert c.lookup_monsters('Goblin Warrior', habitat='urban') == []
+    assert [m.name for m in c.lookup_monsters('Goblin Warrior', habitat='any')] == [
+        'Goblin Warrior'
+    ]

@@ -81,3 +81,23 @@ def test_search_exhaustion_is_distinct_and_invalid_party_is_rejected():
         evaluate_encounter(
             catalog(), party_size=0, party_level=6, monsters=[{'monster_id': 'mage', 'count': 2}]
         )
+
+
+def test_required_any_habitat_monster_is_compatible_with_concrete_habitat():
+    from dnd_rag.game.encounters import build_encounter
+
+    c = catalog()
+    c.monsters['mage'] = c.monsters['mage'].model_copy(update={'habitats': ['any']})
+    args = dict(
+        party_size=2,
+        party_level=6,
+        difficulty='high',
+        habitat='urban',
+        creature_type='humanoid',
+        total_count=1,
+        required_monsters=[{'monster_id': 'mage', 'count': 1}],
+    )
+    result = build_encounter(c, **args)
+    assert result.status == 'success' and result.total_xp == 2300 and result.difficulty == 'high'
+    assert result.monsters[0]['monster_id'] == 'mage' and result.monsters[0]['count'] == 1
+    assert build_encounter(c, **{**args, 'creature_type': 'fey'}).status == 'conflict'

@@ -6,6 +6,7 @@ from itertools import zip_longest
 from pydantic import ValidationError
 
 from dnd_rag.contracts import RagError
+from dnd_rag.game.catalog import matches_habitat
 from dnd_rag.game.contracts import EncounterResult, MonsterCount
 
 
@@ -106,7 +107,7 @@ def build_encounter(
     }
 
     def matches(m):
-        return (not habitat or habitat.casefold() in m.habitats) and (
+        return matches_habitat(m.habitats, habitat) and (
             not creature_type or creature_type.casefold() in m.creature_types
         )
 

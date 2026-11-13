@@ -10,6 +10,15 @@ import pytest
 from dnd_rag.experiments.artifacts import read_jsonl, recompute
 
 
+def _assert_effective_profile(payload, mode, reserve):
+    assert payload['model'] == 'dnd-nemotron'
+    assert payload['chat_template_kwargs']['enable_thinking'] is (mode == 'budgeted')
+    assert payload['reasoning_budget_tokens'] == (512 if mode == 'budgeted' else 0)
+    if mode == 'off':
+        assert payload['reasoning_effort'] == 'none'
+    assert payload.get('max_completion_tokens', payload.get('max_output_tokens')) == reserve
+
+
 @pytest.mark.skipif(
     not os.getenv('DM_SAVED_RUNS'), reason='Set DM_SAVED_RUNS to the four retained run directories'
 )
@@ -30,6 +39,36 @@ def test_saved_matrix_is_referentially_complete_and_recomputes():
         pairs.add((run['agent'], run['mode']))
         fingerprints.add(run['manifest']['common_fingerprint'])
         assert len(dataset['items']) == 15 and len(records) == 47
+        experiment_items = json.loads((directory / 'experiment-items.json').read_text())
+        assert len(experiment_items) == 47
+        assert all(item['experimentId'] == run['experiment_id'] for item in experiment_items)
+        assert {item['traceId'] for item in experiment_items} == {
+            record['reply']['trace_id'] for record in records
+        }
+        assert len({item['experimentItemId'] for item in experiment_items}) == 47
+        if run['agent'] == 'own':
+            for journal in (directory / 'raw/own').glob('*/turns.jsonl'):
+                rows = read_jsonl(journal)
+                requests = [r for r in rows if r['kind'] == 'wire_input']
+                responses = [r for r in rows if r['kind'] == 'model_response']
+                assert len(requests) == len(responses)
+                for request, response in zip(requests, responses):
+                    reserve = 1024 if request['phase'] == 'summary' else 2048
+                    _assert_effective_profile(request['payload'], run['mode'], reserve)
+                    assert request['input_tokens'] == response['response']['usage']['prompt_tokens']
+                    assert request['input_tokens'] + reserve + 256 <= 16384
+        else:
+            for record in records:
+                wire = record['raw_records'].get('wire', [])
+                responses = {r['id']: r['response'] for r in wire if r.get('kind') == 'response'}
+                for request in (r for r in wire if r.get('kind') == 'request'):
+                    _assert_effective_profile(request['effective'], run['mode'], 2048)
+                    assert request['input_tokens'] + 2048 + 256 <= 16384
+                    if request['id'] in responses:
+                        assert (
+                            request['input_tokens']
+                            == responses[request['id']]['usage']['input_tokens']
+                        )
         expected = {i['id']: len(i['turns']) for i in dataset['items']}
         grouped = defaultdict(list)
         manifest = {
@@ -47,6 +86,28 @@ def test_saved_matrix_is_referentially_complete_and_recomputes():
                     type(record['reply']['usage'].get(k)) is int
                     for k in ('input_tokens', 'output_tokens')
                 )
+                observed = (
+                    directory / 'observations' / record['case_id'] / f'{record["turn"]}.json'
+                    if run['agent'] == 'own'
+                    else directory
+                    / 'raw/codex'
+                    / record['session_id']
+                    / f'{record["turn"]}.observations.json'
+                )
+                observations = json.loads(observed.read_text())
+                assert all(o['traceId'] == record['reply']['trace_id'] for o in observations)
+                generations = [o for o in observations if o['type'] == 'GENERATION']
+                assert len(generations) == record['reply']['usage']['model_calls']
+                assert len({o['id'] for o in observations}) == len(observations)
+                assert all(
+                    o.get('input') and o.get('output') and o.get('usageDetails')
+                    for o in generations
+                )
+                for field, native in [('input', 'input_tokens'), ('output', 'output_tokens')]:
+                    assert (
+                        sum(o['usageDetails'][field] for o in generations)
+                        == record['reply']['usage'][native]
+                    )
             for tool in record['tools']:
                 if tool['name'] != 'search_rules':
                     continue

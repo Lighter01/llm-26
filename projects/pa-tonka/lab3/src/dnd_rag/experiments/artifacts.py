@@ -10,7 +10,12 @@ from statistics import mean, median
 from dnd_rag.contracts import ChunkRef, RagError
 from dnd_rag.evaluation.metrics import aggregate_metrics
 from dnd_rag.experiments.contracts import AgentDataset
-from dnd_rag.experiments.scoring import evaluate_retrieval_calls, evaluate_turn, normalized_tools
+from dnd_rag.experiments.scoring import (
+    evaluate_retrieval_calls,
+    evaluate_turn,
+    normalized_tools,
+    recover_wire_tools,
+)
 
 
 def save_json(path, data):
@@ -120,7 +125,17 @@ def score_records(dataset, records, manifest, review=None):
             raise RagError('invalid_artifacts', 'Unknown or duplicate saved turn')
         seen.add(key)
         restored_tools = normalized_tools(raw.get('raw_records', {}).get('tools', raw['tools']))
-        record = {**raw, 'tools': restored_tools, 'history': histories[raw['case_id']]}
+        recovered = recover_wire_tools(raw.get('raw_records', {}).get('wire', []))
+        reply = raw['reply']
+        if len(recovered) > len(restored_tools):
+            restored_tools = recovered
+            reply = {**reply, 'usage': {**reply.get('usage', {}), 'tool_calls': len(recovered)}}
+        record = {
+            **raw,
+            'reply': reply,
+            'tools': restored_tools,
+            'history': histories[raw['case_id']],
+        }
         case = lookup[raw['case_id']].turns[raw['turn'] - 1]
         scores = evaluate_turn(case, record, annotation=review.get((raw['case_id'], raw['turn'])))
         retrieval = evaluate_retrieval_calls(case, record['tools'], manifest)
@@ -129,6 +144,7 @@ def score_records(dataset, records, manifest, review=None):
         scored.append(
             {
                 **raw,
+                'reply': reply,
                 'tools': restored_tools,
                 'scores': {**scores.model_dump(), 'success': scores.success},
                 'retrieval_metrics': retrieval_metrics,

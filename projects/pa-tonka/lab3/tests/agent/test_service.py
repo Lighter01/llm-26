@@ -179,3 +179,105 @@ def test_interrupted_tool_exchange_is_closed_before_next_user_turn(tmp_path):
     closures = [m for m in messages if isinstance(m, ToolMessage) and m.tool_call_id == 'not-run']
     assert len(closures) == 1 and closures[0].status == 'error'
     assert 'unavailable' in closures[0].content.lower()
+
+
+def test_truncated_final_answer_is_incomplete_with_partial_text_and_consumed_usage(tmp_path):
+    from dnd_rag.agent.observability import ObservationRecorder
+    from dnd_rag.agent.service import AgentService
+
+    model = ScriptedModel(
+        replies=[
+            AIMessage(
+                content='The partial answer',
+                response_metadata={'finish_reason': 'length'},
+                usage_metadata={'input_tokens': 100, 'output_tokens': 20, 'total_tokens': 120},
+            )
+        ]
+    )
+    service = AgentService(model=model, tools=[], recorder=ObservationRecorder(tmp_path))
+    reply = asyncio.run(service.ainvoke('scope', 'Explain', turn_id='one'))
+    assert reply.status == 'incomplete' and reply.error['code'] == 'generation_truncated'
+    assert reply.text == 'The partial answer' and reply.usage['output_tokens'] == 20
+
+
+def test_parallel_tool_timeout_preserves_already_completed_loot_result(tmp_path):
+    from dnd_rag.agent.observability import ObservationRecorder
+    from dnd_rag.agent.service import AgentService
+
+    @tool
+    async def actual_loot() -> str:
+        """Return one actual random payout."""
+        return json.dumps({'coins': {'gp': 19}})
+
+    @tool
+    async def slow_lookup() -> str:
+        """A separate slow lookup."""
+        await asyncio.sleep(3)
+        return '{}'
+
+    model = ScriptedModel(
+        replies=[
+            AIMessage(
+                content='',
+                tool_calls=[
+                    {'id': 'loot', 'name': 'actual_loot', 'args': {}},
+                    {'id': 'slow', 'name': 'slow_lookup', 'args': {}},
+                ],
+            ),
+            AIMessage(content='The recorded purse is 19 gp.'),
+        ]
+    )
+    service = AgentService(
+        model=model,
+        tools=[actual_loot, slow_lookup],
+        recorder=ObservationRecorder(tmp_path),
+        config=AgentConfig(timeout_seconds=0.5),
+    )
+
+    async def run():
+        first = await service.ainvoke('scope', 'Loot and look up', turn_id='one')
+        assert first.status == 'timeout'
+        assert service.last_records['scope']['tools'][0]['result'] == {'coins': {'gp': 19}}
+        second = await service.ainvoke(
+            'scope', 'Recall actual payout; do not reroll', turn_id='two'
+        )
+        assert second.status == 'completed'
+        messages = {m.tool_call_id: m for m in model.seen[-1] if isinstance(m, ToolMessage)}
+        assert messages['loot'].status == 'success'
+        assert json.loads(messages['loot'].content) == {'coins': {'gp': 19}}
+        assert messages['slow'].status == 'error' and 'unavailable' in messages['slow'].content
+
+    asyncio.run(run())
+
+
+def test_timeout_during_later_generation_does_not_claim_complete_usage(tmp_path):
+    from dnd_rag.agent.observability import ObservationRecorder
+    from dnd_rag.agent.service import AgentService
+
+    known = {'input_tokens': 100, 'output_tokens': 20, 'total_tokens': 120}
+
+    class SlowSecondModel(ScriptedModel):
+        async def _agenerate(self, messages, *args, **kwargs):
+            if not self.replies:
+                await asyncio.sleep(3)
+            return self._generate(messages, *args, **kwargs)
+
+    model = SlowSecondModel(
+        replies=[
+            AIMessage(
+                content='',
+                tool_calls=[{'id': 'done', 'name': 'double', 'args': {'n': 3}}],
+                usage_metadata=known,
+            )
+        ]
+    )
+    service = AgentService(
+        model=model,
+        tools=[double],
+        recorder=ObservationRecorder(tmp_path),
+        config=AgentConfig(timeout_seconds=0.5),
+    )
+    reply = asyncio.run(service.ainvoke('scope', 'Compute and explain', turn_id='one'))
+    assert reply.status == 'timeout' and reply.usage['model_calls'] == 2
+    assert reply.usage['input_tokens'] is None and reply.usage['output_tokens'] is None
+    assert service.last_records['scope']['generations'] == [known]
